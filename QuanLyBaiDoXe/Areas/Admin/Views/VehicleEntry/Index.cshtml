@@ -1,0 +1,1186 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleEntryViewModel
+@{
+    ViewData["Title"] = "Quản lý xe vào ra";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+<style>
+    .vehicle-entry-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .camera-section {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .camera-wrapper {
+        position: relative;
+        width: 100%;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 4/3;
+    }
+
+    #cameraVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    #capturedImage {
+        display: none;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .camera-overlay {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+    }
+
+    .camera-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.2s;
+    }
+
+    .camera-btn.capture {
+        background: #e74c3c;
+        color: white;
+    }
+
+    .camera-btn.capture:hover {
+        background: #c0392b;
+        transform: scale(1.1);
+    }
+
+    .camera-btn.retake {
+        background: var(--primary-teal);
+        color: white;
+    }
+
+    .camera-btn.retake:hover {
+        background: #1a8a78;
+    }
+
+    .camera-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .camera-status.not-captured {
+        background: rgba(231, 76, 60, 0.9);
+        color: white;
+    }
+
+    .camera-status.captured {
+        background: rgba(39, 174, 96, 0.9);
+        color: white;
+    }
+
+    /* Images comparison section */
+    .images-section {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        grid-column: 1 / -1;
+    }
+
+    .images-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .image-box {
+        border: 2px dashed #e5e9f2;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 4/3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        position: relative;
+    }
+
+    .image-box.has-image {
+        border-style: solid;
+        border-color: var(--primary-teal);
+    }
+
+    .image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-box-placeholder {
+        text-align: center;
+        color: var(--light-gray);
+    }
+
+    .image-box-placeholder i {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .image-box-label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .image-box-label.entry {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+    }
+
+    .image-box-label.exit {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    .image-box-time {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+        color: white;
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .card-scan-section {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-input-wrapper {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .card-input {
+        flex: 1;
+        padding: 15px 20px;
+        border: 2px solid #e5e9f2;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        text-transform: uppercase;
+        transition: border-color 0.2s;
+    }
+
+    .card-input:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+    }
+
+    .plate-input {
+        padding: 12px 15px;
+        border: 2px solid #e5e9f2;
+        border-radius: 8px;
+        font-size: 16px;
+        text-transform: uppercase;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .plate-input:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+    }
+
+    .position-select {
+        padding: 12px 15px;
+        border: 2px solid #e5e9f2;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .capture-warning {
+        background: rgba(255, 152, 0, 0.15);
+        color: #ff9800;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .capture-warning.hidden {
+        display: none;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-entry {
+        flex: 1;
+        padding: 15px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-entry.in {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+    }
+
+    .btn-entry.in:hover {
+        background: linear-gradient(135deg, #219a52, #27ae60);
+    }
+
+    .btn-entry.out {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    .btn-entry.out:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+    }
+
+    .btn-entry:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+    }
+
+    .card-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        display: none;
+    }
+
+    .card-info.show {
+        display: block;
+    }
+
+    .card-info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .card-info-title {
+        font-weight: 600;
+        color: var(--dark-bg);
+    }
+
+    .card-info-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .card-info-status.in {
+        background: rgba(231, 76, 60, 0.15);
+        color: #e74c3c;
+    }
+
+    .card-info-status.out {
+        background: rgba(39, 174, 96, 0.15);
+        color: #27ae60;
+    }
+
+    .card-info-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .card-info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-info-label {
+        color: var(--light-gray);
+        font-size: 12px;
+    }
+
+    .card-info-value {
+        font-weight: 500;
+        color: var(--dark-bg);
+    }
+
+    .vehicles-list-section {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        grid-column: 1 / -1;
+    }
+
+    .vehicles-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .vehicles-list-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--dark-bg);
+    }
+
+    .vehicles-count {
+        background: var(--primary-teal);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .vehicles-table-wrapper {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .time-elapsed {
+        font-family: monospace;
+        font-size: 13px;
+        color: #e74c3c;
+        font-weight: 500;
+    }
+
+    .vehicle-image-thumb {
+        width: 60px;
+        height: 45px;
+        object-fit: cover;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .vehicle-image-thumb:hover {
+        transform: scale(1.1);
+    }
+
+    .notification {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 9999;
+        display: none;
+        animation: slideIn 0.3s ease;
+    }
+
+    .notification.success {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+    }
+
+    .notification.error {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    .notification.show {
+        display: block;
+    }
+
+    /* Modal xem ảnh */
+    .image-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-modal.show {
+        display: flex;
+    }
+
+    .image-modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        position: relative;
+    }
+
+    .image-modal-content img {
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: 8px;
+    }
+
+    .image-modal-close {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+    }
+
+    .image-modal-info {
+        color: white;
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .vehicle-entry-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .images-comparison {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý xe vào ra</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Quản lý xe vào ra</span>
+        </div>
+    </div>
+</div>
+
+<!-- Thống kê -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statXeDangGui">@Model.TongXeDangGui</h3>
+            <p>Xe đang gửi</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-parking"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statViTriTrong">@Model.TongViTriTrong / @Model.TongViTri</h3>
+            <p>Vị trí trống</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statTongThu">@Model.TongThuHomNay.ToString("N0") đ</h3>
+            <p>Thu hôm nay</p>
+        </div>
+    </div>
+</div>
+
+<div class="vehicle-entry-container">
+    <!-- Camera Section -->
+    <div class="camera-section">
+        <h3 style="margin-bottom: 15px; color: var(--dark-bg);">
+            <i class="fas fa-camera"></i> Camera chụp xe <span style="color: #e74c3c; font-size: 14px;">*Bắt buộc</span>
+        </h3>
+        <div class="camera-wrapper">
+            <video id="cameraVideo" autoplay playsinline></video>
+            <img id="capturedImage" alt="Captured" />
+            <canvas id="captureCanvas" style="display: none;"></canvas>
+            <div class="camera-status not-captured" id="cameraStatus">
+                <i class="fas fa-exclamation-circle"></i> Chưa chụp
+            </div>
+            <div class="camera-overlay">
+                <button class="camera-btn capture" id="btnCapture" title="Chụp ảnh">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button class="camera-btn retake" id="btnRetake" title="Chụp lại" style="display: none;">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Scan Section -->
+    <div class="card-scan-section">
+        <h3 style="margin-bottom: 15px; color: var(--dark-bg);">
+            <i class="fas fa-id-card"></i> Quẹt thẻ xe
+        </h3>
+
+        <div class="card-input-wrapper">
+            <input type="text" id="cardInput" class="card-input" placeholder="Nhập hoặc quẹt mã thẻ..." autofocus />
+            <button class="btn-primary-admin" id="btnCheckCard">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
+        <input type="text" id="plateInput" class="plate-input" placeholder="Biển số xe (VD: 59A-12345)" />
+
+        <select id="positionSelect" class="position-select">
+            <option value="">-- Chọn vị trí đỗ (không bắt buộc) --</option>
+            @foreach (var viTri in Model.ViTriTrong)
+            {
+                <option value="@viTri.MaViTri">@viTri.MaKhuVucNavigation?.TenKhuVuc - @viTri.TenViTri</option>
+            }
+        </select>
+
+        <div class="capture-warning" id="captureWarning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Vui lòng chụp hình xe trước khi xử lý!</span>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-entry in" id="btnXeVao" disabled>
+                <i class="fas fa-sign-in-alt"></i> XE VÀO
+            </button>
+            <button class="btn-entry out" id="btnXeRa" disabled>
+                <i class="fas fa-sign-out-alt"></i> XE RA
+            </button>
+        </div>
+
+        <!-- Card Info Display -->
+        <div class="card-info" id="cardInfo">
+            <div class="card-info-header">
+                <span class="card-info-title" id="cardInfoTitle">Thông tin thẻ</span>
+                <span class="card-info-status" id="cardInfoStatus"></span>
+            </div>
+            <div class="card-info-details">
+                <div class="card-info-item">
+                    <span class="card-info-label">Mã thẻ</span>
+                    <span class="card-info-value" id="infoMaThe">-</span>
+                </div>
+                <div class="card-info-item">
+                    <span class="card-info-label">Loại xe</span>
+                    <span class="card-info-value" id="infoLoaiXe">-</span>
+                </div>
+                <div class="card-info-item">
+                    <span class="card-info-label">Loại thẻ</span>
+                    <span class="card-info-value" id="infoLoaiThe">-</span>
+                </div>
+                <div class="card-info-item">
+                    <span class="card-info-label">Biển số vào</span>
+                    <span class="card-info-value" id="infoBienSoVao">-</span>
+                </div>
+                <div class="card-info-item">
+                    <span class="card-info-label">Thời gian vào</span>
+                    <span class="card-info-value" id="infoThoiGianVao">-</span>
+                </div>
+                <div class="card-info-item">
+                    <span class="card-info-label">Vị trí đỗ</span>
+                    <span class="card-info-value" id="infoViTri">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Images Comparison Section -->
+    <div class="images-section" id="imagesSection" style="display: none;">
+        <h3 style="margin-bottom: 15px; color: var(--dark-bg);">
+            <i class="fas fa-images"></i> So sánh hình ảnh xe
+        </h3>
+        <div class="images-comparison">
+            <div class="image-box" id="entryImageBox">
+                <div class="image-box-placeholder">
+                    <i class="fas fa-car"></i>
+                    <p>Hình xe vào</p>
+                </div>
+            </div>
+            <div class="image-box" id="exitImageBox">
+                <div class="image-box-placeholder">
+                    <i class="fas fa-car"></i>
+                    <p>Hình xe ra</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicles List -->
+    <div class="vehicles-list-section">
+        <div class="vehicles-list-header">
+            <h3 class="vehicles-list-title">
+                <i class="fas fa-list"></i> Danh sách xe đang gửi
+            </h3>
+            <span class="vehicles-count" id="vehiclesCount">@Model.XeDangTrongBai.Count xe</span>
+        </div>
+        <div class="vehicles-table-wrapper">
+            <table class="admin-table" id="vehiclesTable">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã thẻ</th>
+                        <th>Biển số</th>
+                        <th>Hình vào</th>
+                        <th>Loại xe</th>
+                        <th>Thời gian vào</th>
+                        <th>Thời gian gửi</th>
+                        <th>Vị trí</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="vehiclesTableBody">
+                    @for (int i = 0; i < Model.XeDangTrongBai.Count; i++)
+                    {
+                        var luotGui = Model.XeDangTrongBai[i];
+                        <tr data-mathe="@luotGui.MaThe">
+                            <td>@(i + 1)</td>
+                            <td><strong>@luotGui.MaThe</strong></td>
+                            <td>@luotGui.BienSoVao</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(luotGui.HinhAnhVao))
+                                {
+                                    <img src="@luotGui.HinhAnhVao" alt="Hình vào" class="vehicle-image-thumb" 
+                                         onclick="showImageModal('@luotGui.HinhAnhVao', 'Xe vào', '@luotGui.BienSoVao', '@luotGui.ThoiGianVao?.ToString("dd/MM/yyyy HH:mm:ss")')" />
+                                }
+                                else
+                                {
+                                    <span style="color: var(--light-gray); font-size: 12px;">Không có</span>
+                                }
+                            </td>
+                            <td>@luotGui.MaTheNavigation?.MaLoaiXeNavigation?.TenLoaiXe</td>
+                            <td>@luotGui.ThoiGianVao?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="time-elapsed" data-start="@luotGui.ThoiGianVao?.ToString("o")">--:--:--</td>
+                            <td>@luotGui.MaViTriNavigation?.TenViTri</td>
+                            <td>
+                                <button class="btn-secondary-admin btn-sm btn-quick-out" data-mathe="@luotGui.MaThe" data-bienso="@luotGui.BienSoVao" data-hinhvao="@luotGui.HinhAnhVao">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification"></div>
+
+<!-- Image Modal -->
+<div class="image-modal" id="imageModal">
+    <div class="image-modal-content">
+        <button class="image-modal-close" onclick="closeImageModal()">&times;</button>
+        <img id="modalImage" src="" alt="Vehicle Image" />
+        <div class="image-modal-info" id="modalInfo"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let cameraStream = null;
+    let capturedImageData = null;
+    let currentAction = null;
+    let currentCardInfo = null;
+    let entryImageUrl = null;
+
+    // Initialize camera
+    async function initCamera() {
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: 1280, height: 720 }
+            });
+            document.getElementById('cameraVideo').srcObject = cameraStream;
+        } catch (err) {
+            console.error('Camera error:', err);
+            showNotification('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.', 'error');
+        }
+    }
+
+    // Capture image
+    function captureImage() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('captureCanvas');
+        const capturedImg = document.getElementById('capturedImage');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const captureWarning = document.getElementById('captureWarning');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+        capturedImg.src = capturedImageData;
+
+        video.style.display = 'none';
+        capturedImg.style.display = 'block';
+
+        document.getElementById('btnCapture').style.display = 'none';
+        document.getElementById('btnRetake').style.display = 'flex';
+
+        // Update camera status
+        cameraStatus.innerHTML = '<i class="fas fa-check-circle"></i> Đã chụp';
+        cameraStatus.className = 'camera-status captured';
+
+        // Hide warning
+        captureWarning.classList.add('hidden');
+
+        // Update buttons state
+        updateButtonsState();
+    }
+
+    // Retake photo
+    function retakePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const capturedImg = document.getElementById('capturedImage');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const captureWarning = document.getElementById('captureWarning');
+
+        capturedImageData = null;
+        video.style.display = 'block';
+        capturedImg.style.display = 'none';
+
+        document.getElementById('btnCapture').style.display = 'flex';
+        document.getElementById('btnRetake').style.display = 'none';
+
+        // Update camera status
+        cameraStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Chưa chụp';
+        cameraStatus.className = 'camera-status not-captured';
+
+        // Show warning if card is checked
+        if (currentCardInfo) {
+            captureWarning.classList.remove('hidden');
+        }
+
+        // Update buttons state
+        updateButtonsState();
+    }
+
+    // Update buttons state based on capture status
+    function updateButtonsState() {
+        if (!currentCardInfo) {
+            document.getElementById('btnXeVao').disabled = true;
+            document.getElementById('btnXeRa').disabled = true;
+            return;
+        }
+
+        const hasCaptured = capturedImageData !== null;
+
+        if (currentAction === 'VAO') {
+            document.getElementById('btnXeVao').disabled = !hasCaptured;
+            document.getElementById('btnXeRa').disabled = true;
+        } else if (currentAction === 'RA') {
+            document.getElementById('btnXeVao').disabled = true;
+            document.getElementById('btnXeRa').disabled = !hasCaptured;
+        }
+    }
+
+    // Check card
+    async function checkCard() {
+        const maThe = document.getElementById('cardInput').value.trim();
+        if (!maThe) {
+            showNotification('Vui lòng nhập mã thẻ!', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Admin/VehicleEntry/KiemTraThe?maThe=${encodeURIComponent(maThe)}`);
+            const data = await response.json();
+
+            if (data.success) {
+                currentCardInfo = data;
+                displayCardInfo(data);
+
+                if (data.action === 'RA') {
+                    currentAction = 'RA';
+                    document.getElementById('plateInput').value = data.luotGui?.bienSoVao || '';
+                    
+                    // Show entry image for comparison
+                    entryImageUrl = data.luotGui?.hinhAnhVao;
+                    showImagesSection(entryImageUrl);
+                } else {
+                    currentAction = 'VAO';
+                    hideImagesSection();
+                }
+
+                // Show capture warning if not captured yet
+                if (!capturedImageData) {
+                    document.getElementById('captureWarning').classList.remove('hidden');
+                }
+
+                updateButtonsState();
+            } else {
+                showNotification(data.message, 'error');
+                resetForm();
+            }
+        } catch (err) {
+            showNotification('Lỗi kết nối server!', 'error');
+        }
+    }
+
+    // Show images section for comparison
+    function showImagesSection(entryImage) {
+        const section = document.getElementById('imagesSection');
+        const entryBox = document.getElementById('entryImageBox');
+        
+        section.style.display = 'block';
+
+        if (entryImage) {
+            entryBox.innerHTML = `
+                <span class="image-box-label entry"><i class="fas fa-sign-in-alt"></i> XE VÀO</span>
+                <img src="${entryImage}" alt="Hình xe vào" onclick="showImageModal('${entryImage}', 'Xe vào')" />
+            `;
+            entryBox.classList.add('has-image');
+        } else {
+            entryBox.innerHTML = `
+                <div class="image-box-placeholder">
+                    <i class="fas fa-car"></i>
+                    <p>Không có hình xe vào</p>
+                </div>
+            `;
+            entryBox.classList.remove('has-image');
+        }
+
+        // Exit image placeholder
+        document.getElementById('exitImageBox').innerHTML = `
+            <span class="image-box-label exit"><i class="fas fa-sign-out-alt"></i> XE RA</span>
+            <div class="image-box-placeholder">
+                <i class="fas fa-camera"></i>
+                <p>Chờ chụp hình xe ra</p>
+            </div>
+        `;
+    }
+
+    // Hide images section
+    function hideImagesSection() {
+        document.getElementById('imagesSection').style.display = 'none';
+    }
+
+    // Display card info
+    function displayCardInfo(data) {
+        const cardInfo = document.getElementById('cardInfo');
+        cardInfo.classList.add('show');
+
+        document.getElementById('infoMaThe').textContent = data.theXe?.maThe || '-';
+        document.getElementById('infoLoaiXe').textContent = data.theXe?.tenLoaiXe || '-';
+        document.getElementById('infoLoaiThe').textContent = data.theXe?.tenLoaiThe || '-';
+
+        const statusEl = document.getElementById('cardInfoStatus');
+        if (data.theXe?.dangGui) {
+            statusEl.textContent = 'Đang gửi';
+            statusEl.className = 'card-info-status in';
+            document.getElementById('infoBienSoVao').textContent = data.luotGui?.bienSoVao || '-';
+            document.getElementById('infoThoiGianVao').textContent = data.luotGui?.thoiGianVao
+                ? new Date(data.luotGui.thoiGianVao).toLocaleString('vi-VN')
+                : '-';
+            document.getElementById('infoViTri').textContent = data.luotGui?.tenViTri || '-';
+        } else {
+            statusEl.textContent = 'Sẵn sàng';
+            statusEl.className = 'card-info-status out';
+            document.getElementById('infoBienSoVao').textContent = '-';
+            document.getElementById('infoThoiGianVao').textContent = '-';
+            document.getElementById('infoViTri').textContent = '-';
+        }
+    }
+
+    // Process vehicle entry/exit
+    async function processVehicle(action) {
+        const maThe = document.getElementById('cardInput').value.trim();
+        const bienSo = document.getElementById('plateInput').value.trim();
+        const maViTri = document.getElementById('positionSelect').value;
+
+        if (!maThe) {
+            showNotification('Vui lòng nhập mã thẻ!', 'error');
+            return;
+        }
+
+        if (!bienSo) {
+            showNotification('Vui lòng nhập biển số xe!', 'error');
+            return;
+        }
+
+        // Bắt buộc chụp hình
+        if (!capturedImageData) {
+            showNotification('Vui lòng chụp hình xe trước khi xử lý!', 'error');
+            document.getElementById('captureWarning').classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const response = await fetch('/Admin/VehicleEntry/QuetThe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    maThe: maThe,
+                    bienSo: bienSo,
+                    hinhAnh: capturedImageData,
+                    maViTri: maViTri ? parseInt(maViTri) : null
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification(data.message, 'success');
+                resetForm();
+                refreshVehiclesList();
+                refreshStats();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (err) {
+            showNotification('Lỗi kết nối server!', 'error');
+        }
+    }
+
+    // Quick exit - cần chụp hình từ modal
+    async function quickExit(maThe, bienSo, hinhVao) {
+        // Hiển thị hình vào để so sánh
+        if (hinhVao) {
+            showImagesSection(hinhVao);
+        }
+
+        showNotification('Vui lòng chụp hình xe ra và nhấn nút XE RA!', 'error');
+        
+        // Điền thông tin vào form
+        document.getElementById('cardInput').value = maThe;
+        document.getElementById('plateInput').value = bienSo;
+        
+        // Kiểm tra thẻ
+        await checkCard();
+    }
+
+    // Refresh vehicles list
+    async function refreshVehiclesList() {
+        try {
+            const response = await fetch('/Admin/VehicleEntry/GetXeDangTrongBai');
+            const data = await response.json();
+
+            const tbody = document.getElementById('vehiclesTableBody');
+            tbody.innerHTML = '';
+
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-mathe', item.maThe);
+                
+                const hinhVaoHtml = item.hinhAnhVao 
+                    ? `<img src="${item.hinhAnhVao}" alt="Hình vào" class="vehicle-image-thumb" onclick="showImageModal('${item.hinhAnhVao}', 'Xe vào', '${item.bienSoVao}', '${item.thoiGianVao ? new Date(item.thoiGianVao).toLocaleString('vi-VN') : ''}')" />`
+                    : '<span style="color: var(--light-gray); font-size: 12px;">Không có</span>';
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${item.maThe}</strong></td>
+                    <td>${item.bienSoVao || ''}</td>
+                    <td>${hinhVaoHtml}</td>
+                    <td>${item.tenLoaiXe || ''}</td>
+                    <td>${item.thoiGianVao ? new Date(item.thoiGianVao).toLocaleString('vi-VN') : ''}</td>
+                    <td class="time-elapsed" data-start="${item.thoiGianVao}">--:--:--</td>
+                    <td>${item.tenViTri || ''}</td>
+                    <td>
+                        <button class="btn-secondary-admin btn-sm btn-quick-out" data-mathe="${item.maThe}" data-bienso="${item.bienSoVao}" data-hinhvao="${item.hinhAnhVao || ''}">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('vehiclesCount').textContent = `${data.length} xe`;
+            attachQuickOutHandlers();
+        } catch (err) {
+            console.error('Error refreshing list:', err);
+        }
+    }
+
+    // Refresh stats
+    async function refreshStats() {
+        try {
+            const response = await fetch('/Admin/VehicleEntry/GetThongKe');
+            const data = await response.json();
+
+            document.getElementById('statXeDangGui').textContent = data.tongXeDangGui;
+            document.getElementById('statViTriTrong').textContent = `${data.tongViTriTrong} / ${data.tongViTri}`;
+            document.getElementById('statTongThu').textContent = new Intl.NumberFormat('vi-VN').format(data.tongThuHomNay) + ' đ';
+        } catch (err) {
+            console.error('Error refreshing stats:', err);
+        }
+    }
+
+    // Reset form
+    function resetForm() {
+        document.getElementById('cardInput').value = '';
+        document.getElementById('plateInput').value = '';
+        document.getElementById('positionSelect').value = '';
+        document.getElementById('cardInfo').classList.remove('show');
+        document.getElementById('btnXeVao').disabled = true;
+        document.getElementById('btnXeRa').disabled = true;
+        document.getElementById('captureWarning').classList.add('hidden');
+        currentCardInfo = null;
+        currentAction = null;
+        entryImageUrl = null;
+        retakePhoto();
+        hideImagesSection();
+        document.getElementById('cardInput').focus();
+    }
+
+    // Show notification
+    function showNotification(message, type) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type} show`;
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    // Show image modal
+    function showImageModal(imageSrc, title, bienSo, time) {
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalInfo = document.getElementById('modalInfo');
+
+        modalImage.src = imageSrc;
+        modalInfo.innerHTML = `<strong>${title}</strong>`;
+        if (bienSo) modalInfo.innerHTML += ` | Biển số: <strong>${bienSo}</strong>`;
+        if (time) modalInfo.innerHTML += ` | Thời gian: ${time}`;
+
+        modal.classList.add('show');
+    }
+
+    // Close image modal
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.remove('show');
+    }
+
+    // Update elapsed time
+    function updateElapsedTime() {
+        document.querySelectorAll('.time-elapsed').forEach(el => {
+            const startTime = el.getAttribute('data-start');
+            if (startTime) {
+                const start = new Date(startTime);
+                const now = new Date();
+                const diff = now - start;
+
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+
+                el.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        });
+    }
+
+    // Attach quick out handlers
+    function attachQuickOutHandlers() {
+        document.querySelectorAll('.btn-quick-out').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const maThe = this.getAttribute('data-mathe');
+                const bienSo = this.getAttribute('data-bienso');
+                const hinhVao = this.getAttribute('data-hinhvao');
+                quickExit(maThe, bienSo, hinhVao);
+            });
+        });
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function () {
+        initCamera();
+
+        document.getElementById('btnCapture').addEventListener('click', captureImage);
+        document.getElementById('btnRetake').addEventListener('click', retakePhoto);
+        document.getElementById('btnCheckCard').addEventListener('click', checkCard);
+
+        document.getElementById('cardInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                checkCard();
+            }
+        });
+
+        document.getElementById('btnXeVao').addEventListener('click', () => processVehicle('VAO'));
+        document.getElementById('btnXeRa').addEventListener('click', () => processVehicle('RA'));
+
+        attachQuickOutHandlers();
+
+        // Close modal on overlay click
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // Update elapsed time every second
+        setInterval(updateElapsedTime, 1000);
+        updateElapsedTime();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            refreshVehiclesList();
+            refreshStats();
+        }, 30000);
+    });
+</script>
+}

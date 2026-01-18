@@ -17,6 +17,8 @@ public partial class LuotGui
 
     public string? BienSoVao { get; set; }
 
+    public string? HinhAnhVao { get; set; }
+
     public int? MaViTri { get; set; }
 
     public int? MaCaRa { get; set; }
@@ -24,6 +26,8 @@ public partial class LuotGui
     public DateTime? ThoiGianRa { get; set; }
 
     public string? BienSoRa { get; set; }
+
+    public string? HinhAnhRa { get; set; }
 
     public decimal? TongTien { get; set; }
 

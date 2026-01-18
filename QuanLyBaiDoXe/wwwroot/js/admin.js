@@ -30,11 +30,11 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             
             // Close other submenus (optional - for accordion style)
-            submenuItems.forEach(function (otherItem) {
-                if (otherItem !== item) {
-                    otherItem.classList.remove('open');
-                }
-            });
+            //submenuItems.forEach(function (otherItem) {
+            //    if (otherItem !== item) {
+            //        otherItem.classList.remove('open');
+            //    }
+            //});
 
             // Toggle current submenu
             item.classList.toggle('open');

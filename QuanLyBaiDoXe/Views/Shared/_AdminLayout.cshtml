@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản Lý Bãi Đỗ Xe</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <!-- Main Content -->
+        <div class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Tìm kiếm..." />
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-icon-btn" title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">5</span>
+                    </button>
+                    <button class="header-icon-btn" title="Tin nhắn">
+                        <i class="fas fa-envelope"></i>
+                        <span class="badge">2</span>
+                    </button>
+                    <div class="header-user dropdown">
+                        <div class="header-user-avatar">
+                            <span>A</span>
+                        </div>
+                        <div class="header-user-info">
+                            <div class="header-user-name">Admin</div>
+                            <div class="header-user-role">Quản trị viên</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="admin-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

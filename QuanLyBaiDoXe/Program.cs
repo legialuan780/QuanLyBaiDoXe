@@ -1,7 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+using QuanLyBaiDoXe.Models.EF;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//add connection string
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<QuanLyBaiDoXeContext>(options => options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
+//
 
 var app = builder.Build();
 
@@ -19,6 +27,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+// Route cho Area Admin
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

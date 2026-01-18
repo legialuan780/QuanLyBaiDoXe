@@ -1,0 +1,274 @@
+﻿@* Admin Sidebar Partial View *@
+
+<aside class="admin-sidebar">
+    <!-- Brand -->
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-parking"></i>
+        </div>
+        <span class="sidebar-brand-text">BÃI ĐỖ XE</span>
+    </div>
+
+    <!-- Menu -->
+    <div class="sidebar-menu">
+        <!-- Dashboard -->
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })" class="sidebar-nav-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Nhóm 1: Nghiệp vụ Vận hành -->
+        <div class="menu-category">Vận hành</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Soát vé xe vào</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("CheckIn", "Operation", new { area = "Admin" })" class="sidebar-nav-link">Nhận xe vào</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("LaneMonitor", "Operation", new { area = "Admin" })" class="sidebar-nav-link">Giám sát làn xe</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Soát vé xe ra</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("CheckOut", "Operation", new { area = "Admin" })" class="sidebar-nav-link">Trả xe ra</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("PaymentConfirm", "Operation", new { area = "Admin" })" class="sidebar-nav-link">Xác nhận thanh toán</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Xử lý sự cố</span>
+                    <span class="badge">3</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("LostCard", "Exception", new { area = "Admin" })" class="sidebar-nav-link">Xe mất thẻ</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("ManualEntry", "Exception", new { area = "Admin" })" class="sidebar-nav-link">Nhập tay biển số</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("ForceOpen", "Exception", new { area = "Admin" })" class="sidebar-nav-link">Mở Barrier khẩn cấp</a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Nhóm 2: Quản lý Thẻ & Khách hàng -->
+        <div class="menu-category">Thẻ & Khách hàng</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-id-card"></i>
+                    <span>Vé tháng</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Index", "Subscription", new { area = "Admin" })" class="sidebar-nav-link">Danh sách vé tháng</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Create", "Subscription", new { area = "Admin" })" class="sidebar-nav-link">Đăng ký mới</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Renew", "Subscription", new { area = "Admin" })" class="sidebar-nav-link">Gia hạn vé</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Expiring", "Subscription", new { area = "Admin" })" class="sidebar-nav-link">Sắp hết hạn</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Kho thẻ</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Index", "Card", new { area = "Admin" })" class="sidebar-nav-link">Danh sách thẻ</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Import", "Card", new { area = "Admin" })" class="sidebar-nav-link">Nhập thẻ mới</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Locked", "Card", new { area = "Admin" })" class="sidebar-nav-link">Thẻ bị khóa</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "Customer", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Khách hàng</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Nhóm 3: Cấu hình & Tài chính -->
+        <div class="menu-category">Tài chính</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Bảng giá</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Index", "Pricing", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình giá</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("VehicleTypes", "Pricing", new { area = "Admin" })" class="sidebar-nav-link">Loại xe</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("TimeBlocks", "Pricing", new { area = "Admin" })" class="sidebar-nav-link">Block thời gian</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Ca làm việc</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Index", "Shift", new { area = "Admin" })" class="sidebar-nav-link">Danh sách ca</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Handover", "Shift", new { area = "Admin" })" class="sidebar-nav-link">Giao/Nhận ca</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Reconcile", "Shift", new { area = "Admin" })" class="sidebar-nav-link">Đối soát doanh thu</a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Nhóm 4: Báo cáo & Thống kê -->
+        <div class="menu-category">Báo cáo</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Báo cáo doanh thu</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Daily", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo ngày</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Monthly", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo tháng</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("ByVehicle", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo loại xe</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("ByGate", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo cổng</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Traffic", "Report", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-car"></i>
+                    <span>Lưu lượng xe</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Anomaly", "Report", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-flag"></i>
+                    <span>Bất thường</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("History", "Report", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch sử ra vào</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Nhóm 5: Smart Parking -->
+        <div class="menu-category">Đỗ xe thông minh</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("SlotMonitor", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-th-large"></i>
+                    <span>Chỗ trống</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Guidance", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-directions"></i>
+                    <span>Dẫn hướng đỗ xe</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Booking", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Đặt chỗ trước</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Nhóm 6: Cài đặt -->
+        <div class="menu-category">Hệ thống</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item has-submenu">
+                <a href="#" class="sidebar-nav-link">
+                    <i class="fas fa-cogs"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("General", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cài đặt chung</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Gate", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình cổng</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Camera", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình camera</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("Barrier", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình barrier</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "User", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "Role", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Phân quyền</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "Log", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Nhật ký hệ thống</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>
+
+<!-- Overlay for mobile -->
+<div class="sidebar-overlay"></div>

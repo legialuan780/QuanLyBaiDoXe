@@ -1,0 +1,266 @@
+﻿@{
+    ViewData["Title"] = "Tổng quan";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Tổng quan</h1>
+        <div class="breadcrumb">
+            <a href="#">Trang chủ</a>
+            <span>/</span>
+            <span>Tổng quan</span>
+        </div>
+    </div>
+    <div>
+        <button class="btn-primary-admin">
+            <i class="fas fa-plus"></i>
+            Thêm mới
+        </button>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>156</h3>
+            <p>Xe trong bãi</p>
+        </div>
+        <div class="stat-card-trend up">
+            <i class="fas fa-arrow-up"></i>
+            12.5%
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-sign-in-alt"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>324</h3>
+            <p>Xe vào hôm nay</p>
+        </div>
+        <div class="stat-card-trend up">
+            <i class="fas fa-arrow-up"></i>
+            8.2%
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>298</h3>
+            <p>Xe ra hôm nay</p>
+        </div>
+        <div class="stat-card-trend down">
+            <i class="fas fa-arrow-down"></i>
+            3.1%
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>15.2M</h3>
+            <p>Doanh thu hôm nay</p>
+        </div>
+        <div class="stat-card-trend up">
+            <i class="fas fa-arrow-up"></i>
+            18.7%
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Chart Card -->
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Thống kê doanh thu</h3>
+                <div>
+                    <button class="btn-secondary-admin btn-sm">Tháng</button>
+                    <button class="btn-primary-admin btn-sm">Tuần</button>
+                </div>
+            </div>
+            <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(33, 166, 145, 0.1) 0%, rgba(33, 166, 145, 0) 100%); border-radius: 8px;">
+                <p style="color: var(--light-gray);">Biểu đồ doanh thu sẽ hiển thị ở đây</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-lg-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Tình trạng bãi đỗ</h3>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Xe máy</span>
+                    <span>85/120</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" style="width: 70%; background-color: #21A691;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Ô tô 4 chỗ</span>
+                    <span>42/60</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" style="width: 70%; background-color: #87DF2C;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Ô tô 7 chỗ</span>
+                    <span>18/25</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" style="width: 72%; background-color: #ff9800;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Xe tải</span>
+                    <span>11/15</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" style="width: 73%; background-color: #e74c3c;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Vé tháng sắp hết hạn</h3>
+                <a href="#" style="color: #21A691; font-size: 13px; text-decoration: none;">Xem tất cả</a>
+            </div>
+            <div class="d-flex align-items-center mb-3">
+                <div style="width: 40px; height: 40px; background-color: rgba(231, 76, 60, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                    <i class="fas fa-motorcycle" style="color: #e74c3c;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500;">59A1-12345</div>
+                    <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: 25/01/2025</div>
+                </div>
+                <span class="status-badge danger">2 ngày</span>
+            </div>
+            <div class="d-flex align-items-center mb-3">
+                <div style="width: 40px; height: 40px; background-color: rgba(255, 152, 0, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                    <i class="fas fa-car" style="color: #ff9800;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500;">30A-56789</div>
+                    <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: 28/01/2025</div>
+                </div>
+                <span class="status-badge warning">5 ngày</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <div style="width: 40px; height: 40px; background-color: rgba(33, 166, 145, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                    <i class="fas fa-motorcycle" style="color: #21A691;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500;">29B1-98765</div>
+                    <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: 30/01/2025</div>
+                </div>
+                <span class="status-badge info">7 ngày</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Table -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Hoạt động gần đây</h3>
+        <div>
+            <button class="btn-secondary-admin">
+                <i class="fas fa-filter"></i>
+                Lọc
+            </button>
+            <button class="btn-secondary-admin">
+                <i class="fas fa-download"></i>
+                Xuất Excel
+            </button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Biển số</th>
+                    <th>Loại xe</th>
+                    <th>Thời gian vào</th>
+                    <th>Thời gian ra</th>
+                    <th>Phí gửi</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>59A1-12345</strong></td>
+                    <td><i class="fas fa-motorcycle me-2"></i>Xe máy</td>
+                    <td>23/01/2025 08:30</td>
+                    <td>23/01/2025 17:45</td>
+                    <td>15,000 đ</td>
+                    <td><span class="status-badge success">Đã thanh toán</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>30A-56789</strong></td>
+                    <td><i class="fas fa-car me-2"></i>Ô tô 4 chỗ</td>
+                    <td>23/01/2025 09:15</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><span class="status-badge info">Đang gửi</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>29B1-98765</strong></td>
+                    <td><i class="fas fa-motorcycle me-2"></i>Xe máy</td>
+                    <td>23/01/2025 07:00</td>
+                    <td>23/01/2025 12:30</td>
+                    <td>10,000 đ</td>
+                    <td><span class="status-badge success">Đã thanh toán</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>51G-11111</strong></td>
+                    <td><i class="fas fa-truck me-2"></i>Xe tải</td>
+                    <td>23/01/2025 06:45</td>
+                    <td>23/01/2025 18:00</td>
+                    <td>50,000 đ</td>
+                    <td><span class="status-badge warning">Vé tháng</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>30E-22222</strong></td>
+                    <td><i class="fas fa-car me-2"></i>Ô tô 7 chỗ</td>
+                    <td>23/01/2025 10:00</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><span class="status-badge info">Đang gửi</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

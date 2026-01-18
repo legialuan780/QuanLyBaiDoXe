@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Models.EF;
+using QuanLyBaiDoXe.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +10,10 @@ builder.Services.AddControllersWithViews();
 //add connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<QuanLyBaiDoXeContext>(options => options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
-//
+
+// Register services
+builder.Services.AddScoped<IVehicleEntryService, VehicleEntryService>();
+builder.Services.AddScoped<ICardService, CardService>();
 
 var app = builder.Build();
 

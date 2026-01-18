@@ -355,3 +355,31 @@ VALUES (
     1500000,
     1
 );
+
+
+-- Script thêm cột HinhAnhVao và HinhAnhRa vào bảng LuotGui
+-- Chạy script này trong SQL Server Management Studio hoặc Azure Data Studio
+
+-- Thêm cột HinhAnhVao
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[LuotGui]') AND name = 'HinhAnhVao')
+BEGIN
+    ALTER TABLE [dbo].[LuotGui] ADD [HinhAnhVao] VARCHAR(500) NULL;
+    PRINT N'Đã thêm cột HinhAnhVao';
+END
+ELSE
+BEGIN
+    PRINT N'Cột HinhAnhVao đã tồn tại';
+END
+
+-- Thêm cột HinhAnhRa
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[LuotGui]') AND name = 'HinhAnhRa')
+BEGIN
+    ALTER TABLE [dbo].[LuotGui] ADD [HinhAnhRa] VARCHAR(500) NULL;
+    PRINT N'Đã thêm cột HinhAnhRa';
+END
+ELSE
+BEGIN
+    PRINT N'Cột HinhAnhRa đã tồn tại';
+END
+
+PRINT N'Hoàn tất cập nhật bảng LuotGui';

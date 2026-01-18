@@ -193,6 +193,12 @@ public partial class QuanLyBaiDoXeContext : DbContext
             entity.Property(e => e.BienSoVao)
                 .HasMaxLength(20)
                 .IsUnicode(false);
+            entity.Property(e => e.HinhAnhVao)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.HinhAnhRa)
+                .HasMaxLength(500)
+                .IsUnicode(false);
             entity.Property(e => e.MaThe)
                 .HasMaxLength(50)
                 .IsUnicode(false);

@@ -14,7 +14,7 @@
         <!-- Dashboard -->
         <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
-                <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })" class="sidebar-nav-link active">
+                <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })" class="sidebar-nav-link">
                     <i class="fas fa-home"></i>
                     <span>Tổng quan</span>
                 </a>
@@ -26,11 +26,25 @@
         <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
                 <a href="@Url.Action("Index", "VehicleEntry", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-car-side"></i>
-                    <span>Quản lý xe vào ra</span>
+                    <i class="fas fa-video"></i>
+                    <span>Giám sát cổng</span>
                 </a>
             </li>
-            <li class="sidebar-nav-item has-submenu">
+
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "VehicleHistory", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch sử gửi xe</span>
+                </a>
+            </li>
+
+          @*   <li class="sidebar-nav-item">
+                <a href="@Url.Action("", "VehicleEntry", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-video"></i>
+                    <span>Danh sách xe vào ra</span>
+                </a>
+            </li> *@
+            @* <li class="sidebar-nav-item has-submenu">
                 <a href="#" class="sidebar-nav-link">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Soát vé xe vào</span>
@@ -75,18 +89,18 @@
                         <a href="@Url.Action("ForceOpen", "Exception", new { area = "Admin" })" class="sidebar-nav-link">Mở Barrier khẩn cấp</a>
                     </li>
                 </ul>
-            </li>
+            </li> *@
         </ul>
 
         <!-- Nhóm 2: Quản lý Thẻ & Khách hàng -->
         <div class="menu-category">Thẻ & Khách hàng</div>
         <ul class="sidebar-nav">
-            <li class="sidebar-nav-item has-submenu">
-                <a href="#" class="sidebar-nav-link">
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("Index", "Card")" class="sidebar-nav-link">
                     <i class="fas fa-id-card"></i>
-                    <span>Vé tháng</span>
+                    <span>Danh sách thẻ</span>
                 </a>
-                <ul class="sidebar-submenu">
+                @* <ul class="sidebar-submenu">
                     <li class="sidebar-nav-item">
                         <a href="@Url.Action("Index", "Subscription", new { area = "Admin" })" class="sidebar-nav-link">Danh sách vé tháng</a>
                     </li>
@@ -99,9 +113,9 @@
                     <li class="sidebar-nav-item">
                         <a href="@Url.Action("Expiring", "Subscription", new { area = "Admin" })" class="sidebar-nav-link">Sắp hết hạn</a>
                     </li>
-                </ul>
+                </ul> *@
             </li>
-            <li class="sidebar-nav-item has-submenu">
+            @* <li class="sidebar-nav-item has-submenu">
                 <a href="#" class="sidebar-nav-link">
                     <i class="fas fa-credit-card"></i>
                     <span>Kho thẻ</span>
@@ -117,7 +131,7 @@
                         <a href="@Url.Action("Locked", "Card", new { area = "Admin" })" class="sidebar-nav-link">Thẻ bị khóa</a>
                     </li>
                 </ul>
-            </li>
+            </li> *@
             <li class="sidebar-nav-item">
                 <a href="@Url.Action("Index", "Customer", new { area = "Admin" })" class="sidebar-nav-link">
                     <i class="fas fa-users"></i>

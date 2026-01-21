@@ -42,21 +42,42 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Set active state based on current URL
-    const currentPath = window.location.pathname;
+    const currentPath = window.location.pathname.toLowerCase();
     const navLinks = document.querySelectorAll('.sidebar-nav-link');
+
+    //remove all existing active class first
+    navLinks.forEach(function (link) {
+        link.classList.remove('active');
+    });
+
+    // find the best matching link
+    let bestMatch = null;
+    let bestMatchLength = 0;
 
     navLinks.forEach(function (link) {
         const href = link.getAttribute('href');
-        if (href && currentPath.includes(href) && href !== '/') {
-            link.classList.add('active');
+        if (href && href!=='#') {
+            const hrefLower = href.toLowerCase();
             
-            // Open parent submenu if exists
-            const parentSubmenu = link.closest('.sidebar-nav-item.has-submenu');
-            if (parentSubmenu) {
-                parentSubmenu.classList.add('open');
+            //check for exact match or if curretn path start with href
+            if (currentPath === hrefLower ||
+                (currentPath.startsWith(hrefLower) && hrefLower.length > bestMatchLength)) {
+                bestMatch = link;
+                bestMatchLength = hrefLower.length;
             }
         }
     });
+
+    // Apply active class to best match
+    if (bestMatch) {
+        bestMatch.classList.add('active');
+
+        // Open parent submenu if exists
+        const parentSubmenu = bestMatch.closest('.sidebar-nav-item.has-submenu');
+        if (parentSubmenu) {
+            parentSubmenu.classList.add('open');
+        }
+    }
 
     // Search functionality placeholder
     const searchInput = document.querySelector('.header-search input');

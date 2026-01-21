@@ -2,420 +2,13 @@
 @{
     ViewData["Title"] = "Quản lý thẻ xe";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    var cardDtos = ViewBag.CardDtos as List<QuanLyBaiDoXe.Areas.Admin.ViewModels.CardDto> ?? new List<QuanLyBaiDoXe.Areas.Admin.ViewModels.CardDto>();
 }
 
 @section Styles {
-<style>
-    .filter-section {
-        background: var(--white);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-    .filter-row {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        align-items: flex-end;
-    }
-
-    .filter-group {
-        flex: 1;
-        min-width: 180px;
-    }
-
-    .filter-group label {
-        display: block;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--dark-teal);
-        margin-bottom: 5px;
-    }
-
-    .filter-group input,
-    .filter-group select {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #e5e9f2;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
-    .filter-group input:focus,
-    .filter-group select:focus {
-        outline: none;
-        border-color: var(--primary-teal);
-    }
-
-    .filter-buttons {
-        display: flex;
-        gap: 10px;
-    }
-
-    .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
-    }
-
-    .card-item {
-        background: var(--white);
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        transition: all 0.2s;
-        position: relative;
-        border-left: 4px solid var(--primary-teal);
-    }
-
-    .card-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-item.locked {
-        border-left-color: #e74c3c;
-        opacity: 0.8;
-    }
-
-    .card-item.in-use {
-        border-left-color: #ff9800;
-    }
-
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 15px;
-    }
-
-    .card-code {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--dark-bg);
-        font-family: 'Consolas', monospace;
-    }
-
-    .card-badges {
-        display: flex;
-        gap: 5px;
-    }
-
-    .card-type-badge {
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 500;
-    }
-
-    .card-type-badge.monthly {
-        background: rgba(33, 166, 145, 0.15);
-        color: var(--primary-teal);
-    }
-
-    .card-type-badge.single {
-        background: rgba(255, 152, 0, 0.15);
-        color: #ff9800;
-    }
-
-    .card-status {
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 500;
-    }
-
-    .card-status.active {
-        background: rgba(135, 223, 44, 0.15);
-        color: #5cb85c;
-    }
-
-    .card-status.locked {
-        background: rgba(231, 76, 60, 0.15);
-        color: #e74c3c;
-    }
-
-    .card-status.in-use {
-        background: rgba(255, 152, 0, 0.15);
-        color: #ff9800;
-    }
-
-    .card-info {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        font-size: 13px;
-        color: var(--light-gray);
-    }
-
-    .card-info-row {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .card-info-label {
-        color: var(--light-gray);
-    }
-
-    .card-info-value {
-        color: var(--dark-bg);
-        font-weight: 500;
-    }
-
-    .card-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #e5e9f2;
-    }
-
-    .card-actions button {
-        flex: 1;
-        padding: 8px;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        transition: all 0.2s;
-    }
-
-    .btn-edit {
-        background: rgba(33, 166, 145, 0.15);
-        color: var(--primary-teal);
-    }
-
-    .btn-edit:hover {
-        background: var(--primary-teal);
-        color: white;
-    }
-
-    .btn-lock {
-        background: rgba(255, 152, 0, 0.15);
-        color: #ff9800;
-    }
-
-    .btn-lock:hover {
-        background: #ff9800;
-        color: white;
-    }
-
-    .btn-unlock {
-        background: rgba(135, 223, 44, 0.15);
-        color: #5cb85c;
-    }
-
-    .btn-unlock:hover {
-        background: #5cb85c;
-        color: white;
-    }
-
-    .btn-delete {
-        background: rgba(231, 76, 60, 0.15);
-        color: #e74c3c;
-    }
-
-    .btn-delete:hover {
-        background: #e74c3c;
-        color: white;
-    }
-
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-overlay.show {
-        display: flex;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 12px;
-        padding: 25px;
-        width: 90%;
-        max-width: 500px;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #e5e9f2;
-    }
-
-    .modal-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--dark-bg);
-    }
-
-    .modal-close {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: var(--light-gray);
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-group label {
-        display: block;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--dark-teal);
-        margin-bottom: 5px;
-    }
-
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #e5e9f2;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-        outline: none;
-        border-color: var(--primary-teal);
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
-
-    .modal-footer {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #e5e9f2;
-    }
-
-    .modal-footer button {
-        flex: 1;
-        padding: 12px;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    .btn-cancel {
-        background: #f5f7fa;
-        color: var(--dark-teal);
-    }
-
-    .btn-submit {
-        background: var(--primary-teal);
-        color: white;
-    }
-
-    .notification {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        padding: 15px 25px;
-        border-radius: 8px;
-        color: white;
-        font-weight: 500;
-        z-index: 99999;
-        display: none;
-        animation: slideIn 0.3s ease;
-    }
-
-    .notification.success {
-        background: linear-gradient(135deg, #27ae60, #2ecc71);
-    }
-
-    .notification.error {
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
-    }
-
-    .notification.show {
-        display: block;
-    }
-
-    .tabs {
-        display: flex;
-        gap: 5px;
-        margin-bottom: 20px;
-    }
-
-    .tab-btn {
-        padding: 10px 20px;
-        border: none;
-        background: #f5f7fa;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--dark-teal);
-        transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-        background: var(--primary-teal);
-        color: white;
-    }
-
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--light-gray);
-    }
-
-    .empty-state i {
-        font-size: 48px;
-        margin-bottom: 15px;
-    }
-
-    @@keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-</style>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/card-management.css" asp-append-version="true" />
 }
 
 <div class="page-header">
@@ -428,10 +21,10 @@
         </div>
     </div>
     <div style="display: flex; gap: 10px;">
-        <button class="btn-secondary-admin" onclick="openModal('importModal')">
+        <button class="btn-secondary-admin" onclick="CardManager.openModal('importModal')">
             <i class="fas fa-file-import"></i> Nhập nhiều thẻ
         </button>
-        <button class="btn-primary-admin" onclick="openModal('addModal')">
+        <button class="btn-primary-admin" onclick="CardManager.openModal('addModal')">
             <i class="fas fa-plus"></i> Thêm thẻ mới
         </button>
     </div>
@@ -480,16 +73,16 @@
 <!-- Bộ lọc -->
 <div class="filter-section">
     <form id="filterForm" class="filter-row">
-        <div class="filter-group">
+        @* <div class="filter-group">
             <label>Tìm kiếm</label>
-            <input type="text" id="searchKeyword" name="keyword" placeholder="Nhập mã thẻ..." value="@Model.SearchKeyword" />
-        </div>
+            <input type="text" id="searchKeyword" name="keyword" placeholder="Nhập mã thẻ..." />
+        </div> *@
         <div class="filter-group">
             <label>Loại thẻ</label>
             <select id="filterLoaiThe" name="loaiThe">
                 <option value="">Tất cả</option>
-                <option value="0" selected="@(Model.FilterLoaiThe == 0)">Vé lượt</option>
-                <option value="1" selected="@(Model.FilterLoaiThe == 1)">Vé tháng</option>
+                <option value="0">Vé lượt</option>
+                <option value="1">Vé tháng</option>
             </select>
         </div>
         <div class="filter-group">
@@ -498,7 +91,7 @@
                 <option value="">Tất cả</option>
                 @foreach (var loaiXe in Model.VehicleTypes)
                 {
-                    <option value="@loaiXe.MaLoaiXe" selected="@(Model.FilterLoaiXe == loaiXe.MaLoaiXe)">@loaiXe.TenLoaiXe</option>
+                    <option value="@loaiXe.MaLoaiXe">@loaiXe.TenLoaiXe</option>
                 }
             </select>
         </div>
@@ -506,15 +99,15 @@
             <label>Trạng thái</label>
             <select id="filterTrangThai" name="trangThai">
                 <option value="">Tất cả</option>
-                <option value="1" selected="@(Model.FilterTrangThai == 1)">Hoạt động</option>
-                <option value="0" selected="@(Model.FilterTrangThai == 0)">Đã khóa</option>
+                <option value="1">Hoạt động</option>
+                <option value="0">Đã khóa</option>
             </select>
         </div>
         <div class="filter-buttons">
             <button type="submit" class="btn-primary-admin">
                 <i class="fas fa-search"></i> Lọc
             </button>
-            <button type="button" class="btn-secondary-admin" onclick="resetFilter()">
+            <button type="button" class="btn-secondary-admin" id="btnResetFilter">
                 <i class="fas fa-redo"></i>
             </button>
         </div>
@@ -525,77 +118,27 @@
 <div class="admin-card">
     <div class="admin-card-header">
         <h3 class="admin-card-title">
-            <i class="fas fa-list"></i> Danh sách thẻ (<span id="cardCount">@cardDtos.Count</span>)
+            <i class="fas fa-list"></i> Danh sách thẻ
         </h3>
     </div>
 
-    @if (cardDtos.Any())
-    {
-        <div class="cards-grid" id="cardsGrid">
-            @foreach (var card in cardDtos)
-            {
-                var itemClass = card.TrangThai == 0 ? "locked" : (card.DangSuDung ? "in-use" : "");
-                <div class="card-item @itemClass" data-mathe="@card.MaThe">
-                    <div class="card-header">
-                        <span class="card-code">@card.MaThe</span>
-                        <div class="card-badges">
-                            <span class="card-type-badge @(card.LoaiThe == 1 ? "monthly" : "single")">
-                                @card.TenLoaiThe
-                            </span>
-                        </div>
-                    </div>
-                    <div class="card-info">
-                        <div class="card-info-row">
-                            <span class="card-info-label">Loại xe:</span>
-                            <span class="card-info-value">@(card.TenLoaiXe ?? "Chưa xác định")</span>
-                        </div>
-                        <div class="card-info-row">
-                            <span class="card-info-label">Trạng thái:</span>
-                            @if (card.DangSuDung)
-                            {
-                                <span class="card-status in-use">Đang sử dụng</span>
-                            }
-                            else if (card.TrangThai == 1)
-                            {
-                                <span class="card-status active">Hoạt động</span>
-                            }
-                            else
-                            {
-                                <span class="card-status locked">Đã khóa</span>
-                            }
-                        </div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn-edit" onclick="editCard('@card.MaThe')" title="Sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        @if (card.TrangThai == 1)
-                        {
-                            <button class="btn-lock" onclick="lockCard('@card.MaThe')" title="Khóa" @(card.DangSuDung ? "disabled" : "")>
-                                <i class="fas fa-lock"></i>
-                            </button>
-                        }
-                        else
-                        {
-                            <button class="btn-unlock" onclick="unlockCard('@card.MaThe')" title="Mở khóa">
-                                <i class="fas fa-unlock"></i>
-                            </button>
-                        }
-                        <button class="btn-delete" onclick="deleteCard('@card.MaThe')" title="Xóa" @(card.DangSuDung ? "disabled" : "")>
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="empty-state">
-            <i class="fas fa-inbox"></i>
-            <p>Không có thẻ nào</p>
-        </div>
-    }
+    <div class="admin-card-body">
+        <table id="cardsTable" class="table table-hover" style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th>Mã thẻ</th>
+                    <th>Loại xe</th>
+                    <th style="width: 100px;">Loại thẻ</th>
+                    <th style="width: 130px;">Trạng thái</th>
+                    <th style="width: 150px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- DataTables will populate this -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Modal Thêm thẻ -->
@@ -603,7 +146,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Thêm thẻ mới</h3>
-            <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+            <button class="modal-close" onclick="CardManager.closeModal('addModal')">&times;</button>
         </div>
         <form id="addCardForm">
             <div class="form-group">
@@ -630,7 +173,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal('addModal')">Hủy</button>
+                <button type="button" class="btn-cancel" onclick="CardManager.closeModal('addModal')">Hủy</button>
                 <button type="submit" class="btn-submit">Thêm thẻ</button>
             </div>
         </form>
@@ -642,7 +185,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Nhập nhiều thẻ</h3>
-            <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+            <button class="modal-close" onclick="CardManager.closeModal('importModal')">&times;</button>
         </div>
         <form id="importCardForm">
             <div class="form-group">
@@ -684,7 +227,7 @@
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal('importModal')">Hủy</button>
+                <button type="button" class="btn-cancel" onclick="CardManager.closeModal('importModal')">Hủy</button>
                 <button type="submit" class="btn-submit">Nhập thẻ</button>
             </div>
         </form>
@@ -696,7 +239,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Chỉnh sửa thẻ</h3>
-            <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            <button class="modal-close" onclick="CardManager.closeModal('editModal')">&times;</button>
         </div>
         <form id="editCardForm">
             <input type="hidden" id="editMaThe" name="maThe" />
@@ -730,251 +273,25 @@
                 </select>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Hủy</button>
+                <button type="button" class="btn-cancel" onclick="CardManager.closeModal('editModal')">Hủy</button>
                 <button type="submit" class="btn-submit">Cập nhật</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
 <!-- Notification -->
 <div class="notification" id="notification"></div>
 
 @section Scripts {
-<script>
-    // Open/Close Modal
-    function openModal(modalId) {
-        document.getElementById(modalId).classList.add('show');
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('show');
-    }
-
-    // Show notification
-    function showNotification(message, type) {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type} show`;
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, 3000);
-    }
-
-    // Reset filter
-    function resetFilter() {
-        document.getElementById('searchKeyword').value = '';
-        document.getElementById('filterLoaiThe').value = '';
-        document.getElementById('filterLoaiXe').value = '';
-        document.getElementById('filterTrangThai').value = '';
-        document.getElementById('filterForm').submit();
-    }
-
-    // Update preview for import
-    function updatePreview() {
-        const prefix = document.getElementById('importPrefix').value.toUpperCase() || 'THE';
-        const start = parseInt(document.getElementById('importStartNumber').value) || 1;
-        const quantity = parseInt(document.getElementById('importQuantity').value) || 1;
-        const end = start + quantity - 1;
-
-        document.getElementById('previewCards').textContent =
-            `${prefix}${start.toString().padStart(4, '0')} → ${prefix}${end.toString().padStart(4, '0')}`;
-    }
-
-    // Add card form
-    document.getElementById('addCardForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const data = {
-            maThe: document.getElementById('addMaThe').value.trim().toUpperCase(),
-            maLoaiXe: parseInt(document.getElementById('addMaLoaiXe').value),
-            loaiThe: parseInt(document.getElementById('addLoaiThe').value),
-            trangThai: 1
-        };
-
-        try {
-            const response = await fetch('/Admin/Card/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showNotification(result.message, 'success');
-                closeModal('addModal');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    });
-
-    // Import cards form
-    document.getElementById('importCardForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const data = {
-            prefix: document.getElementById('importPrefix').value.trim().toUpperCase(),
-            startNumber: parseInt(document.getElementById('importStartNumber').value),
-            quantity: parseInt(document.getElementById('importQuantity').value),
-            maLoaiXe: parseInt(document.getElementById('importMaLoaiXe').value),
-            loaiThe: parseInt(document.getElementById('importLoaiThe').value)
-        };
-
-        try {
-            const response = await fetch('/Admin/Card/CreateMultiple', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showNotification(result.message, 'success');
-                closeModal('importModal');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    });
-
-    // Edit card
-    async function editCard(maThe) {
-        try {
-            const response = await fetch(`/Admin/Card/GetCard?maThe=${encodeURIComponent(maThe)}`);
-            const result = await response.json();
-
-            if (result.success) {
-                document.getElementById('editMaThe').value = result.card.maThe;
-                document.getElementById('editMaTheDisplay').value = result.card.maThe;
-                document.getElementById('editMaLoaiXe').value = result.card.maLoaiXe || '';
-                document.getElementById('editLoaiThe').value = result.card.loaiThe || 0;
-                document.getElementById('editTrangThai').value = result.card.trangThai || 1;
-                openModal('editModal');
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    }
-
-    // Edit card form
-    document.getElementById('editCardForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const data = {
-            maThe: document.getElementById('editMaThe').value,
-            maLoaiXe: parseInt(document.getElementById('editMaLoaiXe').value),
-            loaiThe: parseInt(document.getElementById('editLoaiThe').value),
-            trangThai: parseInt(document.getElementById('editTrangThai').value)
-        };
-
-        try {
-            const response = await fetch('/Admin/Card/Update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showNotification(result.message, 'success');
-                closeModal('editModal');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    });
-
-    // Lock card
-    async function lockCard(maThe) {
-        if (!confirm(`Bạn có chắc muốn khóa thẻ ${maThe}?`)) return;
-
-        try {
-            const response = await fetch(`/Admin/Card/Lock?maThe=${encodeURIComponent(maThe)}`, {
-                method: 'POST'
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showNotification(result.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    }
-
-    // Unlock card
-    async function unlockCard(maThe) {
-        if (!confirm(`Bạn có chắc muốn mở khóa thẻ ${maThe}?`)) return;
-
-        try {
-            const response = await fetch(`/Admin/Card/Unlock?maThe=${encodeURIComponent(maThe)}`, {
-                method: 'POST'
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showNotification(result.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    }
-
-    // Delete card
-    async function deleteCard(maThe) {
-        if (!confirm(`Bạn có chắc muốn xóa thẻ ${maThe}? Hành động này không thể hoàn tác!`)) return;
-
-        try {
-            const response = await fetch(`/Admin/Card/Delete?maThe=${encodeURIComponent(maThe)}`, {
-                method: 'POST'
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showNotification(result.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    }
-
-    // Event listeners
-    document.addEventListener('DOMContentLoaded', function () {
-        // Update preview on input change
-        document.getElementById('importPrefix').addEventListener('input', updatePreview);
-        document.getElementById('importStartNumber').addEventListener('input', updatePreview);
-        document.getElementById('importQuantity').addEventListener('input', updatePreview);
-        updatePreview();
-
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function (e) {
-                if (e.target === this) {
-                    this.classList.remove('show');
-                }
-            });
-        });
-    });
-</script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Custom JS -->
+    <script src="~/js/card-management.js" asp-append-version="true"></script>
 }

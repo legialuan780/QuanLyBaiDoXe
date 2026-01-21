@@ -1,0 +1,259 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleHistoryViewModel
+@{
+    ViewData["Title"] = "Lịch sử gửi xe";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/vehicle-history.css" asp-append-version="true" />
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Lịch sử gửi xe</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Lịch sử gửi xe</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-secondary-admin" onclick="VehicleHistory.exportExcel()">
+            <i class="fas fa-file-excel"></i> Xuất Excel
+        </button>
+    </div>
+</div>
+
+<!-- Thống kê -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statTotal">@Model.TotalVehicles</h3>
+            <p>Tổng lượt gửi</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statInProgress">@Model.InProgressCount</h3>
+            <p>Đang gửi</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statCompleted">@Model.CompletedCount</h3>
+            <p>Đã lấy xe</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statRevenue">@Model.TotalRevenue.ToString("N0") đ</h3>
+            <p>Tổng doanh thu</p>
+        </div>
+    </div>
+</div>
+
+<!-- Bộ lọc -->
+<div class="filter-section">
+    <form id="filterForm" class="filter-row">
+        <div class="filter-group">
+            <label>Từ ngày</label>
+            <input type="date" id="filterFromDate" name="fromDate" />
+        </div>
+        <div class="filter-group">
+            <label>Đến ngày</label>
+            <input type="date" id="filterToDate" name="toDate" />
+        </div>
+        <div class="filter-group">
+            <label>Biển số / Mã thẻ</label>
+            <input type="text" id="filterKeyword" name="keyword" placeholder="Nhập biển số hoặc mã thẻ..." />
+        </div>
+        <div class="filter-group">
+            <label>Loại xe</label>
+            <select id="filterLoaiXe" name="loaiXe">
+                <option value="">Tất cả</option>
+                @foreach (var loaiXe in Model.VehicleTypes)
+                {
+                    <option value="@loaiXe.MaLoaiXe">@loaiXe.TenLoaiXe</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Trạng thái</label>
+            <select id="filterTrangThai" name="trangThai">
+                <option value="">Tất cả</option>
+                <option value="0">Đang gửi</option>
+                <option value="1">Đã lấy xe</option>
+            </select>
+        </div>
+        <div class="filter-buttons">
+            <button type="submit" class="btn-primary-admin">
+                <i class="fas fa-search"></i> Lọc
+            </button>
+            <button type="button" class="btn-secondary-admin" id="btnResetFilter">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Danh sách xe đã gửi -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">
+            <i class="fas fa-list"></i> Danh sách lượt gửi xe
+        </h3>
+    </div>
+
+    <div class="admin-card-body">
+        <table id="vehicleHistoryTable" class="table table-hover" style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th>Biển số vào</th>
+                    <th>Mã thẻ</th>
+                    <th>Loại xe</th>
+                    <th>Vị trí</th>
+                    <th>Thời gian vào</th>
+                    <th>Thời gian ra</th>
+                    <th>Thời gian gửi</th>
+                    <th>Số tiền</th>
+                    <th style="width: 120px;">Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- DataTables will populate this -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Chi tiết lượt gửi -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title">Chi tiết lượt gửi xe</h3>
+            <button class="modal-close" onclick="VehicleHistory.closeModal('detailModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+            <div class="detail-container">
+                <!-- Entry Info -->
+                <div class="detail-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-sign-in-alt"></i> Thông tin xe vào
+                    </h4>
+                    <div class="detail-content">
+                        <div class="image-container">
+                            <img id="imgVao" src="" alt="Hình ảnh xe vào" />
+                            <div class="image-placeholder" id="imgVaoPlaceholder">
+                                <i class="fas fa-image"></i>
+                                <span>Không có hình ảnh</span>
+                            </div>
+                        </div>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Biển số:</span>
+                                <span class="info-value" id="detailBienSoVao">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Thời gian:</span>
+                                <span class="info-value" id="detailThoiGianVao">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Mã thẻ:</span>
+                                <span class="info-value" id="detailMaThe">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exit Info -->
+                <div class="detail-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-sign-out-alt"></i> Thông tin xe ra
+                    </h4>
+                    <div class="detail-content">
+                        <div class="image-container">
+                            <img id="imgRa" src="" alt="Hình ảnh xe ra" />
+                            <div class="image-placeholder" id="imgRaPlaceholder">
+                                <i class="fas fa-image"></i>
+                                <span>Không có hình ảnh</span>
+                            </div>
+                        </div>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Biển số:</span>
+                                <span class="info-value" id="detailBienSoRa">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Thời gian:</span>
+                                <span class="info-value" id="detailThoiGianRa">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="detail-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Loại xe:</span>
+                        <span class="summary-value" id="detailLoaiXe">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Vị trí đỗ:</span>
+                        <span class="summary-value" id="detailViTri">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Khu vực:</span>
+                        <span class="summary-value" id="detailKhuVuc">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Thời gian gửi:</span>
+                        <span class="summary-value" id="detailThoiGianGui">--</span>
+                    </div>
+                    <div class="summary-item highlight">
+                        <span class="summary-label">Tổng tiền:</span>
+                        <span class="summary-value" id="detailTongTien">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Trạng thái:</span>
+                        <span class="summary-value" id="detailTrangThai">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="VehicleHistory.closeModal('detailModal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification"></div>
+
+@section Scripts {
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Custom JS -->
+    <script src="~/js/vehicle-history.js" asp-append-version="true"></script>
+}

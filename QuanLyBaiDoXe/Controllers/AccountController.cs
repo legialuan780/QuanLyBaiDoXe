@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace QuanLyBaiDoXe.Controllers
 {
@@ -15,10 +15,10 @@ namespace QuanLyBaiDoXe.Controllers
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError(string.Empty, "Email v� m?t kh?u l� b?t bu?c.");
+                ModelState.AddModelError(string.Empty, "Email và mật khẩu là bắt buộc.");
                 return View("~/Views/Account/Login.cshtml");
             }
-            TempData["LoginMessage"] = "??ng nh?p demo th�nh c�ng.";
+            TempData["LoginMessage"] = "Đăng nhập demo thành công.";
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
             return RedirectToAction("Index", "Home");
@@ -35,10 +35,10 @@ namespace QuanLyBaiDoXe.Controllers
         {
             if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError(string.Empty, "Vui l�ng nh?p ??y ?? th�ng tin.");
+                ModelState.AddModelError(string.Empty, "Vui lòng nhập đầy đủ thông tin.");
                 return View("~/Views/Account/Register.cshtml");
             }
-            TempData["RegisterMessage"] = "??ng k� demo th�nh c�ng. Vui l�ng ??ng nh?p.";
+            TempData["RegisterMessage"] = "Đăng ký demo thành công. Vui lòng đăng nhập.";
             return RedirectToAction("Login");
         }
     }

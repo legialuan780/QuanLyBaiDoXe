@@ -23,5 +23,23 @@ namespace QuanLyBaiDoXe.Controllers
                 return Redirect(returnUrl);
             return RedirectToAction("Index", "Home");
         }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View("~/Views/Account/Register.cshtml");
+        }
+
+        [HttpPost]
+        public IActionResult Register(string fullName, string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError(string.Empty, "Vui lòng nh?p ??y ?? thông tin.");
+                return View("~/Views/Account/Register.cshtml");
+            }
+            TempData["RegisterMessage"] = "??ng ký demo thành công. Vui lòng ??ng nh?p.";
+            return RedirectToAction("Login");
+        }
     }
 }

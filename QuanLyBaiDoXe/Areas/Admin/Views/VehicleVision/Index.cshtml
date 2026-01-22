@@ -1,0 +1,2302 @@
+﻿@{
+    ViewData["Title"] = "Giám sát bãi đỗ xe";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Giám sát bãi đỗ xe</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Giám sát bãi</span>
+        </div>
+    </div>
+    <div>
+        <button class="btn-secondary-admin" onclick="showOverviewMap()">
+            <i class="fas fa-map-marked-alt"></i>
+            Map tổng quan
+        </button>
+        <button class="btn-secondary-admin" onclick="refreshParkingLot()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
+        </button>
+        <button class="btn-primary-admin">
+            <i class="fas fa-expand"></i>
+            Toàn màn hình
+        </button>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-parking"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="totalSlots">80</h3>
+            <p>Tổng chỗ đỗ</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="availableSlots">38</h3>
+            <p>Chỗ trống</p>
+        </div>
+        <div class="stat-card-trend up">
+            <i class="fas fa-arrow-up"></i>
+            47.5%
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="occupiedSlots">39</h3>
+            <p>Đang sử dụng</p>
+        </div>
+        <div class="stat-card-trend">
+            <i class="fas fa-minus"></i>
+            48.7%
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon red">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="reservedSlots">3</h3>
+            <p>Đã đặt / Bảo trì</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Parking Lot Map -->
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Sơ đồ bãi đỗ xe</h3>
+                <div>
+                    <select class="form-select form-select-sm" id="floorSelect" style="width: auto; display: inline-block; margin-right: 10px;">
+                        <option value="1">Tầng 1</option>
+                        <option value="2">Tầng 2</option>
+                        <option value="3">Tầng 3</option>
+                        <option value="4">Tầng 4</option>
+                        <option value="5">Tầng 5</option>
+                    </select>
+                    <button class="btn-secondary-admin btn-sm">
+                        <i class="fas fa-map"></i>
+                        Chế độ xem
+                    </button>
+                </div>
+            </div>
+            <div class="parking-map-container">
+                <!-- Legend -->
+                <div class="parking-legend mb-3">
+                    <div class="legend-item">
+                        <span class="legend-color available"></span>
+                        <span>Trống</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color occupied"></span>
+                        <span>Đang đỗ</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color reserved"></span>
+                        <span>Đã đặt</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color maintenance"></span>
+                        <span>Bảo trì</span>
+                    </div>
+                </div>
+
+                <!-- Parking Map Grid -->
+                <div class="parking-map">
+                    <!-- Section A - Xe máy -->
+                    <div class="parking-section">
+                        <div class="section-header">
+                            <i class="fas fa-motorcycle"></i>
+                            Khu A - Xe máy (40 chỗ)
+                        </div>
+                        <div class="parking-grid motorcycle-grid">
+                            <!-- Row 1 -->
+                            <div class="parking-slot motorcycle available" data-slot="A01" onclick="viewSlotDetails('A01')">
+                                <span class="slot-number">A01</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A02" onclick="viewSlotDetails('A02')">
+                                <span class="slot-number">A02</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A03" onclick="viewSlotDetails('A03')">
+                                <span class="slot-number">A03</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A04" onclick="viewSlotDetails('A04')">
+                                <span class="slot-number">A04</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A05" onclick="viewSlotDetails('A05')">
+                                <span class="slot-number">A05</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A06" onclick="viewSlotDetails('A06')">
+                                <span class="slot-number">A06</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A07" onclick="viewSlotDetails('A07')">
+                                <span class="slot-number">A07</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A08" onclick="viewSlotDetails('A08')">
+                                <span class="slot-number">A08</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A09" onclick="viewSlotDetails('A09')">
+                                <span class="slot-number">A09</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A10" onclick="viewSlotDetails('A10')">
+                                <span class="slot-number">A10</span>
+                            </div>
+                            <!-- Row 2 -->
+                            <div class="parking-slot motorcycle available" data-slot="A11" onclick="viewSlotDetails('A11')">
+                                <span class="slot-number">A11</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A12" onclick="viewSlotDetails('A12')">
+                                <span class="slot-number">A12</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A13" onclick="viewSlotDetails('A13')">
+                                <span class="slot-number">A13</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A14" onclick="viewSlotDetails('A14')">
+                                <span class="slot-number">A14</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A15" onclick="viewSlotDetails('A15')">
+                                <span class="slot-number">A15</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A16" onclick="viewSlotDetails('A16')">
+                                <span class="slot-number">A16</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A17" onclick="viewSlotDetails('A17')">
+                                <span class="slot-number">A17</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A18" onclick="viewSlotDetails('A18')">
+                                <span class="slot-number">A18</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A19" onclick="viewSlotDetails('A19')">
+                                <span class="slot-number">A19</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A20" onclick="viewSlotDetails('A20')">
+                                <span class="slot-number">A20</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <!-- Row 3 -->
+                            <div class="parking-slot motorcycle occupied" data-slot="A21" onclick="viewSlotDetails('A21')">
+                                <span class="slot-number">A21</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A22" onclick="viewSlotDetails('A22')">
+                                <span class="slot-number">A22</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A23" onclick="viewSlotDetails('A23')">
+                                <span class="slot-number">A23</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A24" onclick="viewSlotDetails('A24')">
+                                <span class="slot-number">A24</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A25" onclick="viewSlotDetails('A25')">
+                                <span class="slot-number">A25</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A26" onclick="viewSlotDetails('A26')">
+                                <span class="slot-number">A26</span>
+                            </div>
+                            <div class="parking-slot motorcycle reserved" data-slot="A27" onclick="viewSlotDetails('A27')">
+                                <span class="slot-number">A27</span>
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A28" onclick="viewSlotDetails('A28')">
+                                <span class="slot-number">A28</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A29" onclick="viewSlotDetails('A29')">
+                                <span class="slot-number">A29</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A30" onclick="viewSlotDetails('A30')">
+                                <span class="slot-number">A30</span>
+                            </div>
+                            <!-- Row 4 -->
+                            <div class="parking-slot motorcycle available" data-slot="A31" onclick="viewSlotDetails('A31')">
+                                <span class="slot-number">A31</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A32" onclick="viewSlotDetails('A32')">
+                                <span class="slot-number">A32</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A33" onclick="viewSlotDetails('A33')">
+                                <span class="slot-number">A33</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A34" onclick="viewSlotDetails('A34')">
+                                <span class="slot-number">A34</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A35" onclick="viewSlotDetails('A35')">
+                                <span class="slot-number">A35</span>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A36" onclick="viewSlotDetails('A36')">
+                                <span class="slot-number">A36</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A37" onclick="viewSlotDetails('A37')">
+                                <span class="slot-number">A37</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A38" onclick="viewSlotDetails('A38')">
+                                <span class="slot-number">A38</span>
+                            </div>
+                            <div class="parking-slot motorcycle occupied" data-slot="A39" onclick="viewSlotDetails('A39')">
+                                <span class="slot-number">A39</span>
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="parking-slot motorcycle available" data-slot="A40" onclick="viewSlotDetails('A40')">
+                                <span class="slot-number">A40</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section B - Ô tô 4 chỗ -->
+                    <div class="parking-section">
+                        <div class="section-header">
+                            <i class="fas fa-car"></i>
+                            Khu B - Ô tô 4 chỗ (20 chỗ)
+                        </div>
+                        <div class="parking-grid car-grid">
+                            <!-- Row 1 -->
+                            <div class="parking-slot car occupied" data-slot="B01" onclick="viewSlotDetails('B01')">
+                                <span class="slot-number">B01</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B02" onclick="viewSlotDetails('B02')">
+                                <span class="slot-number">B02</span>
+                            </div>
+                            <div class="parking-slot car reserved" data-slot="B03" onclick="viewSlotDetails('B03')">
+                                <span class="slot-number">B03</span>
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="parking-slot car occupied" data-slot="B04" onclick="viewSlotDetails('B04')">
+                                <span class="slot-number">B04</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B05" onclick="viewSlotDetails('B05')">
+                                <span class="slot-number">B05</span>
+                            </div>
+                            <!-- Row 2 -->
+                            <div class="parking-slot car occupied" data-slot="B06" onclick="viewSlotDetails('B06')">
+                                <span class="slot-number">B06</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car maintenance" data-slot="B07" onclick="viewSlotDetails('B07')">
+                                <span class="slot-number">B07</span>
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B08" onclick="viewSlotDetails('B08')">
+                                <span class="slot-number">B08</span>
+                            </div>
+                            <div class="parking-slot car occupied" data-slot="B09" onclick="viewSlotDetails('B09')">
+                                <span class="slot-number">B09</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B10" onclick="viewSlotDetails('B10')">
+                                <span class="slot-number">B10</span>
+                            </div>
+                            <!-- Row 3 -->
+                            <div class="parking-slot car available" data-slot="B11" onclick="viewSlotDetails('B11')">
+                                <span class="slot-number">B11</span>
+                            </div>
+                            <div class="parking-slot car occupied" data-slot="B12" onclick="viewSlotDetails('B12')">
+                                <span class="slot-number">B12</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B13" onclick="viewSlotDetails('B13')">
+                                <span class="slot-number">B13</span>
+                            </div>
+                            <div class="parking-slot car occupied" data-slot="B14" onclick="viewSlotDetails('B14')">
+                                <span class="slot-number">B14</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B15" onclick="viewSlotDetails('B15')">
+                                <span class="slot-number">B15</span>
+                            </div>
+                            <!-- Row 4 -->
+                            <div class="parking-slot car occupied" data-slot="B16" onclick="viewSlotDetails('B16')">
+                                <span class="slot-number">B16</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B17" onclick="viewSlotDetails('B17')">
+                                <span class="slot-number">B17</span>
+                            </div>
+                            <div class="parking-slot car occupied" data-slot="B18" onclick="viewSlotDetails('B18')">
+                                <span class="slot-number">B18</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="parking-slot car available" data-slot="B19" onclick="viewSlotDetails('B19')">
+                                <span class="slot-number">B19</span>
+                            </div>
+                            <div class="parking-slot car occupied" data-slot="B20" onclick="viewSlotDetails('B20')">
+                                <span class="slot-number">B20</span>
+                                <i class="fas fa-car"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section C - Ô tô 7 chỗ -->
+                    <div class="parking-section">
+                        <div class="section-header">
+                            <i class="fas fa-shuttle-van"></i>
+                            Khu C - Ô tô 7 chỗ / SUV (12 chỗ)
+                        </div>
+                        <div class="parking-grid suv-grid">
+                            <!-- Row 1 -->
+                            <div class="parking-slot suv occupied" data-slot="C01" onclick="viewSlotDetails('C01')">
+                                <span class="slot-number">C01</span>
+                                <i class="fas fa-shuttle-van"></i>
+                            </div>
+                            <div class="parking-slot suv available" data-slot="C02" onclick="viewSlotDetails('C02')">
+                                <span class="slot-number">C02</span>
+                            </div>
+                            <div class="parking-slot suv occupied" data-slot="C03" onclick="viewSlotDetails('C03')">
+                                <span class="slot-number">C03</span>
+                                <i class="fas fa-shuttle-van"></i>
+                            </div>
+                            <div class="parking-slot suv available" data-slot="C04" onclick="viewSlotDetails('C04')">
+                                <span class="slot-number">C04</span>
+                            </div>
+                            <!-- Row 2 -->
+                            <div class="parking-slot suv reserved" data-slot="C05" onclick="viewSlotDetails('C05')">
+                                <span class="slot-number">C05</span>
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="parking-slot suv available" data-slot="C06" onclick="viewSlotDetails('C06')">
+                                <span class="slot-number">C06</span>
+                            </div>
+                            <div class="parking-slot suv occupied" data-slot="C07" onclick="viewSlotDetails('C07')">
+                                <span class="slot-number">C07</span>
+                                <i class="fas fa-shuttle-van"></i>
+                            </div>
+                            <div class="parking-slot suv available" data-slot="C08" onclick="viewSlotDetails('C08')">
+                                <span class="slot-number">C08</span>
+                            </div>
+                            <!-- Row 3 -->
+                            <div class="parking-slot suv occupied" data-slot="C09" onclick="viewSlotDetails('C09')">
+                                <span class="slot-number">C09</span>
+                                <i class="fas fa-shuttle-van"></i>
+                            </div>
+                            <div class="parking-slot suv available" data-slot="C10" onclick="viewSlotDetails('C10')">
+                                <span class="slot-number">C10</span>
+                            </div>
+                            <div class="parking-slot suv occupied" data-slot="C11" onclick="viewSlotDetails('C11')">
+                                <span class="slot-number">C11</span>
+                                <i class="fas fa-shuttle-van"></i>
+                            </div>
+                            <div class="parking-slot suv available" data-slot="C12" onclick="viewSlotDetails('C12')">
+                                <span class="slot-number">C12</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section D - Xe tải -->
+                    <div class="parking-section">
+                        <div class="section-header">
+                            <i class="fas fa-truck"></i>
+                            Khu D - Xe tải (8 chỗ)
+                        </div>
+                        <div class="parking-grid truck-grid">
+                            <!-- Row 1 -->
+                            <div class="parking-slot truck occupied" data-slot="D01" onclick="viewSlotDetails('D01')">
+                                <span class="slot-number">D01</span>
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="parking-slot truck available" data-slot="D02" onclick="viewSlotDetails('D02')">
+                                <span class="slot-number">D02</span>
+                            </div>
+                            <div class="parking-slot truck occupied" data-slot="D03" onclick="viewSlotDetails('D03')">
+                                <span class="slot-number">D03</span>
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="parking-slot truck available" data-slot="D04" onclick="viewSlotDetails('D04')">
+                                <span class="slot-number">D04</span>
+                            </div>
+                            <!-- Row 2 -->
+                            <div class="parking-slot truck occupied" data-slot="D05" onclick="viewSlotDetails('D05')">
+                                <span class="slot-number">D05</span>
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="parking-slot truck available" data-slot="D06" onclick="viewSlotDetails('D06')">
+                                <span class="slot-number">D06</span>
+                            </div>
+                            <div class="parking-slot truck available" data-slot="D07" onclick="viewSlotDetails('D07')">
+                                <span class="slot-number">D07</span>
+                            </div>
+                            <div class="parking-slot truck occupied" data-slot="D08" onclick="viewSlotDetails('D08')">
+                                <span class="slot-number">D08</span>
+                                <i class="fas fa-truck"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-lg-4">
+        <!-- Gate Status -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Trạng thái cổng</h3>
+            </div>
+            <div class="gate-status-list">
+                <div class="gate-status-item">
+                    <div class="gate-info">
+                        <div class="gate-icon active" id="gate-in-a-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div>
+                            <div class="gate-name">Cổng vào A</div>
+                            <div class="gate-stats">
+                                <span class="badge badge-success" id="gate-in-a-status">Đang mở</span>
+                                <span class="gate-count">124 xe/ngày</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gate-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewGateCamera('gate-in-a')" title="Xem camera">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-gate-in-a" onclick="toggleGate('gate-in-a', 'Cổng vào A')" title="Đóng cổng">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="maintenanceGate('gate-in-a', 'Cổng vào A')" title="Bảo trì">
+                            <i class="fas fa-tools"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gate-status-item">
+                    <div class="gate-info">
+                        <div class="gate-icon active" id="gate-in-b-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div>
+                            <div class="gate-name">Cổng vào B</div>
+                            <div class="gate-stats">
+                                <span class="badge badge-success" id="gate-in-b-status">Đang mở</span>
+                                <span class="gate-count">98 xe/ngày</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gate-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewGateCamera('gate-in-b')" title="Xem camera">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-gate-in-b" onclick="toggleGate('gate-in-b', 'Cổng vào B')" title="Đóng cổng">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="maintenanceGate('gate-in-b', 'Cổng vào B')" title="Bảo trì">
+                            <i class="fas fa-tools"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gate-status-item">
+                    <div class="gate-info">
+                        <div class="gate-icon active" id="gate-out-a-icon">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div>
+                            <div class="gate-name">Cổng ra A</div>
+                            <div class="gate-stats">
+                                <span class="badge badge-success" id="gate-out-a-status">Đang mở</span>
+                                <span class="gate-count">112 xe/ngày</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gate-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewGateCamera('gate-out-a')" title="Xem camera">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-gate-out-a" onclick="toggleGate('gate-out-a', 'Cổng ra A')" title="Đóng cổng">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="maintenanceGate('gate-out-a', 'Cổng ra A')" title="Bảo trì">
+                            <i class="fas fa-tools"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gate-status-item">
+                    <div class="gate-info">
+                        <div class="gate-icon active" id="gate-out-b-icon">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div>
+                            <div class="gate-name">Cổng ra B</div>
+                            <div class="gate-stats">
+                                <span class="badge badge-success" id="gate-out-b-status">Đang mở</span>
+                                <span class="gate-count">95 xe/ngày</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gate-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewGateCamera('gate-out-b')" title="Xem camera">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-gate-out-b" onclick="toggleGate('gate-out-b', 'Cổng ra B')" title="Đóng cổng">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="maintenanceGate('gate-out-b', 'Cổng ra B')" title="Bảo trì">
+                            <i class="fas fa-tools"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Counter Status -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Chốt thu phí</h3>
+            </div>
+            <div class="counter-status-list">
+                <div class="counter-status-item">
+                    <div class="counter-icon active" id="counter-1-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div class="counter-info">
+                        <div class="counter-name">Quầy 1</div>
+                        <div class="counter-staff">NV: Nguyễn Văn A</div>
+                        <div class="counter-revenue">2.5M VNĐ</div>
+                    </div>
+                    <div class="counter-status">
+                        <span class="status-indicator online" id="counter-1-indicator"></span>
+                        <span class="status-text" id="counter-1-text">Đang hoạt động</span>
+                    </div>
+                    <div class="counter-actions">
+                        <button class="btn btn-sm btn-outline-danger" id="btn-counter-1" onclick="toggleCounter('counter-1', 'Quầy 1')" title="Đóng quầy">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="counter-status-item">
+                    <div class="counter-icon active" id="counter-2-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div class="counter-info">
+                        <div class="counter-name">Quầy 2</div>
+                        <div class="counter-staff">NV: Trần Thị B</div>
+                        <div class="counter-revenue">1.8M VNĐ</div>
+                    </div>
+                    <div class="counter-status">
+                        <span class="status-indicator online" id="counter-2-indicator"></span>
+                        <span class="status-text" id="counter-2-text">Đang hoạt động</span>
+                    </div>
+                    <div class="counter-actions">
+                        <button class="btn btn-sm btn-outline-danger" id="btn-counter-2" onclick="toggleCounter('counter-2', 'Quầy 2')" title="Đóng quầy">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="counter-status-item">
+                    <div class="counter-icon inactive" id="counter-3-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div class="counter-info">
+                        <div class="counter-name">Quầy 3</div>
+                        <div class="counter-staff">NV: Chưa phân công</div>
+                        <div class="counter-revenue">0 VNĐ</div>
+                    </div>
+                    <div class="counter-status">
+                        <span class="status-indicator offline" id="counter-3-indicator"></span>
+                        <span class="status-text" id="counter-3-text">Không hoạt động</span>
+                    </div>
+                    <div class="counter-actions">
+                        <button class="btn btn-sm btn-outline-success" id="btn-counter-3" onclick="toggleCounter('counter-3', 'Quầy 3')" title="Mở quầy">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Activity -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Hoạt động trực tiếp</h3>
+            </div>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-icon entry">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Xe vào: <strong>29B1-12345</strong></div>
+                        <div class="activity-time">2 phút trước</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon exit">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Xe ra: <strong>30A-98765</strong></div>
+                        <div class="activity-time">5 phút trước</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon payment">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Thanh toán: <strong>15,000 VNĐ</strong></div>
+                        <div class="activity-time">7 phút trước</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon entry">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">Xe vào: <strong>51G-11111</strong></div>
+                        <div class="activity-time">10 phút trước</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Map Modal -->
+<div class="modal fade" id="overviewMapModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-map-marked-alt"></i>
+                    Bản đồ tổng quan bãi đỗ xe
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Parking Lot Map -->
+                <div class="parking-lot-map">
+                    <!-- Title -->
+                    <div class="map-title text-center mb-4">
+                        <h4>BÃI ĐỖ XE THÔNG MINH</h4>
+                        <p class="text-muted">Tổng 80 chỗ - 38 trống - 39 đang đỗ - 3 đặt/bảo trì</p>
+                    </div>
+
+                    <!-- Map Container with roads and arrows -->
+                    <div class="map-container">
+                        <!-- Top Section - Entry Gates -->
+                        <div class="map-row entrance-row">
+                            <!-- Gate In A -->
+                            <div class="map-gate gate-in-left">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>CỔNG VÀO A</span>
+                                <div class="gate-arrow">↓</div>
+                            </div>
+
+                            <div class="map-spacer"></div>
+
+                            <!-- Gate In B -->
+                            <div class="map-gate gate-in-right">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>CỔNG VÀO B</span>
+                                <div class="gate-arrow">↓</div>
+                            </div>
+                        </div>
+
+                        <!-- Main Road Horizontal -->
+                        <div class="road-horizontal main-road">
+                            <div class="road-arrow-left">←</div>
+                            <div class="road-label">ĐƯỜNG CHÍNH</div>
+                            <div class="road-arrow-right">→</div>
+                        </div>
+
+                        <!-- Parking Areas Row 1 -->
+                        <div class="map-row parking-row">
+                            <!-- Khu A - Xe máy (Bên trái) -->
+                            <div class="parking-zone zone-a">
+                                <div class="zone-header">
+                                    <i class="fas fa-motorcycle"></i>
+                                    <strong>KHU A</strong>
+                                    <span>Xe máy</span>
+                                </div>
+                                <div class="zone-body">
+                                    <div class="zone-grid motorcycle-mini"></div>
+                                    <div class="zone-stats">
+                                        <span class="stat-available">15 trống</span>
+                                        <span class="stat-occupied">24 đỗ</span>
+                                        <span class="stat-reserved">1 đặt</span>
+                                    </div>
+                                    <div class="zone-capacity-bar">
+                                        <div class="zone-fill" style="width: 60%"></div>
+                                    </div>
+                                    <div class="zone-capacity-text">40 chỗ (60%)</div>
+                                </div>
+                                <div class="zone-arrow-in">↓</div>
+                            </div>
+
+                            <!-- Vertical Road -->
+                            <div class="road-vertical">
+                                <div class="road-arrow-up">↑</div>
+                                <div class="road-arrow-down">↓</div>
+                            </div>
+
+                            <!-- Khu B - Ô tô 4 chỗ (Bên phải) -->
+                            <div class="parking-zone zone-b">
+                                <div class="zone-header">
+                                    <i class="fas fa-car"></i>
+                                    <strong>KHU B</strong>
+                                    <span>Ô tô 4 chỗ</span>
+                                </div>
+                                <div class="zone-body">
+                                    <div class="zone-grid car-mini"></div>
+                                    <div class="zone-stats">
+                                        <span class="stat-available">11 trống</span>
+                                        <span class="stat-occupied">8 đỗ</span>
+                                        <span class="stat-maintenance">1 bảo trì</span>
+                                    </div>
+                                    <div class="zone-capacity-bar">
+                                        <div class="zone-fill" style="width: 40%"></div>
+                                    </div>
+                                    <div class="zone-capacity-text">20 chỗ (40%)</div>
+                                </div>
+                                <div class="zone-arrow-in">↓</div>
+                            </div>
+                        </div>
+
+                        <!-- Counter Area (Giữa) -->
+                        <div class="counter-area">
+                            <div class="counter-box active">
+                                <i class="fas fa-cash-register"></i>
+                                <span>QUẦY 1</span>
+                            </div>
+                            <div class="counter-box active">
+                                <i class="fas fa-cash-register"></i>
+                                <span>QUẦY 2</span>
+                            </div>
+                            <div class="counter-box inactive">
+                                <i class="fas fa-cash-register"></i>
+                                <span>QUẦY 3</span>
+                            </div>
+                        </div>
+
+                        <!-- Parking Areas Row 2 -->
+                        <div class="map-row parking-row">
+                            <!-- Khu C - Ô tô 7 chỗ (Bên trái) -->
+                            <div class="parking-zone zone-c">
+                                <div class="zone-arrow-out">↑</div>
+                                <div class="zone-header">
+                                    <i class="fas fa-shuttle-van"></i>
+                                    <strong>KHU C</strong>
+                                    <span>Ô tô 7 chỗ/SUV</span>
+                                </div>
+                                <div class="zone-body">
+                                    <div class="zone-grid suv-mini"></div>
+                                    <div class="zone-stats">
+                                        <span class="stat-available">7 trống</span>
+                                        <span class="stat-occupied">4 đỗ</span>
+                                        <span class="stat-reserved">1 đặt</span>
+                                    </div>
+                                    <div class="zone-capacity-bar">
+                                        <div class="zone-fill" style="width: 33%"></div>
+                                    </div>
+                                    <div class="zone-capacity-text">12 chỗ (33%)</div>
+                                </div>
+                            </div>
+
+                            <!-- Vertical Road -->
+                            <div class="road-vertical">
+                                <div class="road-arrow-up">↑</div>
+                                <div class="road-arrow-down">↓</div>
+                            </div>
+
+                            <!-- Khu D - Xe tải (Bên phải) -->
+                            <div class="parking-zone zone-d">
+                                <div class="zone-arrow-out">↑</div>
+                                <div class="zone-header">
+                                    <i class="fas fa-truck"></i>
+                                    <strong>KHU D</strong>
+                                    <span>Xe tải</span>
+                                </div>
+                                <div class="zone-body">
+                                    <div class="zone-grid truck-mini"></div>
+                                    <div class="zone-stats">
+                                        <span class="stat-available">4 trống</span>
+                                        <span class="stat-occupied">4 đỗ</span>
+                                    </div>
+                                    <div class="zone-capacity-bar">
+                                        <div class="zone-fill" style="width: 50%"></div>
+                                    </div>
+                                    <div class="zone-capacity-text">8 chỗ (50%)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exit Road Horizontal -->
+                        <div class="road-horizontal exit-road">
+                            <div class="road-arrow-left">←</div>
+                            <div class="road-label">ĐƯỜNG RA</div>
+                            <div class="road-arrow-right">→</div>
+                        </div>
+
+                        <!-- Bottom Section - Exit Gates -->
+                        <div class="map-row exit-row">
+                            <!-- Gate Out A -->
+                            <div class="map-gate gate-out-left">
+                                <div class="gate-arrow">↑</div>
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>CỔNG RA A</span>
+                            </div>
+
+                            <div class="map-spacer"></div>
+
+                            <!-- Gate Out B -->
+                            <div class="map-gate gate-out-right">
+                                <div class="gate-arrow">↑</div>
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>CỔNG RA B</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="map-legend mt-4">
+                        <div class="legend-title">CHÚ THÍCH:</div>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #87DF2C;"></div>
+                                <span>Cổng vào (mở)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #21A691;"></div>
+                                <span>Cổng ra (mở)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #e74c3c;"></div>
+                                <span>Cổng đóng</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #ff9800;"></div>
+                                <span>Cổng bảo trì</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #ddd; border: 2px dashed #666;"></div>
+                                <span>Đường đi</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #f0f0f0; border: 2px solid #21A691;"></div>
+                                <span>Khu đỗ xe</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #21A691;"></div>
+                                <span>Quầy hoạt động</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-box" style="background: #95a5a6;"></div>
+                                <span>Quầy đóng</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Đóng
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printOverviewMap()">
+                    <i class="fas fa-print"></i>
+                    In bản đồ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slot Details Modal -->
+<div class="modal fade" id="slotDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết chỗ đỗ <span id="modalSlotNumber"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="slot-details-content">
+                    <div class="detail-row">
+                        <span class="detail-label">Trạng thái:</span>
+                        <span class="detail-value" id="modalSlotStatus"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Loại xe:</span>
+                        <span class="detail-value" id="modalVehicleType"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Biển số:</span>
+                        <span class="detail-value" id="modalLicensePlate"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Thời gian vào:</span>
+                        <span class="detail-value" id="modalEntryTime"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Thời gian đỗ:</span>
+                        <span class="detail-value" id="modalDuration"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Phí tạm tính:</span>
+                        <span class="detail-value" id="modalEstimatedFee"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="navigateToSlot()">Dẫn đường</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Parking Map Styles */
+    .parking-map-container {
+        padding: 20px;
+    }
+
+    .parking-legend {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .legend-color {
+        width: 30px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+
+    .legend-color.available {
+        background-color: #87DF2C;
+    }
+
+    .legend-color.occupied {
+        background-color: #ff6b6b;
+    }
+
+    .legend-color.reserved {
+        background-color: #ffa500;
+    }
+
+    .legend-color.maintenance {
+        background-color: #95a5a6;
+    }
+
+    .parking-map {
+        margin-top: 20px;
+    }
+
+    .parking-section {
+        margin-bottom: 30px;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #21A691 0%, #1a8274 100%);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .parking-grid {
+        display: grid;
+        gap: 10px;
+    }
+
+    .motorcycle-grid {
+        grid-template-columns: repeat(10, 1fr);
+    }
+
+    .car-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .suv-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .truck-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .parking-slot {
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        padding: 6px;
+        min-height: 50px;
+    }
+
+    /* Xe máy - hình chữ nhật nhỏ */
+    .parking-slot.motorcycle {
+        aspect-ratio: 4/3;
+        min-height: 45px;
+    }
+
+    /* Ô tô 4 chỗ - trung bình */
+    .parking-slot.car {
+        aspect-ratio: 5/4;
+        min-height: 60px;
+    }
+
+    /* Ô tô 7 chỗ - lớn hơn */
+    .parking-slot.suv {
+        aspect-ratio: 5/4;
+        min-height: 70px;
+    }
+
+    /* Xe tải - to nhất */
+    .parking-slot.truck {
+        aspect-ratio: 6/5;
+        min-height: 85px;
+    }
+
+    .parking-slot:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .parking-slot.available {
+        background-color: #87DF2C;
+        border-color: #76c91e;
+    }
+
+    .parking-slot.occupied {
+        background-color: #ff6b6b;
+        border-color: #ff5252;
+    }
+
+    .parking-slot.reserved {
+        background-color: #ffa500;
+        border-color: #ff9500;
+    }
+
+    .parking-slot.maintenance {
+        background-color: #95a5a6;
+        border-color: #7f8c8d;
+        cursor: not-allowed;
+    }
+
+    .slot-number {
+        font-weight: 700;
+        font-size: 11px;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .parking-slot i {
+        font-size: 16px;
+        color: white;
+        margin-top: 3px;
+    }
+
+    .parking-slot.motorcycle i {
+        font-size: 12px;
+    }
+
+    .parking-slot.car i {
+        font-size: 16px;
+    }
+
+    .parking-slot.suv i {
+        font-size: 18px;
+    }
+
+    .parking-slot.truck i {
+        font-size: 22px;
+    }
+
+    .gate-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    /* Gate Status Styles */
+    .gate-status-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .gate-status-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .gate-status-item:hover {
+        background-color: #e9ecef;
+    }
+
+    .gate-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+    }
+
+    .gate-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .gate-icon.active {
+        background-color: rgba(33, 166, 145, 0.15);
+        color: #21A691;
+    }
+
+    .gate-icon.warning {
+        background-color: rgba(255, 152, 0, 0.15);
+        color: #ff9800;
+    }
+
+    .gate-name {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .gate-stats {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .gate-count {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background-color: #87DF2C;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffa500;
+        color: white;
+    }
+
+    /* Counter Status Styles */
+    .counter-status-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .counter-status-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .counter-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .counter-icon.active {
+        background-color: rgba(33, 166, 145, 0.15);
+        color: #21A691;
+    }
+
+    .counter-icon.inactive {
+        background-color: rgba(149, 165, 166, 0.15);
+        color: #95a5a6;
+    }
+
+    .counter-info {
+        flex: 1;
+    }
+
+    .counter-name {
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .counter-staff {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 2px;
+    }
+
+    .counter-revenue {
+        font-size: 13px;
+        font-weight: 600;
+        color: #21A691;
+    }
+
+    .counter-status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .counter-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .status-indicator.online {
+        background-color: #87DF2C;
+        box-shadow: 0 0 8px rgba(135, 223, 44, 0.6);
+    }
+
+    .status-indicator.offline {
+        background-color: #95a5a6;
+    }
+
+    .status-text {
+        font-size: 11px;
+        color: #6c757d;
+    }
+
+    /* Activity Styles */
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        border-left: 3px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #21A691;
+    }
+
+    .activity-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: white;
+    }
+
+    .activity-icon.entry {
+        background-color: #87DF2C;
+    }
+
+    .activity-icon.exit {
+        background-color: #ff9800;
+    }
+
+    .activity-icon.payment {
+        background-color: #21A691;
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-size: 13px;
+        margin-bottom: 2px;
+    }
+
+    .activity-time {
+        font-size: 11px;
+        color: #6c757d;
+    }
+
+    /* Modal Styles */
+    .slot-details-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .detail-value {
+        color: #21A691;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .motorcycle-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .car-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .suv-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .truck-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Parking Lot Map Styles */
+    .parking-lot-map {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .map-title h4 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .map-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 3px solid #dee2e6;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    /* Map Rows */
+    .map-row {
+        display: grid;
+        grid-template-columns: 1fr 120px 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .map-spacer {
+        grid-column: 2;
+    }
+
+    /* Gates */
+    .map-gate {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 3px solid;
+        position: relative;
+    }
+
+    .gate-in-left, .gate-in-right {
+        border-color: #87DF2C;
+        background: linear-gradient(180deg, white 0%, rgba(135, 223, 44, 0.1) 100%);
+    }
+
+    .gate-out-left, .gate-out-right {
+        border-color: #21A691;
+        background: linear-gradient(180deg, rgba(33, 166, 145, 0.1) 0%, white 100%);
+    }
+
+    .map-gate.maintenance {
+        border-color: #ff9800;
+        opacity: 0.7;
+        background: linear-gradient(180deg, rgba(255, 152, 0, 0.1) 0%, white 100%);
+    }
+
+    .map-gate.closed {
+        border-color: #e74c3c;
+        opacity: 0.8;
+        background: linear-gradient(180deg, rgba(231, 76, 60, 0.1) 0%, white 100%);
+    }
+
+    .map-gate i {
+        font-size: 36px;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .gate-in-left i, .gate-in-right i {
+        color: #87DF2C;
+    }
+
+    .gate-out-left i, .gate-out-right i {
+        color: #21A691;
+    }
+
+    .map-gate.maintenance i {
+        color: #ff9800;
+    }
+
+    .map-gate.closed i {
+        color: #e74c3c;
+    }
+
+    .map-gate span {
+        font-weight: 700;
+        font-size: 14px;
+        display: block;
+        color: #2c3e50;
+    }
+
+    .map-gate small {
+        font-size: 11px;
+        color: #ff9800;
+        display: block;
+        margin-top: 5px;
+    }
+
+    .gate-arrow {
+        font-size: 32px;
+        font-weight: 700;
+        color: #333;
+        margin: 10px 0;
+        animation: bounce 2s infinite;
+    }
+
+    /* Roads */
+    .road-horizontal {
+        grid-column: 1 / -1;
+        background: repeating-linear-gradient(
+            90deg,
+            #ddd,
+            #ddd 20px,
+            #fff 20px,
+            #fff 40px
+        );
+        border: 3px dashed #666;
+        border-radius: 8px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        position: relative;
+        margin: 15px 0;
+    }
+
+    .road-label {
+        background: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 700;
+        color: #333;
+        border: 2px solid #666;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .road-arrow-left, .road-arrow-right {
+        font-size: 32px;
+        font-weight: 700;
+        color: #333;
+        animation: slide 2s infinite;
+    }
+
+    .road-vertical {
+        background: repeating-linear-gradient(
+            180deg,
+            #ddd,
+            #ddd 20px,
+            #fff 20px,
+            #fff 40px
+        );
+        border: 3px dashed #666;
+        border-radius: 8px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-around;
+        padding: 20px 0;
+    }
+
+    .road-arrow-up, .road-arrow-down {
+        font-size: 32px;
+        font-weight: 700;
+        color: #333;
+        animation: bounce 2s infinite;
+    }
+
+    /* Parking Zones */
+    .parking-zone {
+        background: white;
+        border: 3px solid #21A691;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .zone-header {
+        background: linear-gradient(135deg, #21A691 0%, #1a8274 100%);
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .zone-header i {
+        font-size: 28px;
+    }
+
+    .zone-header strong {
+        font-size: 16px;
+        display: block;
+    }
+
+    .zone-header span {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+
+    .zone-body {
+        padding: 10px;
+    }
+
+    .zone-grid {
+        height: 80px;
+        background: repeating-linear-gradient(
+            90deg,
+            #f0f0f0,
+            #f0f0f0 15px,
+            #ddd 15px,
+            #ddd 17px
+        );
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border: 2px solid #ddd;
+    }
+
+    .zone-stats {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .zone-stats span {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .stat-available {
+        background: rgba(135, 223, 44, 0.2);
+        color: #5a9216;
+    }
+
+    .stat-occupied {
+        background: rgba(255, 107, 107, 0.2);
+        color: #c92a2a;
+    }
+
+    .stat-reserved {
+        background: rgba(255, 152, 0, 0.2);
+        color: #e67700;
+    }
+
+    .stat-maintenance {
+        background: rgba(149, 165, 166, 0.2);
+        color: #7f8c8d;
+    }
+
+    .zone-capacity-bar {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 5px;
+    }
+
+    .zone-fill {
+        height: 100%;
+        background: #ff6b6b;
+        transition: width 0.3s ease;
+    }
+
+    .zone-capacity-text {
+        font-size: 11px;
+        text-align: center;
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    .zone-arrow-in, .zone-arrow-out {
+        position: absolute;
+        font-size: 28px;
+        font-weight: 700;
+        color: #21A691;
+        animation: bounce 2s infinite;
+    }
+
+    .zone-arrow-in {
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .zone-arrow-out {
+        bottom: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* Counter Area */
+    .counter-area {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 25px 0;
+    }
+
+    .counter-box {
+        background: white;
+        border: 3px solid #21A691;
+        border-radius: 12px;
+        padding: 15px 25px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        min-width: 120px;
+    }
+
+    .counter-box.active {
+        background: linear-gradient(135deg, rgba(33, 166, 145, 0.1) 0%, white 100%);
+    }
+
+    .counter-box.inactive {
+        border-color: #95a5a6;
+        opacity: 0.6;
+    }
+
+    .counter-box i {
+        font-size: 32px;
+        color: #21A691;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .counter-box.inactive i {
+        color: #95a5a6;
+    }
+
+    .counter-box span {
+        font-weight: 700;
+        font-size: 13px;
+        display: block;
+        color: #2c3e50;
+    }
+
+    /* Map Legend */
+    .map-legend {
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .legend-title {
+        font-weight: 700;
+        font-size: 16px;
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+
+    .legend-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .legend-box {
+        width: 30px;
+        height: 20px;
+        border-radius: 4px;
+    }
+
+    /* Animations */
+    @@keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @@keyframes slide {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        50% {
+            transform: translateX(10px);
+        }
+    }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .map-row {
+            grid-template-columns: 1fr;
+        }
+
+        .map-spacer {
+            display: none;
+        }
+
+        .road-vertical {
+            height: 60px;
+            flex-direction: row;
+        }
+
+        .counter-area {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .legend-items {
+            flex-direction: column;
+        }
+    }
+
+
+
+</style>
+
+<script>
+    // Sample data for parking slots
+    const parkingData = {
+        'A01': { status: 'available', vehicle: null },
+        'A02': { status: 'occupied', vehicle: { plate: '29B1-12345', type: 'Xe máy', entryTime: '2025-01-23 08:30' } },
+        'A03': { status: 'occupied', vehicle: { plate: '59A1-98765', type: 'Xe máy', entryTime: '2025-01-23 09:15' } },
+        'A04': { status: 'available', vehicle: null },
+        'A05': { status: 'occupied', vehicle: { plate: '29C1-54321', type: 'Xe máy', entryTime: '2025-01-23 10:00' } },
+        'A06': { status: 'available', vehicle: null },
+        'A07': { status: 'occupied', vehicle: { plate: '30A-11111', type: 'Xe máy', entryTime: '2025-01-23 07:45' } },
+        'A08': { status: 'available', vehicle: null },
+        'B01': { status: 'occupied', vehicle: { plate: '30A-56789', type: 'Ô tô 4 chỗ', entryTime: '2025-01-23 08:00' } },
+        'B02': { status: 'available', vehicle: null },
+        'B03': { status: 'reserved', vehicle: { plate: 'Đã đặt', type: 'Ô tô 4 chỗ', entryTime: 'Dự kiến 14:00' } },
+        'B04': { status: 'occupied', vehicle: { plate: '51G-22222', type: 'Ô tô 4 chỗ', entryTime: '2025-01-23 09:30' } },
+        'B05': { status: 'available', vehicle: null },
+        'B06': { status: 'occupied', vehicle: { plate: '30E-33333', type: 'Ô tô 4 chỗ', entryTime: '2025-01-23 10:15' } },
+        'B07': { status: 'maintenance', vehicle: null },
+        'B08': { status: 'available', vehicle: null },
+        'C01': { status: 'occupied', vehicle: { plate: '30E-77777', type: 'Ô tô 7 chỗ', entryTime: '2025-01-23 07:00' } },
+        'C02': { status: 'available', vehicle: null },
+        'C03': { status: 'occupied', vehicle: { plate: '51G-88888', type: 'SUV', entryTime: '2025-01-23 09:00' } },
+        'C04': { status: 'available', vehicle: null },
+        'C05': { status: 'reserved', vehicle: { plate: 'Đã đặt', type: 'Ô tô 7 chỗ', entryTime: 'Dự kiến 15:30' } },
+        'C06': { status: 'available', vehicle: null },
+        'D01': { status: 'occupied', vehicle: { plate: '51G-99999', type: 'Xe tải', entryTime: '2025-01-23 06:00' } },
+        'D02': { status: 'available', vehicle: null },
+        'D03': { status: 'occupied', vehicle: { plate: '30E-55555', type: 'Xe tải', entryTime: '2025-01-23 08:30' } },
+        'D04': { status: 'available', vehicle: null }
+    };
+
+    // Gate status tracking
+    const gateStatus = {
+        'gate-in-a': { isOpen: true, isMaintenance: false, name: 'Cổng vào A' },
+        'gate-in-b': { isOpen: true, isMaintenance: false, name: 'Cổng vào B' },
+        'gate-out-a': { isOpen: true, isMaintenance: false, name: 'Cổng ra A' },
+        'gate-out-b': { isOpen: true, isMaintenance: false, name: 'Cổng ra B' }
+    };
+
+    // Counter status tracking
+    const counterStatus = {
+        'counter-1': { isActive: true, name: 'Quầy 1' },
+        'counter-2': { isActive: true, name: 'Quầy 2' },
+        'counter-3': { isActive: false, name: 'Quầy 3' }
+    };
+
+    function viewSlotDetails(slotNumber) {
+        const slot = parkingData[slotNumber];
+        
+        if (!slot) return;
+
+        document.getElementById('modalSlotNumber').textContent = slotNumber;
+
+        // Status
+        let statusBadge = '';
+        switch (slot.status) {
+            case 'available':
+                statusBadge = '<span class="badge badge-success">Trống</span>';
+                break;
+            case 'occupied':
+                statusBadge = '<span class="badge" style="background-color: #ff6b6b; color: white;">Đang đỗ</span>';
+                break;
+            case 'reserved':
+                statusBadge = '<span class="badge badge-warning">Đã đặt</span>';
+                break;
+            case 'maintenance':
+                statusBadge = '<span class="badge" style="background-color: #95a5a6; color: white;">Bảo trì</span>';
+                break;
+        }
+        document.getElementById('modalSlotStatus').innerHTML = statusBadge;
+
+        if (slot.vehicle) {
+            document.getElementById('modalVehicleType').textContent = slot.vehicle.type;
+            document.getElementById('modalLicensePlate').textContent = slot.vehicle.plate;
+            document.getElementById('modalEntryTime').textContent = slot.vehicle.entryTime;
+            
+            // Calculate duration and fee
+            if (slot.status === 'occupied' && slot.vehicle.entryTime !== 'Dự kiến 14:00' && slot.vehicle.entryTime !== 'Dự kiến 15:30') {
+                const entryTime = new Date(slot.vehicle.entryTime);
+                const now = new Date();
+                const duration = Math.floor((now - entryTime) / 1000 / 60 / 60); // hours
+                document.getElementById('modalDuration').textContent = duration + ' giờ';
+                
+                // Simple fee calculation
+                let fee = 0;
+                if (slot.vehicle.type === 'Xe máy') {
+                    fee = duration * 5000;
+                } else if (slot.vehicle.type === 'Ô tô 4 chỗ') {
+                    fee = duration * 10000;
+                } else if (slot.vehicle.type === 'Ô tô 7 chỗ' || slot.vehicle.type === 'SUV') {
+                    fee = duration * 15000;
+                } else if (slot.vehicle.type === 'Xe tải') {
+                    fee = duration * 20000;
+                }
+                document.getElementById('modalEstimatedFee').textContent = fee.toLocaleString('vi-VN') + ' VNĐ';
+            } else {
+                document.getElementById('modalDuration').textContent = '-';
+                document.getElementById('modalEstimatedFee').textContent = '-';
+            }
+        } else {
+            document.getElementById('modalVehicleType').textContent = '-';
+            document.getElementById('modalLicensePlate').textContent = '-';
+            document.getElementById('modalEntryTime').textContent = '-';
+            document.getElementById('modalDuration').textContent = '-';
+            document.getElementById('modalEstimatedFee').textContent = '-';
+        }
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('slotDetailsModal'));
+        modal.show();
+    }
+
+    function toggleGate(gateId, gateName) {
+        const gate = gateStatus[gateId];
+        if (!gate || gate.isMaintenance) return;
+
+        // Toggle status
+        gate.isOpen = !gate.isOpen;
+
+        // Update sidebar UI
+        updateGateUI(gateId, gate);
+        
+        // Update map if modal is open
+        updateMapGateStatus();
+
+        // Show notification
+        if (gate.isOpen) {
+            showNotification('success', `${gateName} đã được mở`, 'Barrier đã được nâng lên');
+        } else {
+            showNotification('warning', `${gateName} đã được đóng`, 'Barrier đã được hạ xuống');
+        }
+    }
+
+    function maintenanceGate(gateId, gateName) {
+        const gate = gateStatus[gateId];
+        if (!gate) return;
+
+        // Toggle maintenance status
+        gate.isMaintenance = !gate.isMaintenance;
+        
+        if (gate.isMaintenance) {
+            gate.isOpen = false;
+        }
+
+        // Update sidebar UI
+        updateGateUI(gateId, gate);
+        
+        // Update map
+        updateMapGateStatus();
+
+        // Show notification
+        if (gate.isMaintenance) {
+            showNotification('warning', `${gateName} đang bảo trì`, 'Cổng tạm thời không hoạt động');
+        } else {
+            showNotification('success', `${gateName} đã hoàn tất bảo trì`, 'Cổng sẵn sàng hoạt động');
+        }
+    }
+
+    function updateGateUI(gateId, gate) {
+        const statusElement = document.getElementById(`${gateId}-status`);
+        const buttonElement = document.getElementById(`btn-${gateId}`);
+        const iconElement = document.getElementById(`${gateId}-icon`);
+        const icon = buttonElement.querySelector('i');
+
+        if (gate.isMaintenance) {
+            // Maintenance mode
+            statusElement.textContent = 'Bảo trì';
+            statusElement.className = 'badge badge-warning';
+            buttonElement.className = 'btn btn-sm btn-outline-secondary';
+            buttonElement.disabled = true;
+            iconElement.className = 'gate-icon warning';
+        } else if (gate.isOpen) {
+            // Open
+            statusElement.textContent = 'Đang mở';
+            statusElement.className = 'badge badge-success';
+            buttonElement.className = 'btn btn-sm btn-outline-danger';
+            buttonElement.disabled = false;
+            buttonElement.title = 'Đóng cổng';
+            icon.className = 'fas fa-lock';
+            iconElement.className = 'gate-icon active';
+        } else {
+            // Closed
+            statusElement.textContent = 'Đã đóng';
+            statusElement.className = 'badge badge-danger';
+            buttonElement.className = 'btn btn-sm btn-outline-success';
+            buttonElement.disabled = false;
+            buttonElement.title = 'Mở cổng';
+            icon.className = 'fas fa-lock-open';
+            iconElement.className = 'gate-icon';
+        }
+    }
+
+    function updateMapGateStatus() {
+        // Update gate-in-left (Cổng vào A)
+        const gateInLeft = document.querySelector('.gate-in-left');
+        if (gateInLeft) {
+            updateMapGateElement(gateInLeft, gateStatus['gate-in-a']);
+        }
+
+        // Update gate-in-right (Cổng vào B)
+        const gateInRight = document.querySelector('.gate-in-right');
+        if (gateInRight) {
+            updateMapGateElement(gateInRight, gateStatus['gate-in-b']);
+        }
+
+        // Update gate-out-left (Cổng ra A)
+        const gateOutLeft = document.querySelector('.gate-out-left');
+        if (gateOutLeft) {
+            updateMapGateElement(gateOutLeft, gateStatus['gate-out-a']);
+        }
+
+        // Update gate-out-right (Cổng ra B)
+        const gateOutRight = document.querySelector('.gate-out-right');
+        if (gateOutRight) {
+            updateMapGateElement(gateOutRight, gateStatus['gate-out-b']);
+        }
+    }
+
+    function updateMapGateElement(element, gateData) {
+        // Remove all status classes
+        element.classList.remove('maintenance', 'closed');
+        
+        if (gateData.isMaintenance) {
+            element.classList.add('maintenance');
+            const existingSmall = element.querySelector('small');
+            if (!existingSmall) {
+                const small = document.createElement('small');
+                small.textContent = '(Bảo trì)';
+                element.appendChild(small);
+            }
+        } else {
+            // Remove maintenance indicator
+            const existingSmall = element.querySelector('small');
+            if (existingSmall && existingSmall.textContent === '(Bảo trì)') {
+                existingSmall.remove();
+            }
+            
+            if (!gateData.isOpen) {
+                element.classList.add('closed');
+                const existingSmall = element.querySelector('small');
+                if (!existingSmall) {
+                    const small = document.createElement('small');
+                    small.textContent = '(Đã đóng)';
+                    small.style.color = '#e74c3c';
+                    element.appendChild(small);
+                }
+            } else {
+                const existingSmall = element.querySelector('small');
+                if (existingSmall && existingSmall.textContent === '(Đã đóng)') {
+                    existingSmall.remove();
+                }
+            }
+        }
+    }
+
+    function toggleCounter(counterId, counterName) {
+        const counter = counterStatus[counterId];
+        if (!counter) return;
+
+        // Toggle status
+        counter.isActive = !counter.isActive;
+
+        // Update UI
+        updateCounterUI(counterId, counter);
+        
+        // Update map
+        updateMapCounterStatus();
+
+        // Show notification
+        if (counter.isActive) {
+            showNotification('success', `${counterName} đã mở`, 'Quầy sẵn sàng phục vụ');
+        } else {
+            showNotification('info', `${counterName} đã đóng`, 'Quầy tạm ngừng hoạt động');
+        }
+    }
+
+    function updateCounterUI(counterId, counter) {
+        const iconElement = document.getElementById(`${counterId}-icon`);
+        const indicatorElement = document.getElementById(`${counterId}-indicator`);
+        const textElement = document.getElementById(`${counterId}-text`);
+        const buttonElement = document.getElementById(`btn-${counterId}`);
+        const buttonIcon = buttonElement.querySelector('i');
+
+        if (counter.isActive) {
+            // Active
+            iconElement.className = 'counter-icon active';
+            indicatorElement.className = 'status-indicator online';
+            textElement.textContent = 'Đang hoạt động';
+            buttonElement.className = 'btn btn-sm btn-outline-danger';
+            buttonElement.title = 'Đóng quầy';
+            buttonIcon.className = 'fas fa-times-circle';
+        } else {
+            // Inactive
+            iconElement.className = 'counter-icon inactive';
+            indicatorElement.className = 'status-indicator offline';
+            textElement.textContent = 'Không hoạt động';
+            buttonElement.className = 'btn btn-sm btn-outline-success';
+            buttonElement.title = 'Mở quầy';
+            buttonIcon.className = 'fas fa-check-circle';
+        }
+    }
+
+    function updateMapCounterStatus() {
+        const counterBoxes = document.querySelectorAll('.counter-box');
+        counterBoxes.forEach((box, index) => {
+            const counterId = `counter-${index + 1}`;
+            const counter = counterStatus[counterId];
+            
+            if (counter) {
+                if (counter.isActive) {
+                    box.classList.add('active');
+                    box.classList.remove('inactive');
+                } else {
+                    box.classList.add('inactive');
+                    box.classList.remove('active');
+                }
+            }
+        });
+    }
+
+    function viewGateCamera(gateId) {
+        // In real implementation, this would open camera feed in a modal
+        showNotification('info', 'Đang mở camera giám sát', 'Kết nối đến camera cổng ' + gateId);
+        
+        // Simulate opening camera feed
+        setTimeout(() => {
+            alert('Camera feed sẽ hiển thị ở đây\nGate ID: ' + gateId);
+        }, 500);
+    }
+
+    function navigateToSlot() {
+        showNotification('info', 'Chức năng dẫn đường', 'Tính năng này sẽ dẫn đường đến chỗ đỗ');
+    }
+
+    function refreshParkingLot() {
+        // Simulate refresh
+        const slots = document.querySelectorAll('.parking-slot');
+        slots.forEach(slot => {
+            slot.style.opacity = '0.5';
+        });
+
+        setTimeout(() => {
+            slots.forEach(slot => {
+                slot.style.opacity = '1';
+            });
+            showNotification('success', 'Đã cập nhật', 'Trạng thái bãi đỗ đã được làm mới');
+        }, 500);
+    }
+
+    function showOverviewMap() {
+        const modal = new bootstrap.Modal(document.getElementById('overviewMapModal'));
+        modal.show();
+        // Update map status when opening
+        updateMapGateStatus();
+        updateMapCounterStatus();
+    }
+
+    function printOverviewMap() {
+        window.print();
+    }
+
+    function showNotification(type, title, message) {
+        // Simple notification (in real app, use a library like toastr)
+        const bgColors = {
+            'success': '#87DF2C',
+            'warning': '#ff9800',
+            'danger': '#e74c3c',
+            'info': '#21A691'
+        };
+
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 9999;
+            min-width: 300px;
+            border-left: 4px solid ${bgColors[type] || '#21A691'};
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 12px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'danger' ? 'times-circle' : 'info-circle'}" 
+                   style="color: ${bgColors[type] || '#21A691'}; font-size: 20px; margin-top: 2px;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                    <div style="font-size: 13px; color: #6c757d;">${message}</div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.transition = 'opacity 0.3s ease';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    // Auto refresh every 30 seconds
+    setInterval(() => {
+        // In real implementation, fetch fresh data from API
+        console.log('Auto refreshing parking data...');
+    }, 30000);
+
+    // Floor selector
+    document.getElementById('floorSelect')?.addEventListener('change', function(e) {
+        const floor = e.target.value;
+        showNotification('info', 'Chuyển tầng', `Đang tải dữ liệu tầng ${floor}`);
+        // In real implementation, load data for selected floor
+        // Here you would make an AJAX call to load floor-specific data
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set initial gate UI
+        Object.keys(gateStatus).forEach(gateId => {
+            updateGateUI(gateId, gateStatus[gateId]);
+        });
+        
+        // Set initial counter UI
+        Object.keys(counterStatus).forEach(counterId => {
+            updateCounterUI(counterId, counterStatus[counterId]);
+        });
+        
+        console.log('VehicleVision initialized');
+    });
+</script>

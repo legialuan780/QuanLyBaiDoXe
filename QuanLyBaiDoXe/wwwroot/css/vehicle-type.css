@@ -1,0 +1,440 @@
+﻿/* Vehicle Type Management Page Styles */
+
+/* DataTables Custom Styles */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 15px;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border: 1px solid #e5e9f2;
+    border-radius: 6px;
+    margin: 0 5px;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    padding: 8px 12px;
+    border: 1px solid #e5e9f2;
+    border-radius: 6px;
+    margin-left: 5px;
+}
+
+table.dataTable {
+    width: 100% !important;
+    border-collapse: collapse;
+}
+
+table.dataTable thead th {
+    background-color: #f5f7fa;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #e5e9f2;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--light-gray);
+}
+
+table.dataTable tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e5e9f2;
+    font-size: 14px;
+    color: var(--dark-bg);
+}
+
+table.dataTable tbody tr {
+    transition: all 0.2s ease;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: rgba(33, 166, 145, 0.08);
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 15px;
+    font-size: 13px;
+    color: var(--light-gray);
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    padding-top: 15px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 6px 12px;
+    margin: 0 2px;
+    border: 1px solid #e5e9f2;
+    border-radius: 6px;
+    background: white;
+    color: var(--dark-teal);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--primary-teal);
+    color: white;
+    border-color: var(--primary-teal);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--primary-teal);
+    color: white;
+    border-color: var(--primary-teal);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Vehicle Type Name */
+.vehicle-type-name {
+    font-weight: 600;
+    color: var(--dark-bg);
+}
+
+/* Count Badge */
+.count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 35px;
+    padding: 4px 10px;
+    background: rgba(33, 166, 145, 0.15);
+    color: var(--primary-teal);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.count-badge.zero {
+    background: rgba(149, 165, 166, 0.15);
+    color: #95a5a6;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-action {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-action i {
+    font-size: 13px;
+}
+
+.btn-action-view {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+.btn-action-view:hover {
+    background: #3498db;
+    color: white;
+}
+
+.btn-action-edit {
+    background: rgba(33, 166, 145, 0.15);
+    color: var(--primary-teal);
+}
+
+.btn-action-edit:hover {
+    background: var(--primary-teal);
+    color: white;
+}
+
+.btn-action-delete {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+}
+
+.btn-action-delete:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e5e9f2;
+    background: #f5f7fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark-bg);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--light-gray);
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--dark-bg);
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 15px 25px;
+    border-top: 1px solid #e5e9f2;
+    justify-content: flex-end;
+}
+
+.modal-footer button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: #f5f7fa;
+    color: var(--dark-teal);
+}
+
+.btn-cancel:hover {
+    background: #e5e9f2;
+}
+
+.btn-submit {
+    background: var(--primary-teal);
+    color: white;
+}
+
+.btn-submit:hover {
+    background: var(--dark-teal);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-teal);
+    margin-bottom: 8px;
+}
+
+.required {
+    color: #e74c3c;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e5e9f2;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Detail Section */
+.detail-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f7fa;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 13px;
+    color: var(--light-gray);
+    min-width: 150px;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: var(--dark-bg);
+    font-weight: 500;
+    flex: 1;
+}
+
+/* Notification */
+.notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 99999;
+    display: none;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification.success {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+}
+
+.notification.error {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.notification.info {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.notification.show {
+    display: block;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Stat Card Blue */
+.stat-card-icon.blue {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        max-width: 95%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .detail-label {
+        min-width: auto;
+    }
+}

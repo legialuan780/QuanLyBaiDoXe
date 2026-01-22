@@ -1,0 +1,199 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleTypeViewModel
+@{
+    ViewData["Title"] = "Quản lý loại xe";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/vehicle-type.css" asp-append-version="true" />
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý loại xe</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Quản lý loại xe</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-primary-admin" onclick="VehicleType.openAddModal()">
+            <i class="fas fa-plus"></i> Thêm loại xe
+        </button>
+    </div>
+</div>
+
+<!-- Thống kê -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statTotalTypes">@Model.TotalVehicleTypes</h3>
+            <p>Tổng loại xe</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-id-card"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statTotalCards">@Model.TotalCards</h3>
+            <p>Tổng số thẻ</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statActiveCards">@Model.ActiveCards</h3>
+            <p>Thẻ hoạt động</p>
+        </div>
+    </div>
+</div>
+
+<!-- Danh sách loại xe -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">
+            <i class="fas fa-list"></i> Danh sách loại xe
+        </h3>
+    </div>
+
+    <div class="admin-card-body">
+        <table id="vehicleTypeTable" class="table table-hover" style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th>Tên loại xe</th>
+                    <th>Mô tả</th>
+                    <th style="width: 100px;">Số lượng thẻ</th>
+                    <th style="width: 120px;">Thẻ hoạt động</th>
+                    <th style="width: 120px;">Cấu hình giá</th>
+                    <th style="width: 150px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- DataTables will populate this -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Thêm loại xe -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Thêm loại xe mới</h3>
+            <button class="modal-close" onclick="VehicleType.closeModal('addModal')">&times;</button>
+        </div>
+        <form id="addForm">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tên loại xe <span class="required">*</span></label>
+                    <input type="text" id="addTenLoaiXe" name="tenLoaiXe" required placeholder="VD: Xe máy, Ô tô" />
+                </div>
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea id="addMoTa" name="moTa" rows="3" placeholder="Nhập mô tả cho loại xe..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="VehicleType.closeModal('addModal')">Hủy</button>
+                <button type="submit" class="btn-submit">Thêm loại xe</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Sửa loại xe -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Chỉnh sửa loại xe</h3>
+            <button class="modal-close" onclick="VehicleType.closeModal('editModal')">&times;</button>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="editMaLoaiXe" name="maLoaiXe" />
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tên loại xe <span class="required">*</span></label>
+                    <input type="text" id="editTenLoaiXe" name="tenLoaiXe" required placeholder="VD: Xe máy, Ô tô" />
+                </div>
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea id="editMoTa" name="moTa" rows="3" placeholder="Nhập mô tả cho loại xe..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="VehicleType.closeModal('editModal')">Hủy</button>
+                <button type="submit" class="btn-submit">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Chi tiết loại xe -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Chi tiết loại xe</h3>
+            <button class="modal-close" onclick="VehicleType.closeModal('detailModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-section">
+                <div class="detail-item">
+                    <span class="detail-label">Mã loại xe:</span>
+                    <span class="detail-value" id="detailMaLoaiXe">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tên loại xe:</span>
+                    <span class="detail-value" id="detailTenLoaiXe">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Mô tả:</span>
+                    <span class="detail-value" id="detailMoTa">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Số lượng thẻ:</span>
+                    <span class="detail-value" id="detailSoLuongThe">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Thẻ hoạt động:</span>
+                    <span class="detail-value" id="detailSoLuongTheHoatDong">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cấu hình giá:</span>
+                    <span class="detail-value" id="detailSoLuongCauHinhGia">--</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="VehicleType.closeModal('detailModal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification"></div>
+
+@section Scripts {
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- SweetAlert2 for confirmations -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Custom JS -->
+    <script src="~/js/vehicle-type.js" asp-append-version="true"></script>
+}

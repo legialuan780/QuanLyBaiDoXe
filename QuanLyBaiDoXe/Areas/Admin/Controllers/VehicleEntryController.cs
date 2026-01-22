@@ -91,6 +91,22 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         });
                     }
 
+                    // Kiểm tra biển số xe ra phải giống biển số xe vào
+                    if (!string.IsNullOrEmpty(luotGuiHienTai.BienSoVao))
+                    {
+                        var bienSoVao = luotGuiHienTai.BienSoVao.Trim().ToUpper();
+                        var bienSoRa = request.BienSo.Trim().ToUpper();
+                        
+                        if (bienSoVao != bienSoRa)
+                        {
+                            return Json(new QuetTheResponse
+                            {
+                                Success = false,
+                                Message = $"Biển số xe ra ({request.BienSo}) không khớp với biển số xe vào ({luotGuiHienTai.BienSoVao})! Vui lòng kiểm tra lại."
+                            });
+                        }
+                    }
+
                     // Lưu hình ảnh nếu có
                     string? savedImagePath = null;
                     if (!string.IsNullOrEmpty(request.HinhAnh))

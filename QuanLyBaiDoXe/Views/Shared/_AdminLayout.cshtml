@@ -17,6 +17,135 @@
     <!-- Admin CSS -->
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
     
+    <style>
+        .header-user {
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .header-user:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .header-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3748;
+            line-height: 1.2;
+        }
+
+        .header-user-role {
+            font-size: 12px;
+            color: #718096;
+            line-height: 1.2;
+        }
+
+        .header-user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            min-width: 220px;
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .header-user.show .header-user-dropdown {
+            display: block;
+        }
+
+        .dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .dropdown-user-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-user-email {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .dropdown-menu-custom {
+            padding: 8px 0;
+        }
+
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: #f7fafc;
+            color: #2d3748;
+        }
+
+        .dropdown-item-custom i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 8px 0;
+        }
+
+        .dropdown-item-logout {
+            color: #e53e3e;
+        }
+
+        .dropdown-item-logout:hover {
+            background-color: #fff5f5;
+            color: #c53030;
+        }
+    </style>
+    
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -46,13 +175,53 @@
                         <i class="fas fa-envelope"></i>
                         <span class="badge">2</span>
                     </button>
-                    <div class="header-user dropdown">
+                    
+                    @{
+                        var fullName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "User";
+                        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Unknown";
+                        var roleName = role == "Admin" ? "Quản trị viên" : (role == "Employee" ? "Nhân viên" : "Người dùng");
+                        var username = User.Identity?.Name ?? "";
+                        var firstLetter = !string.IsNullOrEmpty(fullName) ? fullName.Substring(0, 1).ToUpper() : "?";
+                    }
+                    
+                    <div class="header-user" id="headerUserDropdown">
                         <div class="header-user-avatar">
-                            <span>A</span>
+                            <span>@firstLetter</span>
                         </div>
                         <div class="header-user-info">
-                            <div class="header-user-name">Admin</div>
-                            <div class="header-user-role">Quản trị viên</div>
+                            <div class="header-user-name">@fullName</div>
+                            <div class="header-user-role">@roleName</div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="font-size: 12px; color: #718096;"></i>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="header-user-dropdown">
+                            <div class="dropdown-header">
+                                <div class="dropdown-user-name">@fullName</div>
+                                <div class="dropdown-user-email">@("@" + username)</div>
+                            </div>
+                            <div class="dropdown-menu-custom">
+                                <a href="#" class="dropdown-item-custom">
+                                    <i class="fas fa-user"></i>
+                                    <span>Thông tin cá nhân</span>
+                                </a>
+                                <a href="#" class="dropdown-item-custom">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Cài đặt</span>
+                                </a>
+                                <a href="#" class="dropdown-item-custom">
+                                    <i class="fas fa-key"></i>
+                                    <span>Đổi mật khẩu</span>
+                                </a>
+                                <div class="dropdown-divider-custom"></div>
+                                <form action="/Account/Logout" method="post" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item-custom dropdown-item-logout">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Đăng xuất</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -60,6 +229,15 @@
 
             <!-- Page Content -->
             <main class="admin-content">
+                @if (TempData["LoginMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["LoginMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                
                 @RenderBody()
             </main>
         </div>
@@ -69,6 +247,28 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/admin.js" asp-append-version="true"></script>
+    
+    <script>
+        // Toggle user dropdown
+        $(document).ready(function() {
+            $('#headerUserDropdown').on('click', function(e) {
+                e.stopPropagation();
+                $(this).toggleClass('show');
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#headerUserDropdown').length) {
+                    $('#headerUserDropdown').removeClass('show');
+                }
+            });
+
+            // Prevent dropdown close when clicking inside
+            $('.header-user-dropdown').on('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    </script>
     
     @await RenderSectionAsync("Scripts", required: false)
 </body>

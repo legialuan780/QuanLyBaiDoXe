@@ -1,0 +1,1020 @@
+﻿@model QuanLyBaiDoXe.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .login-left {
+            flex: 0 0 40%;
+            max-width: 40%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .login-right {
+            flex: 0 0 60%;
+            max-width: 60%;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Custom scrollbar */
+        .login-right::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .login-right::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .login-right::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .login-right::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .register-right .content {
+            max-width: 550px;
+            width: 100%;
+            padding: 20px 25px 40px 25px;
+            margin: 0 auto;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome {
+            font-size: 24px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .hint {
+            font-size: 13px;
+            margin-bottom: 18px;
+            color: #666;
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .form-control.is-valid {
+            border-color: #28a745;
+        }
+        
+        .validation-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            font-size: 14px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .spinner-border-sm {
+            width: 0.9rem;
+            height: 0.9rem;
+        }
+
+        .account-type-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .account-type-option {
+            flex: 1;
+            padding: 10px 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .account-type-option h5 {
+            font-size: 14px;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+
+        .account-type-option small {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .account-type-option:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .account-type-option.active {
+            border-color: #007bff;
+            background-color: #e7f1ff;
+        }
+
+        .account-type-option input[type="radio"] {
+            display: none;
+        }
+
+        .employee-fields {
+            display: none;
+        }
+
+        .customer-fields {
+            display: block;
+        }
+
+        .form-label {
+            font-size: 13px;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .mb-3 {
+            margin-bottom: 12px !important;
+        }
+
+        .input {
+            padding: 7px 10px;
+            border-radius: 8px;
+        }
+
+        .input .icon {
+            font-size: 16px;
+        }
+
+        .input input,
+        .form-control,
+        .form-select {
+            font-size: 13px !important;
+        }
+
+        .btn-primary {
+            margin-top: 8px;
+            margin-bottom: 12px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .register {
+            margin-top: 12px;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+
+        .login-form {
+            flex: 1;
+        }
+
+        .login-right {
+            scroll-behavior: smooth;
+        }
+
+        .text-danger {
+            font-size: 11px;
+        }
+
+        .alert {
+            padding: 8px 12px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .row {
+            margin-left: -6px;
+            margin-right: -6px;
+        }
+
+        .row > * {
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+
+        /* Responsive adjustments */
+        
+        /* Large Desktop (1400px+) */
+        @@media (min-width: 1400px) {
+            .register-right .content {
+                max-width: 600px;
+                padding: 25px 30px 45px 30px;
+            }
+            
+            .welcome {
+                font-size: 26px;
+            }
+            
+            .form-label {
+                font-size: 14px;
+            }
+        }
+
+        /* Desktop (1200px - 1399px) */
+        @@media (min-width: 1200px) and (max-width: 1399px) {
+            .login-left {
+                flex: 0 0 38%;
+                max-width: 38%;
+            }
+            
+            .login-right {
+                flex: 0 0 62%;
+                max-width: 62%;
+            }
+        }
+
+        /* Laptop / Small Desktop (992px - 1199px) */
+        @@media (min-width: 992px) and (max-width: 1199px) {
+            .login-left {
+                flex: 0 0 35%;
+                max-width: 35%;
+            }
+            
+            .login-right {
+                flex: 0 0 65%;
+                max-width: 65%;
+            }
+
+            .register-right .content {
+                max-width: 520px;
+                padding: 18px 22px 38px 22px;
+            }
+
+            .welcome {
+                font-size: 22px;
+            }
+            
+            .hint {
+                font-size: 12px;
+            }
+
+            .account-type-option h5 {
+                font-size: 13px;
+            }
+
+            .account-type-option small {
+                font-size: 10px;
+            }
+        }
+
+        /* Tablet Landscape (768px - 991px) */
+        @@media (min-width: 768px) and (max-width: 991px) {
+            .login-wrapper {
+                flex-direction: column;
+            }
+
+            .login-left {
+                flex: 0 0 auto;
+                max-width: 100%;
+                height: 30vh;
+                min-height: 220px;
+            }
+            
+            .login-right {
+                flex: 1;
+                max-width: 100%;
+                height: 70vh;
+            }
+
+            .register-right .content {
+                max-width: 600px;
+                padding: 20px 24px 35px 24px;
+            }
+
+            .welcome {
+                font-size: 22px;
+            }
+
+            .hint {
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+
+            .account-type-selector {
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+
+            .account-type-option {
+                padding: 9px 7px;
+            }
+
+            .account-type-option h5 {
+                font-size: 13px;
+            }
+
+            .account-type-option small {
+                font-size: 10px;
+            }
+
+            .mb-3 {
+                margin-bottom: 11px !important;
+            }
+        }
+
+        /* Tablet Portrait (576px - 767px) */
+        @@media (min-width: 576px) and (max-width: 767px) {
+            .login-wrapper {
+                flex-direction: column;
+            }
+
+            .login-left {
+                flex: 0 0 auto;
+                max-width: 100%;
+                height: 28vh;
+                min-height: 200px;
+            }
+            
+            .login-right {
+                flex: 1;
+                max-width: 100%;
+                height: 72vh;
+            }
+
+            .register-right .content {
+                max-width: 500px;
+                padding: 18px 20px 32px 20px;
+            }
+
+            .welcome {
+                font-size: 20px;
+            }
+
+            .hint {
+                font-size: 12px;
+                margin-bottom: 15px;
+            }
+
+            .account-type-selector {
+                gap: 9px;
+                margin-bottom: 15px;
+            }
+
+            .account-type-option {
+                padding: 8px 6px;
+            }
+
+            .account-type-option h5 {
+                font-size: 12px;
+            }
+
+            .account-type-option small {
+                font-size: 10px;
+            }
+
+            .form-label {
+                font-size: 12px;
+            }
+
+            .input {
+                padding: 6px 9px;
+            }
+
+            .mb-3 {
+                margin-bottom: 10px !important;
+            }
+
+            .btn-primary {
+                padding: 9px;
+                font-size: 13px;
+            }
+        }
+
+        /* Mobile Large (480px - 575px) */
+        @@media (min-width: 480px) and (max-width: 575px) {
+            .login-wrapper {
+                flex-direction: column;
+            }
+
+            .login-left {
+                flex: 0 0 auto;
+                max-width: 100%;
+                height: 25vh;
+                min-height: 180px;
+            }
+            
+            .login-right {
+                flex: 1;
+                max-width: 100%;
+                height: 75vh;
+            }
+
+            .register-right .content {
+                max-width: 100%;
+                padding: 16px 18px 30px 18px;
+            }
+
+            .welcome {
+                font-size: 19px;
+            }
+
+            .hint {
+                font-size: 11px;
+                margin-bottom: 14px;
+            }
+
+            .account-type-selector {
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+
+            .account-type-option {
+                padding: 8px 10px;
+            }
+
+            .account-type-option h5 {
+                font-size: 13px;
+            }
+
+            .account-type-option small {
+                font-size: 10px;
+            }
+
+            .form-label {
+                font-size: 12px;
+            }
+
+            .input {
+                padding: 6px 8px;
+            }
+
+            .input .icon {
+                font-size: 14px;
+            }
+
+            .mb-3 {
+                margin-bottom: 9px !important;
+            }
+
+            .btn-primary {
+                padding: 9px;
+                font-size: 13px;
+            }
+
+            .register {
+                font-size: 12px;
+            }
+        }
+
+        /* Mobile Small (< 480px) */
+        @@media (max-width: 479px) {
+            .login-wrapper {
+                flex-direction: column;
+            }
+
+            .login-left {
+                flex: 0 0 auto;
+                max-width: 100%;
+                height: 22vh;
+                min-height: 160px;
+            }
+            
+            .login-right {
+                flex: 1;
+                max-width: 100%;
+                height: 78vh;
+            }
+
+            .register-right .content {
+                max-width: 100%;
+                padding: 14px 15px 28px 15px;
+            }
+
+            .welcome {
+                font-size: 18px;
+            }
+
+            .hint {
+                font-size: 11px;
+                margin-bottom: 12px;
+            }
+
+            .account-type-selector {
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .account-type-option {
+                padding: 8px;
+            }
+
+            .account-type-option h5 {
+                font-size: 12px;
+            }
+
+            .account-type-option small {
+                font-size: 9px;
+            }
+
+            .form-label {
+                font-size: 11px;
+                margin-bottom: 3px;
+            }
+
+            .input {
+                padding: 5px 8px;
+            }
+
+            .input .icon {
+                font-size: 14px;
+            }
+
+            .input input,
+            .form-control,
+            .form-select {
+                font-size: 12px !important;
+            }
+
+            .mb-3 {
+                margin-bottom: 8px !important;
+            }
+
+            .btn-primary {
+                padding: 8px;
+                font-size: 12px;
+                margin-top: 6px;
+            }
+
+            .register {
+                font-size: 11px;
+                margin-top: 10px;
+                margin-bottom: 20px;
+            }
+
+            .alert {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .text-danger {
+                font-size: 10px;
+            }
+
+            .row {
+                margin-left: -4px;
+                margin-right: -4px;
+            }
+
+            .row > * {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+        }
+
+        /* Landscape mode for mobile */
+        @@media (max-width: 991px) and (orientation: landscape) {
+            .login-wrapper {
+                flex-direction: row;
+            }
+
+            .login-left {
+                flex: 0 0 40%;
+                max-width: 40%;
+                height: 100vh;
+            }
+
+            .login-right {
+                flex: 0 0 60%;
+                max-width: 60%;
+                height: 100vh;
+            }
+
+            .register-right .content {
+                padding: 15px 20px 30px 20px;
+            }
+
+            .welcome {
+                font-size: 18px;
+            }
+
+            .hint {
+                font-size: 11px;
+                margin-bottom: 12px;
+            }
+
+            .account-type-selector {
+                margin-bottom: 12px;
+            }
+
+            .mb-3 {
+                margin-bottom: 8px !important;
+            }
+        }
+
+        /* Very small screens (< 360px) */
+        @@media (max-width: 359px) {
+            .login-left {
+                height: 20vh;
+                min-height: 140px;
+            }
+
+            .register-right .content {
+                padding: 12px 12px 25px 12px;
+            }
+
+            .welcome {
+                font-size: 16px;
+            }
+
+            .hint {
+                font-size: 10px;
+            }
+
+            .form-label {
+                font-size: 10px;
+            }
+
+            .input input,
+            .form-control,
+            .form-select {
+                font-size: 11px !important;
+            }
+
+            .btn-primary {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-left">
+            <div class="overlay">
+             
+            </div>
+        </div>
+        <div class="login-right register-right">
+            <div class="content">
+                <br />
+             
+                <br />
+                <h2 class="welcome">Đăng ký tài khoản</h2>
+                <p class="hint">Chọn loại tài khoản và điền thông tin</p>
+
+                <form asp-action="Register" asp-controller="Account" method="post" class="login-form" id="registerForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Account Type Selector -->
+                    <div class="account-type-selector">
+                        <label class="account-type-option active" id="customerOption">
+                            <input type="radio" name="AccountType" value="Customer" checked />
+                            <div>
+                                <h5>👤 Khách hàng</h5>
+                                <small>Sử dụng dịch vụ gửi xe</small>
+                            </div>
+                        </label>
+                        <label class="account-type-option" id="employeeOption">
+                            <input type="radio" name="AccountType" value="Employee" />
+                            <div>
+                                <h5>👔 Nhân viên</h5>
+                                <small>Quản lý bãi đỗ xe</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="row">
+                        <!-- Tên đăng nhập -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="Username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">👤</span>
+                                    <input asp-for="Username" class="form-control border-0" placeholder="Nhập tên đăng nhập" />
+                                    <span class="validation-icon" id="usernameIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Username" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Mật khẩu -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">🔒</span>
+                                <input asp-for="Password" class="form-control border-0" type="password" placeholder="********" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Xác nhận mật khẩu -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">🔒</span>
+                                <input asp-for="ConfirmPassword" class="form-control border-0" type="password" placeholder="********" />
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Họ tên -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="FullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">📝</span>
+                                <input asp-for="FullName" class="form-control border-0" placeholder="Nguyễn Văn A" />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Số điện thoại -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">📱</span>
+                                    <input asp-for="PhoneNumber" class="form-control border-0" placeholder="0912345678" />
+                                    <span class="validation-icon" id="phoneIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <!-- CCCD -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CCCD" class="form-label">
+                                CCCD/CMND 
+                                <span class="text-danger employee-only" style="display:none;">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">🪪</span>
+                                    <input asp-for="CCCD" class="form-control border-0" placeholder="001234567890" />
+                                    <span class="validation-icon" id="cccdIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="CCCD" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Địa chỉ -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="Address" class="form-label">Địa chỉ</label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">🏠</span>
+                                <input asp-for="Address" class="form-control border-0" placeholder="123 Đường ABC, Quận XYZ" />
+                            </div>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Customer-only fields -->
+                        <div class="customer-fields">
+                            <!-- Biển số xe -->
+                            <div class="col-12 mb-3">
+                                <label asp-for="LicensePlate" class="form-label">Biển số xe mặc định</label>
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">🚗</span>
+                                    <input asp-for="LicensePlate" class="form-control border-0" placeholder="29A-12345" />
+                                </div>
+                                <span asp-validation-for="LicensePlate" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Employee-only fields -->
+                        <div class="employee-fields">
+                            <!-- Giới tính -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Gender" class="form-label">Giới tính</label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">Chọn</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+
+                            <!-- Ngày sinh -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            </div>
+
+                            <!-- Chức vụ -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Position" class="form-label">Chức vụ</label>
+                                <select asp-for="Position" class="form-select">
+                                    <option value="1">Nhân viên</option>
+                                    <option value="0">Quản lý</option>
+                                </select>
+                            </div>
+
+                            <!-- Ngày vào làm -->
+                            <div class="col-12 mb-3">
+                                <label asp-for="StartDate" class="form-label">Ngày vào làm</label>
+                                <input asp-for="StartDate" class="form-control" type="date" />
+                                <small class="text-muted d-block mt-1" style="font-size: 11px;">Để trống sẽ dùng ngày hôm nay</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">ĐĂNG KÝ</button>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger mt-2" role="alert">
+                            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@err.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+                </form>
+
+                <div class="register text-center">
+                    Đã có tài khoản? <a asp-controller="Account" asp-action="Login">Đăng nhập ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            let usernameTimeout;
+            let phoneTimeout;
+            let cccdTimeout;
+
+            // Account type switching
+            $('.account-type-option').click(function() {
+                $('.account-type-option').removeClass('active');
+                $(this).addClass('active');
+                
+                const accountType = $(this).find('input[type="radio"]').val();
+                
+                if (accountType === 'Employee') {
+                    $('.employee-fields').slideDown(400, function() {
+                        $('.login-right').animate({
+                            scrollTop: $('.employee-fields').offset().top - 100
+                        }, 300);
+                    });
+                    $('.customer-fields').slideUp();
+                    $('.employee-only').show();
+                } else {
+                    $('.customer-fields').slideDown();
+                    $('.employee-fields').slideUp();
+                    $('.employee-only').hide();
+                }
+            });
+
+            // Kiểm tra tên đăng nhập
+            $('#Username').on('input', function () {
+                clearTimeout(usernameTimeout);
+                const username = $(this).val().trim();
+                const icon = $('#usernameIcon');
+
+                if (username.length < 3) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                usernameTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckUsername", "Account")',
+                        type: 'GET',
+                        data: { username: username },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#Username').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#Username').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Kiểm tra số điện thoại
+            $('#PhoneNumber').on('input', function () {
+                clearTimeout(phoneTimeout);
+                const phone = $(this).val().trim();
+                const icon = $('#phoneIcon');
+
+                if (phone.length < 10) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                phoneTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckPhoneNumber", "Account")',
+                        type: 'GET',
+                        data: { phoneNumber: phone },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#PhoneNumber').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#PhoneNumber').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Kiểm tra CCCD
+            $('#CCCD').on('input', function () {
+                clearTimeout(cccdTimeout);
+                const cccd = $(this).val().trim();
+                const icon = $('#cccdIcon');
+
+                if (cccd.length < 9) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                cccdTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckCCCD", "Account")',
+                        type: 'GET',
+                        data: { cccd: cccd },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#CCCD').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#CCCD').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Chuyển biển số xe thành chữ hoa
+            $('#LicensePlate').on('input', function () {
+                $(this).val($(this).val().toUpperCase());
+            });
+
+            // Form validation
+            $('#registerForm').on('submit', function (e) {
+                if (!$(this).valid()) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...');
+            });
+        });
+    </script>
+</body>
+</html>

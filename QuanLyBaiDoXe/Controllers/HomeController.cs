@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaiDoXe.Models;
 
@@ -13,11 +14,14 @@ namespace QuanLyBaiDoXe.Controllers
             _logger = logger;
         }
 
+        [Authorize] // Yêu c?u ??ng nh?p
         public IActionResult Index()
         {
+            // N?u ch?a ??ng nh?p s? redirect v? Login
             return View();
         }
 
+        [Authorize]
         public IActionResult Privacy()
         {
             return View();

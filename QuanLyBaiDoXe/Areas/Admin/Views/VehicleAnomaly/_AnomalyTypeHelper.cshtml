@@ -1,0 +1,74 @@
+@*
+    Helper ?? th?ng nh?t hi?n th? icon và màu s?c cho các lo?i s? c?
+*@
+
+@functions {
+    public static string GetAnomalyIcon(string loaiSuCo)
+    {
+        return loaiSuCo switch
+        {
+            "Xe m?t th?" => "fas fa-id-card-alt",
+            "L?i barrier" => "fas fa-road-barrier",
+            "L?i camera" => "fas fa-video-slash",
+            "Tranh ch?p phí" => "fas fa-hand-holding-usd",
+            "Kh?n c?p" => "fas fa-exclamation-triangle",
+            _ => "fas fa-flag"
+        };
+    }
+
+    public static string GetAnomalyColorClass(string loaiSuCo)
+    {
+        return loaiSuCo switch
+        {
+            "Xe m?t th?" => "warning",
+            "L?i barrier" => "danger",
+            "L?i camera" => "info",
+            "Tranh ch?p phí" => "purple",
+            "Kh?n c?p" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    public static string GetAnomalyBgColor(string loaiSuCo)
+    {
+        return loaiSuCo switch
+        {
+            "Xe m?t th?" => "bg-warning",
+            "L?i barrier" => "bg-danger",
+            "L?i camera" => "bg-info",
+            "Tranh ch?p phí" => "bg-purple",
+            "Kh?n c?p" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    public static string GetAnomalyHexColor(string loaiSuCo)
+    {
+        return loaiSuCo switch
+        {
+            "Xe m?t th?" => "#f39c12",
+            "L?i barrier" => "#e74c3c",
+            "L?i camera" => "#3498db",
+            "Tranh ch?p phí" => "#9b59b6",
+            "Kh?n c?p" => "#e74c3c",
+            _ => "#95a5a6"
+        };
+    }
+}
+
+@*
+    CSS cho màu purple (thêm vào n?u ch?a có)
+*@
+<style>
+    .bg-purple {
+        background-color: #9b59b6 !important;
+    }
+    
+    .text-purple {
+        color: #9b59b6 !important;
+    }
+    
+    .badge.bg-purple {
+        color: #fff;
+    }
+</style>

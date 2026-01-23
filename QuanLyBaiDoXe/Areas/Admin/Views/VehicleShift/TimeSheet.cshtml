@@ -1,0 +1,330 @@
+﻿@model List<QuanLyBaiDoXe.Areas.Admin.ViewModels.EmployeeTimeSheetViewModel>
+
+@{
+    ViewData["Title"] = "Bảng chấm công";
+    var selectedMonth = (int)ViewBag.SelectedMonth;
+    var selectedYear = (int)ViewBag.SelectedYear;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-clock"></i>
+            Bảng chấm công
+        </h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })">Ca làm việc</a>
+            <span>/</span>
+            <span>Bảng chấm công</span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-secondary-admin" onclick="exportTimeSheet()">
+            <i class="fas fa-file-excel"></i>
+            Xuất Excel
+        </button>
+        <button class="btn-primary-admin" onclick="printTimeSheet()">
+            <i class="fas fa-print"></i>
+            In bảng công
+        </button>
+    </div>
+</div>
+
+<!-- Month Selector -->
+<div class="admin-card">
+    <div class="month-selector">
+        <button class="btn-secondary-admin" onclick="previousMonth()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="month-display">
+            <select class="form-select" id="selectMonth" onchange="changeMonth()">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    if (m == selectedMonth)
+                    {
+                        <option value="@m" selected>Tháng @m</option>
+                    }
+                    else
+                    {
+                        <option value="@m">Tháng @m</option>
+                    }
+                }
+            </select>
+            <select class="form-select" id="selectYear" onchange="changeMonth()">
+                @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                {
+                    if (y == selectedYear)
+                    {
+                        <option value="@y" selected>Năm @y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">Năm @y</option>
+                    }
+                }
+            </select>
+        </div>
+        <button class="btn-secondary-admin" onclick="nextMonth()">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Count</h3>
+            <p>Tổng nhân viên</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-business-time"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Sum(e => e.SoCaLam)</h3>
+            <p>Tổng ca làm việc</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Sum(e => e.TongGioLam).ToString("F1")h</h3>
+            <p>Tổng giờ làm việc</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Sum(e => e.TongDoanhThu).ToString("N0") đ</h3>
+            <p>Tổng doanh thu</p>
+        </div>
+    </div>
+</div>
+
+<!-- TimeSheet Table -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Bảng công tháng @selectedMonth/@selectedYear</h3>
+        <div class="admin-card-actions">
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="searchEmployee" placeholder="Tìm nhân viên..." onkeyup="searchEmployee()">
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table admin-table timesheet-table">
+            <thead>
+                <tr>
+                    <th>Mã NV</th>
+                    <th>Họ tên</th>
+                    <th>Chức vụ</th>
+                    <th>Số ca làm</th>
+                    <th>Tổng giờ</th>
+                    <th>Giờ chuẩn</th>
+                    <th>Tăng ca</th>
+                    <th>Doanh thu</th>
+                    <th>Hiệu suất</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="timesheetTableBody">
+                @if (Model.Any())
+                {
+                    @foreach (var emp in Model)
+                    {
+                        var standardHours = emp.SoCaLam * 8;
+                        var overtimeHours = Math.Max(0, emp.TongGioLam - standardHours);
+                        var efficiency = emp.SoCaLam > 0 ? (emp.TongDoanhThu / emp.SoCaLam) : 0;
+                        
+                        <tr class="employee-row" data-name="@emp.HoTen.ToLower()">
+                            <td><strong>NV@emp.MaNhanVien.ToString("D4")</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="employee-avatar">@emp.HoTen.Substring(0, 1)</div>
+                                    <span>@emp.HoTen</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">@emp.ChucVuText</span>
+                            </td>
+                            <td class="text-center">
+                                <strong>@emp.SoCaLam</strong>
+                            </td>
+                            <td class="text-center">
+                                <strong class="text-primary">@emp.TongGioLam.ToString("F1")h</strong>
+                            </td>
+                            <td class="text-center">
+                                @standardHours.ToString("F1")h
+                            </td>
+                            <td class="text-center">
+                                @if (overtimeHours > 0)
+                                {
+                                    <strong class="text-warning">@overtimeHours.ToString("F1")h</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">0h</span>
+                                }
+                            </td>
+                            <td>
+                                <strong class="text-success">@emp.TongDoanhThu.ToString("N0") đ</strong>
+                            </td>
+                            <td>
+                                <div class="efficiency-bar">
+                                    <div class="progress" style="height: 20px;">
+                                        @{
+                                            var efficiencyPercent = Math.Min(100, (efficiency / 1000000) * 100);
+                                            var barColor = efficiencyPercent >= 80 ? "success" : efficiencyPercent >= 50 ? "warning" : "danger";
+                                        }
+                                        <div class="progress-bar bg-@barColor" style="width: @efficiencyPercent.ToString("F0")%">
+                                            @efficiency.ToString("N0") đ/ca
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" onclick="viewEmployeeDetail(@emp.MaNhanVien)" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-icon btn-primary" onclick="exportEmployeeTimeSheet(@emp.MaNhanVien)" title="Xuất bảng công">
+                                        <i class="fas fa-file-export"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Không có dữ liệu chấm công</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Performance Chart -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Biểu đồ hiệu suất</h3>
+    </div>
+    <div class="chart-container" style="height: 300px;">
+        <canvas id="performanceChart"></canvas>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function previousMonth() {
+            let month = parseInt($('#selectMonth').val()) - 1;
+            let year = parseInt($('#selectYear').val());
+            
+            if (month < 1) {
+                month = 12;
+                year--;
+            }
+            
+            window.location.href = '@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })?month=' + month + '&year=' + year;
+        }
+
+        function nextMonth() {
+            let month = parseInt($('#selectMonth').val()) + 1;
+            let year = parseInt($('#selectYear').val());
+            
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+            
+            window.location.href = '@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })?month=' + month + '&year=' + year;
+        }
+
+        function changeMonth() {
+            const month = $('#selectMonth').val();
+            const year = $('#selectYear').val();
+            window.location.href = '@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })?month=' + month + '&year=' + year;
+        }
+
+        function searchEmployee() {
+            const searchText = $('#searchEmployee').val().toLowerCase();
+            $('.employee-row').each(function() {
+                const name = $(this).data('name');
+                if (name.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function viewEmployeeDetail(employeeId) {
+            console.log('View employee detail:', employeeId);
+        }
+
+        function exportEmployeeTimeSheet(employeeId) {
+            const month = $('#selectMonth').val();
+            const year = $('#selectYear').val();
+            window.location.href = '@Url.Action("ExportEmployeeTimeSheet", "VehicleShift", new { area = "Admin" })?employeeId=' + employeeId + '&month=' + month + '&year=' + year;
+        }
+
+        function exportTimeSheet() {
+            const month = $('#selectMonth').val();
+            const year = $('#selectYear').val();
+            window.location.href = '@Url.Action("ExportTimeSheet", "VehicleShift", new { area = "Admin" })?month=' + month + '&year=' + year;
+        }
+
+        function printTimeSheet() {
+            window.print();
+        }
+
+        // Chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => $"'{e.HoTen}'")))],
+                datasets: [{
+                    label: 'Doanh thu (triệu đồng)',
+                    data: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => (e.TongDoanhThu / 1000000).ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                    backgroundColor: 'rgba(33, 166, 145, 0.6)',
+                    borderColor: 'rgba(33, 166, 145, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}

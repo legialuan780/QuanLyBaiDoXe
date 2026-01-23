@@ -174,13 +174,16 @@
                 </a>
                 <ul class="sidebar-submenu">
                     <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Index", "Shift", new { area = "Admin" })" class="sidebar-nav-link">Danh sách ca</a>
+                        <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })" class="sidebar-nav-link">Danh sách ca</a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Handover", "Shift", new { area = "Admin" })" class="sidebar-nav-link">Giao/Nhận ca</a>
+                        <a href="@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })" class="sidebar-nav-link">Lịch làm việc</a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Reconcile", "Shift", new { area = "Admin" })" class="sidebar-nav-link">Đối soát doanh thu</a>
+                        <a href="@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })" class="sidebar-nav-link">Bảng chấm công</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="@Url.Action("EmployeeList", "VehicleShift", new { area = "Admin" })" class="sidebar-nav-link">Danh sách nhân viên</a>
                     </li>
                 </ul>
             </li>

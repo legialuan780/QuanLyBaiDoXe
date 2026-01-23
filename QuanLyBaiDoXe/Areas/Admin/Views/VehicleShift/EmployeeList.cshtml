@@ -1,0 +1,269 @@
+﻿@model List<QuanLyBaiDoXe.Areas.Admin.ViewModels.EmployeeViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách nhân viên";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-users"></i>
+            Danh sách nhân viên
+        </h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })">Ca làm việc</a>
+            <span>/</span>
+            <span>Nhân viên</span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })'">
+            <i class="fas fa-calendar-alt"></i>
+            Xem lịch làm việc
+        </button>
+        <button class="btn-primary-admin" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+            <i class="fas fa-plus"></i>
+            Thêm nhân viên
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Count</h3>
+            <p>Tổng nhân viên</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Count(e => e.TrangThaiLamViec)</h3>
+            <p>Đang làm việc</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-user-times"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Count(e => !e.TrangThaiLamViec)</h3>
+            <p>Đã nghỉ việc</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Count(e => e.ChucVu >= 3)</h3>
+            <p>Quản lý</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Danh sách nhân viên</h3>
+    </div>
+    
+    <!-- Filter Row -->
+    <div class="filter-row">
+        <select class="form-select" id="filterPosition" onchange="filterEmployees()">
+            <option value="">Tất cả chức vụ</option>
+            <option value="1">Bảo vệ</option>
+            <option value="2">Thu ngân</option>
+            <option value="3">Giám sát</option>
+            <option value="4">Quản lý</option>
+        </select>
+        <select class="form-select" id="filterStatus" onchange="filterEmployees()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="true">Đang làm việc</option>
+            <option value="false">Đã nghỉ việc</option>
+        </select>
+        <div class="input-group search-box">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" class="form-control" id="searchEmployee" placeholder="Tìm theo tên, SĐT..." onkeyup="searchEmployees()">
+        </div>
+    </div>
+
+    <!-- Employee Cards Grid -->
+    <div class="employee-grid">
+        @if (Model.Any())
+        {
+            @foreach (var emp in Model)
+            {
+                <div class="employee-card" data-position="@emp.ChucVu" data-status="@emp.TrangThaiLamViec.ToString().ToLower()" data-search="@emp.HoTen.ToLower() @emp.SoDienThoai">
+                    <div class="employee-card-header">
+                        <div class="employee-avatar-large">
+                            @emp.HoTen.Substring(0, 1)
+                        </div>
+                        <div class="employee-status">
+                            @if (emp.TrangThaiLamViec)
+                            {
+                                <span class="badge badge-success">
+                                    <i class="fas fa-circle"></i>
+                                    Đang làm việc
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">
+                                    <i class="fas fa-circle"></i>
+                                    Đã nghỉ việc
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="employee-card-body">
+                        <h5 class="employee-card-name">@emp.HoTen</h5>
+                        <p class="employee-card-id">Mã NV: <strong>NV@emp.MaNhanVien.ToString("D4")</strong></p>
+                        
+                        <div class="employee-info-grid">
+                            <div class="info-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span>@emp.ChucVuText</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-phone"></i>
+                                <span>@(emp.SoDienThoai ?? "Chưa có")</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-birthday-cake"></i>
+                                <span>@emp.Tuoi tuổi</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>Vào làm: @emp.NgayVaoLam?.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(emp.DiaChi))
+                        {
+                            <div class="employee-address">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>@emp.DiaChi</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="employee-card-footer">
+                        <button class="btn-sm btn-secondary-admin" onclick="viewEmployeeDetail(@emp.MaNhanVien)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <button class="btn-sm btn-primary-admin" onclick="viewEmployeeSchedule(@emp.MaNhanVien)">
+                            <i class="fas fa-calendar-alt"></i>
+                            Lịch làm việc
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-users-slash"></i>
+                    <p>Chưa có nhân viên nào</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Employee Detail Modal -->
+<div class="modal fade" id="employeeDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thông tin nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="employeeDetailContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn-primary-admin" onclick="editEmployee()">
+                    <i class="fas fa-edit"></i>
+                    Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script>
+        function filterEmployees() {
+            const position = $('#filterPosition').val();
+            const status = $('#filterStatus').val();
+            
+            $('.employee-card').each(function() {
+                const cardPosition = $(this).data('position').toString();
+                const cardStatus = $(this).data('status');
+                
+                let showCard = true;
+                
+                if (position && cardPosition !== position) {
+                    showCard = false;
+                }
+                
+                if (status && cardStatus !== status) {
+                    showCard = false;
+                }
+                
+                if (showCard) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function searchEmployees() {
+            const searchText = $('#searchEmployee').val().toLowerCase();
+            
+            $('.employee-card').each(function() {
+                const searchData = $(this).data('search');
+                
+                if (searchData.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function viewEmployeeDetail(employeeId) {
+            $('#employeeDetailModal').modal('show');
+            
+            // Load employee detail via AJAX
+            $.get('@Url.Action("GetEmployeeDetail", "VehicleShift", new { area = "Admin" })', { id: employeeId }, function(data) {
+                // Render employee detail
+                $('#employeeDetailContent').html('<div class="text-center"><p>Chi tiết nhân viên #' + employeeId + '</p></div>');
+            });
+        }
+
+        function viewEmployeeSchedule(employeeId) {
+            window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?employeeId=' + employeeId;
+        }
+
+        function editEmployee() {
+            // Implement edit functionality
+            console.log('Edit employee');
+        }
+    </script>
+}

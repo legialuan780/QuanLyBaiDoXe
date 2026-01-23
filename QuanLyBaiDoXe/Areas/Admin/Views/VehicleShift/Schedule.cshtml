@@ -1,0 +1,207 @@
+﻿@model List<QuanLyBaiDoXe.Areas.Admin.ViewModels.ScheduleViewModel>
+
+@{
+    ViewData["Title"] = "Lịch làm việc";
+    var startDate = (DateTime)ViewBag.StartDate;
+    var endDate = (DateTime)ViewBag.EndDate;
+    var selectedDate = (DateTime)ViewBag.SelectedDate;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-calendar-alt"></i>
+            Lịch làm việc
+        </h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })">Ca làm việc</a>
+            <span>/</span>
+            <span>Lịch làm việc</span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("EmployeeList", "VehicleShift", new { area = "Admin" })'">
+            <i class="fas fa-users"></i>
+            Danh sách nhân viên
+        </button>
+        <button class="btn-primary-admin" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+            <i class="fas fa-plus"></i>
+            Thêm lịch
+        </button>
+    </div>
+</div>
+
+<!-- Calendar Navigation -->
+<div class="admin-card">
+    <div class="calendar-navigation">
+        <button class="btn-secondary-admin" onclick="previousWeek()">
+            <i class="fas fa-chevron-left"></i>
+            Tuần trước
+        </button>
+        <div class="calendar-title">
+            <h4>Tuần @startDate.ToString("dd/MM") - @endDate.ToString("dd/MM/yyyy")</h4>
+            <input type="date" class="form-control" id="selectDate" value="@selectedDate.ToString("yyyy-MM-dd")" onchange="goToDate()">
+        </div>
+        <button class="btn-secondary-admin" onclick="nextWeek()">
+            Tuần sau
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Schedule Table -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Thời khóa biểu tuần</h3>
+        <div class="admin-card-actions">
+            <button class="btn-secondary-admin" onclick="exportSchedule()">
+                <i class="fas fa-file-excel"></i>
+                Xuất Excel
+            </button>
+            <button class="btn-primary-admin" onclick="printSchedule()">
+                <i class="fas fa-print"></i>
+                In lịch
+            </button>
+        </div>
+    </div>
+
+    <div class="schedule-grid">
+        <table class="table schedule-table">
+            <thead>
+                <tr>
+                    <th class="employee-col">Nhân viên</th>
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        var day = startDate.AddDays(i);
+                        var isToday = day.Date == DateTime.Today;
+                        <th class="day-col @(isToday ? "today" : "")">
+                            <div class="day-header">
+                                <span class="day-name">@day.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</span>
+                                <span class="day-date">@day.ToString("dd/MM")</span>
+                            </div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var employees = Model.GroupBy(s => new { s.MaNhanVien, s.TenNhanVien }).ToList();
+                }
+                @foreach (var emp in employees)
+                {
+                    <tr>
+                        <td class="employee-name">
+                            <div class="d-flex align-items-center">
+                                <div class="employee-avatar">@emp.Key.TenNhanVien.Substring(0, 1)</div>
+                                <span>@emp.Key.TenNhanVien</span>
+                            </div>
+                        </td>
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            var day = DateOnly.FromDateTime(startDate.AddDays(i));
+                            var schedules = emp.Where(s => s.NgayLamViec == day).ToList();
+                            var isToday = startDate.AddDays(i).Date == DateTime.Today;
+                            
+                            <td class="shift-cell @(isToday ? "today" : "")">
+                                @if (schedules.Any())
+                                {
+                                    @foreach (var schedule in schedules)
+                                    {
+                                        <div class="shift-badge shift-@schedule.CaLamViec" 
+                                             onclick="viewScheduleDetail(@schedule.MaLich)"
+                                             title="@schedule.TenCa">
+                                            <i class="fas fa-clock"></i>
+                                            <span>Ca @schedule.CaLamViec</span>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <button class="btn-add-shift" onclick="addShiftToCell(@emp.Key.MaNhanVien, '@day.ToString("yyyy-MM-dd")')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+                @if (!employees.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>Chưa có lịch làm việc nào trong tuần này</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Legend -->
+<div class="admin-card">
+    <div class="schedule-legend">
+        <h5>Chú thích:</h5>
+        <div class="legend-items">
+            <div class="legend-item">
+                <span class="shift-badge shift-1"><i class="fas fa-sun"></i> Ca 1</span>
+                <span>Ca sáng (6h-14h)</span>
+            </div>
+            <div class="legend-item">
+                <span class="shift-badge shift-2"><i class="fas fa-cloud-sun"></i> Ca 2</span>
+                <span>Ca chiều (14h-22h)</span>
+            </div>
+            <div class="legend-item">
+                <span class="shift-badge shift-3"><i class="fas fa-moon"></i> Ca 3</span>
+                <span>Ca đêm (22h-6h)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script>
+        function previousWeek() {
+            const currentDate = new Date('@selectedDate.ToString("yyyy-MM-dd")');
+            currentDate.setDate(currentDate.getDate() - 7);
+            window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?date=' + currentDate.toISOString().split('T')[0];
+        }
+
+        function nextWeek() {
+            const currentDate = new Date('@selectedDate.ToString("yyyy-MM-dd")');
+            currentDate.setDate(currentDate.getDate() + 7);
+            window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?date=' + currentDate.toISOString().split('T')[0];
+        }
+
+        function goToDate() {
+            const date = $('#selectDate').val();
+            window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?date=' + date;
+        }
+
+        function viewScheduleDetail(scheduleId) {
+            console.log('View schedule:', scheduleId);
+            // Implement modal to view/edit schedule detail
+        }
+
+        function addShiftToCell(employeeId, date) {
+            console.log('Add shift for employee:', employeeId, 'on date:', date);
+            // Implement modal to add shift
+        }
+
+        function exportSchedule() {
+            window.location.href = '@Url.Action("ExportSchedule", "VehicleShift", new { area = "Admin" })?date=@selectedDate.ToString("yyyy-MM-dd")';
+        }
+
+        function printSchedule() {
+            window.print();
+        }
+    </script>
+}

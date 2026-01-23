@@ -1,0 +1,421 @@
+﻿@model QuanLyBaiDoXe.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login.css" />
+    <style>
+        .register-right .content {
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .form-control.is-valid {
+            border-color: #28a745;
+        }
+        
+        .validation-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .account-type-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .account-type-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .account-type-option:hover {
+            border-color: #007bff;
+        }
+
+        .account-type-option.active {
+            border-color: #007bff;
+            background-color: #e7f1ff;
+        }
+
+        .account-type-option input[type="radio"] {
+            display: none;
+        }
+
+        .employee-fields {
+            display: none;
+        }
+
+        .customer-fields {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-left">
+            <div class="overlay">
+                <h1 class="brand">Quản Lý Bãi Đỗ Xe</h1>
+                <p class="subtitle">Đăng ký tài khoản mới để sử dụng dịch vụ của chúng tôi</p>
+            </div>
+        </div>
+        <div class="login-right register-right">
+            <div class="content">
+                <h2 class="welcome">Đăng ký tài khoản</h2>
+                <p class="hint">Chọn loại tài khoản và điền thông tin</p>
+
+                <form asp-action="Register" asp-controller="Account" method="post" class="login-form" id="registerForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Account Type Selector -->
+                    <div class="account-type-selector">
+                        <label class="account-type-option active" id="customerOption">
+                            <input type="radio" name="AccountType" value="Customer" checked />
+                            <div>
+                                <h5>👤 Khách hàng</h5>
+                                <small>Sử dụng dịch vụ gửi xe</small>
+                            </div>
+                        </label>
+                        <label class="account-type-option" id="employeeOption">
+                            <input type="radio" name="AccountType" value="Employee" />
+                            <div>
+                                <h5>👔 Nhân viên</h5>
+                                <small>Quản lý bãi đỗ xe</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="row">
+                        <!-- Tên đăng nhập -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="Username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">👤</span>
+                                    <input asp-for="Username" class="form-control border-0" placeholder="Nhập tên đăng nhập" />
+                                    <span class="validation-icon" id="usernameIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Username" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Tên đăng nhập phải có từ 3-50 ký tự</small>
+                        </div>
+
+                        <!-- Mật khẩu -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">🔒</span>
+                                <input asp-for="Password" class="form-control border-0" type="password" placeholder="********" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Xác nhận mật khẩu -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">🔒</span>
+                                <input asp-for="ConfirmPassword" class="form-control border-0" type="password" placeholder="********" />
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Họ tên -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="FullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">📝</span>
+                                <input asp-for="FullName" class="form-control border-0" placeholder="Nguyễn Văn A" />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Số điện thoại -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">📱</span>
+                                    <input asp-for="PhoneNumber" class="form-control border-0" placeholder="0912345678" />
+                                    <span class="validation-icon" id="phoneIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <!-- CCCD -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CCCD" class="form-label">
+                                CCCD/CMND 
+                                <span class="text-danger employee-only" style="display:none;">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">🪪</span>
+                                    <input asp-for="CCCD" class="form-control border-0" placeholder="001234567890" />
+                                    <span class="validation-icon" id="cccdIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="CCCD" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Địa chỉ -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="Address" class="form-label">Địa chỉ</label>
+                            <div class="input d-flex align-items-center">
+                                <span class="icon">🏠</span>
+                                <input asp-for="Address" class="form-control border-0" placeholder="123 Đường ABC, Quận XYZ" />
+                            </div>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Customer-only fields -->
+                        <div class="customer-fields">
+                            <!-- Biển số xe -->
+                            <div class="col-12 mb-3">
+                                <label asp-for="LicensePlate" class="form-label">Biển số xe mặc định</label>
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">🚗</span>
+                                    <input asp-for="LicensePlate" class="form-control border-0" placeholder="29A-12345" />
+                                </div>
+                                <span asp-validation-for="LicensePlate" class="text-danger small"></span>
+                                <small class="text-muted d-block mt-1">Không bắt buộc, có thể thêm sau</small>
+                            </div>
+                        </div>
+
+                        <!-- Employee-only fields -->
+                        <div class="employee-fields">
+                            <!-- Giới tính -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Gender" class="form-label">Giới tính</label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">Chọn</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+
+                            <!-- Ngày sinh -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            </div>
+
+                            <!-- Chức vụ -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Position" class="form-label">Chức vụ</label>
+                                <select asp-for="Position" class="form-select">
+                                    <option value="1">Nhân viên</option>
+                                    <option value="0">Quản lý</option>
+                                </select>
+                            </div>
+
+                            <!-- Ngày vào làm -->
+                            <div class="col-12 mb-3">
+                                <label asp-for="StartDate" class="form-label">Ngày vào làm</label>
+                                <input asp-for="StartDate" class="form-control" type="date" />
+                                <small class="text-muted d-block mt-1">Để trống sẽ dùng ngày hôm nay</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">ĐĂNG KÝ</button>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger mt-3" role="alert">
+                            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@err.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+                </form>
+
+                <div class="register text-center mt-4">
+                    Đã có tài khoản? <a asp-controller="Account" asp-action="Login">Đăng nhập ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            let usernameTimeout;
+            let phoneTimeout;
+            let cccdTimeout;
+
+            // Account type switching
+            $('.account-type-option').click(function() {
+                $('.account-type-option').removeClass('active');
+                $(this).addClass('active');
+                
+                const accountType = $(this).find('input[type="radio"]').val();
+                
+                if (accountType === 'Employee') {
+                    $('.employee-fields').slideDown();
+                    $('.customer-fields').slideUp();
+                    $('.employee-only').show();
+                } else {
+                    $('.customer-fields').slideDown();
+                    $('.employee-fields').slideUp();
+                    $('.employee-only').hide();
+                }
+            });
+
+            // Kiểm tra tên đăng nhập
+            $('#Username').on('input', function () {
+                clearTimeout(usernameTimeout);
+                const username = $(this).val().trim();
+                const icon = $('#usernameIcon');
+
+                if (username.length < 3) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                usernameTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckUsername", "Account")',
+                        type: 'GET',
+                        data: { username: username },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#Username').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#Username').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Kiểm tra số điện thoại
+            $('#PhoneNumber').on('input', function () {
+                clearTimeout(phoneTimeout);
+                const phone = $(this).val().trim();
+                const icon = $('#phoneIcon');
+
+                if (phone.length < 10) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                phoneTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckPhoneNumber", "Account")',
+                        type: 'GET',
+                        data: { phoneNumber: phone },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#PhoneNumber').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#PhoneNumber').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Kiểm tra CCCD
+            $('#CCCD').on('input', function () {
+                clearTimeout(cccdTimeout);
+                const cccd = $(this).val().trim();
+                const icon = $('#cccdIcon');
+
+                if (cccd.length < 9) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                cccdTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckCCCD", "Account")',
+                        type: 'GET',
+                        data: { cccd: cccd },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#CCCD').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#CCCD').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Chuyển biển số xe thành chữ hoa
+            $('#LicensePlate').on('input', function () {
+                $(this).val($(this).val().toUpperCase());
+            });
+
+            // Form validation
+            $('#registerForm').on('submit', function (e) {
+                if (!$(this).valid()) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...');
+            });
+        });
+    </script>
+</body>
+</html>

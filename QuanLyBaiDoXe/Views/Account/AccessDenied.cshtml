@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Truy c?p b? t? ch?i";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <i class="bi bi-shield-exclamation text-danger" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3 text-danger">Truy c?p b? t? ch?i</h2>
+                    <p class="text-muted mt-3">
+                        B?n không có quy?n truy c?p vào trang này.
+                    </p>
+                    <div class="mt-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                            <i class="bi bi-house-door"></i> V? trang ch?
+                        </a>
+                        <a href="@Url.Action("Login", "Account")" class="btn btn-outline-secondary">
+                            <i class="bi bi-box-arrow-in-right"></i> ??ng nh?p l?i
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

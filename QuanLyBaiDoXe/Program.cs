@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Models.EF;
 using QuanLyBaiDoXe.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,28 @@ builder.Services.AddDbContext<QuanLyBaiDoXeContext>(options => options.UseSqlSer
 // Register services
 builder.Services.AddScoped<IVehicleEntryService, VehicleEntryService>();
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
+
+// Add Session (optional, for additional state management)
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -30,6 +53,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Route cho Area Admin

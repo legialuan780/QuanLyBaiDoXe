@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +22,7 @@ namespace QuanLyBaiDoXe.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl)
         {
-            // N?u ?� ??ng nh?p, redirect v? trang ch?
+            // Nếu đã đăng nhập, redirect về trang chủ
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Index", "Home");
@@ -39,7 +39,7 @@ namespace QuanLyBaiDoXe.Controllers
             // Validate input
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                ModelState.AddModelError(string.Empty, "Email v� m?t kh?u l� b?t bu?c.");
+                ModelState.AddModelError(string.Empty, "Email và mật khẩu là bắt buộc.");
                 ViewBag.ReturnUrl = returnUrl;
                 return View("~/Views/Account/Login.cshtml");
             }
@@ -49,7 +49,7 @@ namespace QuanLyBaiDoXe.Controllers
 
             if (!success)
             {
-                ModelState.AddModelError(string.Empty, errorMessage ?? "??ng nh?p th?t b?i!");
+                ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng nhập thất bại!");
                 ViewBag.ReturnUrl = returnUrl;
                 return View("~/Views/Account/Login.cshtml");
             }
@@ -62,7 +62,7 @@ namespace QuanLyBaiDoXe.Controllers
                 new Claim(ClaimTypes.Role, role!)
             };
 
-            // Th�m th�ng tin nh�n vi�n ho?c kh�ch h�ng
+            // Thêm thông tin nhân viên hoặc khách hàng
             if (account.NhanVien != null)
             {
                 claims.Add(new Claim("EmployeeId", account.NhanVien.MaNhanVien.ToString()));
@@ -87,7 +87,8 @@ namespace QuanLyBaiDoXe.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            TempData["LoginMessage"] = $"??ng nh?p th�nh c�ng! Ch�o m?ng {claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? account.TenDangNhap}";
+            TempData["LoginMessage"] =
+                $"Đăng nhập thành công! Chào mừng {claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? account.TenDangNhap}";
 
             // Redirect based on role
             if (role == "Admin" || role == "Employee")
@@ -110,7 +111,7 @@ namespace QuanLyBaiDoXe.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            // N?u ?� ??ng nh?p, redirect v? trang ch?
+            // Nếu đã đăng nhập, redirect về trang chủ
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Index", "Home");
@@ -128,13 +129,13 @@ namespace QuanLyBaiDoXe.Controllers
                 return View("~/Views/Account/Register.cshtml", model);
             }
 
-            // ??ng k� theo lo?i t�i kho?n
+            // Đăng ký theo loại tài khoản
             if (model.AccountType == "Employee")
             {
-                // Ki?m tra c�c tr??ng b?t bu?c cho nh�n vi�n
+                // Kiểm tra các trường bắt buộc cho nhân viên
                 if (string.IsNullOrEmpty(model.CCCD))
                 {
-                    ModelState.AddModelError("CCCD", "CCCD/CMND l� b?t bu?c ??i v?i nh�n vi�n!");
+                    ModelState.AddModelError("CCCD", "CCCD/CMND là bắt buộc đối với nhân viên!");
                     return View("~/Views/Account/Register.cshtml", model);
                 }
 
@@ -142,11 +143,12 @@ namespace QuanLyBaiDoXe.Controllers
 
                 if (!success)
                 {
-                    ModelState.AddModelError(string.Empty, errorMessage ?? "??ng k� th?t b?i!");
+                    ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng ký thất bại!");
                     return View("~/Views/Account/Register.cshtml", model);
                 }
 
-                TempData["RegisterSuccess"] = "??ng k� t�i kho?n nh�n vi�n th�nh c�ng! Vui l�ng ??ng nh?p ?? ti?p t?c.";
+                TempData["RegisterSuccess"] =
+                    "Đăng ký tài khoản nhân viên thành công! Vui lòng đăng nhập để tiếp tục.";
             }
             else // Customer
             {
@@ -154,17 +156,18 @@ namespace QuanLyBaiDoXe.Controllers
 
                 if (!success)
                 {
-                    ModelState.AddModelError(string.Empty, errorMessage ?? "??ng k� th?t b?i!");
+                    ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng ký thất bại!");
                     return View("~/Views/Account/Register.cshtml", model);
                 }
 
-                TempData["RegisterSuccess"] = "??ng k� t�i kho?n kh�ch h�ng th�nh c�ng! Vui l�ng ??ng nh?p ?? ti?p t?c.";
+                TempData["RegisterSuccess"] =
+                    "Đăng ký tài khoản khách hàng thành công! Vui lòng đăng nhập để tiếp tục.";
             }
 
             return RedirectToAction("Login");
         }
 
-        // API ?? ki?m tra t�n ??ng nh?p
+        // API để kiểm tra tên đăng nhập
         [HttpGet]
         public async Task<IActionResult> CheckUsername(string username)
         {
@@ -177,7 +180,7 @@ namespace QuanLyBaiDoXe.Controllers
             return Json(new { available = !exists });
         }
 
-        // API ?? ki?m tra s? ?i?n tho?i
+        // API để kiểm tra số điện thoại
         [HttpGet]
         public async Task<IActionResult> CheckPhoneNumber(string phoneNumber)
         {
@@ -190,7 +193,7 @@ namespace QuanLyBaiDoXe.Controllers
             return Json(new { available = !exists });
         }
 
-        // API ?? ki?m tra CCCD
+        // API để kiểm tra CCCD
         [HttpGet]
         public async Task<IActionResult> CheckCCCD(string cccd)
         {
@@ -212,7 +215,7 @@ namespace QuanLyBaiDoXe.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            TempData["LogoutMessage"] = "??ng xu?t th�nh c�ng!";
+            TempData["LogoutMessage"] = "Đăng xuất thành công!";
             return RedirectToAction("Login", "Account");
         }
 

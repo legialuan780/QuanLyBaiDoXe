@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+Ôªøusing Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Models.EF;
 using QuanLyBaiDoXe.Models.Entities;
 using QuanLyBaiDoXe.ViewModels;
@@ -20,7 +20,7 @@ namespace QuanLyBaiDoXe.Services
         {
             try
             {
-                // TÏm t‡i kho?n theo tÍn ??ng nh?p
+                // T√¨m t√†i kho?n theo t√™n ??ng nh?p
                 var account = await _context.TaiKhoans
                     .Include(t => t.NhanVien)
                     .Include(t => t.KhachHang)
@@ -28,32 +28,32 @@ namespace QuanLyBaiDoXe.Services
 
                 if (account == null)
                 {
-                    return (false, "TÍn ??ng nh?p ho?c m?t kh?u khÙng ?˙ng!", null, null);
+                    return (false, "T√™n ƒëƒÉng nh·∫≠p ho·∫∑c m·∫≠t kh·∫©u kh√¥ng ƒë√∫ng!", null, null);
                 }
 
-                // Ki?m tra tr?ng th·i t‡i kho?n
+                // Ki?m tra tr?ng th√°i t√†i kho?n
                 if (account.TrangThai == false)
                 {
-                    return (false, "T‡i kho?n ?„ b? khÛa!", null, null);
+                    return (false, "T√†i kho·∫£n ƒë√£ b·ªã kh√≥a!", null, null);
                 }
 
-                // Ki?m tra m?t kh?u - so s·nh tr?c ti?p (plain text)
+                // Ki?m tra m?t kh?u - so s√°nh tr?c ti?p (plain text)
                 if (account.MatKhau != password)
                 {
-                    return (false, "TÍn ??ng nh?p ho?c m?t kh?u khÙng ?˙ng!", null, null);
+                    return (false, "T√™n ƒëƒÉng nh·∫≠p ho·∫∑c m·∫≠t kh·∫©u kh√¥ng ƒë√∫ng!", null, null);
                 }
 
-                // X·c ??nh role
+                // X√°c ??nh role
                 string role = "Customer";
                 if (account.NhanVien != null)
                 {
                     if (account.NhanVien.TrangThaiLamViec == false)
                     {
-                        return (false, "Nh‚n viÍn ?„ ngh? vi?c!", null, null);
+                        return (false, "Nh√¢n vi√™n ƒë√£ ngh·ªâ vi·ªác!", null, null);
                     }
 
-                    // X·c ??nh role d?a trÍn ch?c v?
-                    // 0: Admin, 1: Nh‚n viÍn
+                    // X√°c ??nh role d?a tr√™n ch?c v?
+                    // 0: Admin, 1: Nh√¢n vi√™n
                     role = account.NhanVien.ChucVu == 0 ? "Admin" : "Employee";
                 }
                 else if (account.KhachHang != null)
@@ -74,28 +74,28 @@ namespace QuanLyBaiDoXe.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Ki?m tra tÍn ??ng nh?p ?„ t?n t?i
+                // Ki?m tra t√™n ??ng nh?p ?√£ t?n t?i
                 if (await UsernameExistsAsync(model.Username))
                 {
-                    return (false, "TÍn ??ng nh?p ?„ t?n t?i!", null);
+                    return (false, "T√™n ??ng nh?p ?√£ t?n t?i!", null);
                 }
 
-                // Ki?m tra s? ?i?n tho?i ?„ t?n t?i
+                // Ki?m tra s? ?i?n tho?i ?√£ t?n t?i
                 if (await PhoneNumberExistsAsync(model.PhoneNumber))
                 {
-                    return (false, "S? ?i?n tho?i ?„ ???c ??ng k˝!", null);
+                    return (false, "S? ?i?n tho?i ?√£ ???c ??ng k√Ω!", null);
                 }
 
-                // Ki?m tra CCCD n?u cÛ
+                // Ki?m tra CCCD n?u c√≥
                 if (!string.IsNullOrEmpty(model.CCCD))
                 {
                     if (await CCCDExistsAsync(model.CCCD))
                     {
-                        return (false, "CCCD/CMND ?„ ???c ??ng k˝!", null);
+                        return (false, "CCCD/CMND ?√£ ???c ??ng k√Ω!", null);
                     }
                 }
 
-                // T?o t‡i kho?n - L?u m?t kh?u plain text
+                // T?o t√†i kho?n - L?u m?t kh?u plain text
                 var taiKhoan = new TaiKhoan
                 {
                     TenDangNhap = model.Username.Trim(),
@@ -106,7 +106,7 @@ namespace QuanLyBaiDoXe.Services
                 _context.TaiKhoans.Add(taiKhoan);
                 await _context.SaveChangesAsync();
 
-                // T?o kh·ch h‡ng
+                // T?o kh√°ch h√†ng
                 var khachHang = new KhachHang
                 {
                     MaTaiKhoan = taiKhoan.MaTaiKhoan,
@@ -136,24 +136,24 @@ namespace QuanLyBaiDoXe.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Ki?m tra tÍn ??ng nh?p ?„ t?n t?i
+                // Ki?m tra t√™n ??ng nh?p ?√£ t?n t?i
                 if (await UsernameExistsAsync(model.Username))
                 {
-                    return (false, "TÍn ??ng nh?p ?„ t?n t?i!", null);
+                    return (false, "T√™n ??ng nh?p ?√£ t?n t?i!", null);
                 }
 
-                // Ki?m tra CCCD ?„ t?n t?i (b?t bu?c cho nh‚n viÍn)
+                // Ki?m tra CCCD ?√£ t?n t?i (b?t bu?c cho nh√¢n vi√™n)
                 if (string.IsNullOrEmpty(model.CCCD))
                 {
-                    return (false, "CCCD/CMND l‡ b?t bu?c ??i v?i nh‚n viÍn!", null);
+                    return (false, "CCCD/CMND l√† b?t bu?c ??i v?i nh√¢n vi√™n!", null);
                 }
 
                 if (await CCCDExistsAsync(model.CCCD))
                 {
-                    return (false, "CCCD/CMND ?„ ???c ??ng k˝!", null);
+                    return (false, "CCCD/CMND ?√£ ???c ??ng k√Ω!", null);
                 }
 
-                // T?o t‡i kho?n - L?u m?t kh?u plain text
+                // T?o t√†i kho?n - L?u m?t kh?u plain text
                 var taiKhoan = new TaiKhoan
                 {
                     TenDangNhap = model.Username.Trim(),
@@ -164,7 +164,7 @@ namespace QuanLyBaiDoXe.Services
                 _context.TaiKhoans.Add(taiKhoan);
                 await _context.SaveChangesAsync();
 
-                // T?o nh‚n viÍn
+                // T?o nh√¢n vi√™n
                 var nhanVien = new NhanVien
                 {
                     MaTaiKhoan = taiKhoan.MaTaiKhoan,
@@ -174,7 +174,7 @@ namespace QuanLyBaiDoXe.Services
                     Cccd = model.CCCD.Trim(),
                     SoDienThoai = model.PhoneNumber.Trim(),
                     DiaChi = model.Address?.Trim(),
-                    ChucVu = model.Position ?? 1, // M?c ??nh l‡ nh‚n viÍn (1)
+                    ChucVu = model.Position ?? 1, // M?c ??nh l√† nh√¢n vi√™n (1)
                     NgayVaoLam = model.StartDate ?? DateOnly.FromDateTime(DateTime.Now),
                     TrangThaiLamViec = true
                 };
@@ -203,7 +203,7 @@ namespace QuanLyBaiDoXe.Services
         {
             var existsInCustomer = await _context.KhachHangs
                 .AnyAsync(k => k.SoDienThoai == phoneNumber.Trim());
-            
+
             var existsInEmployee = await _context.NhanViens
                 .AnyAsync(n => n.SoDienThoai == phoneNumber.Trim());
 
@@ -214,7 +214,7 @@ namespace QuanLyBaiDoXe.Services
         {
             var existsInCustomer = await _context.KhachHangs
                 .AnyAsync(k => k.Cccd == cccd.Trim());
-            
+
             var existsInEmployee = await _context.NhanViens
                 .AnyAsync(n => n.Cccd == cccd.Trim());
 
@@ -229,7 +229,7 @@ namespace QuanLyBaiDoXe.Services
                 return false;
             }
 
-            // Verify old password - so s·nh tr?c ti?p plain text
+            // Verify old password - so s√°nh tr?c ti?p plain text
             if (account.MatKhau != oldPassword)
             {
                 return false;
@@ -244,13 +244,13 @@ namespace QuanLyBaiDoXe.Services
 
         public string HashPassword(string password)
         {
-            // KhÙng m„ hÛa, tr? v? plain text
+            // Kh√¥ng m√£ h√≥a, tr? v? plain text
             return password;
         }
 
         public bool VerifyPassword(string hashedPassword, string password)
         {
-            // So s·nh tr?c ti?p plain text
+            // So s√°nh tr?c ti?p plain text
             return hashedPassword == password;
         }
     }

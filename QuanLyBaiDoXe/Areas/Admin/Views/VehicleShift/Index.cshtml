@@ -1,0 +1,299 @@
+﻿@model List<QuanLyBaiDoXe.Areas.Admin.ViewModels.ShiftViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý ca làm việc";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-clock"></i>
+            Quản lý ca làm việc
+        </h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Ca làm việc</span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })'">
+            <i class="fas fa-calendar-alt"></i>
+            Lịch làm việc
+        </button>
+        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })'">
+            <i class="fas fa-clock"></i>
+            Bảng chấm công
+        </button>
+        <button class="btn-primary-admin" data-bs-toggle="modal" data-bs-target="#addShiftModal">
+            <i class="fas fa-plus"></i>
+            Mở ca mới
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-business-time"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="totalShifts">@Model.Count</h3>
+            <p>Tổng số ca</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="activeShifts">@Model.Count(s => s.TrangThaiCa == 1)</h3>
+            <p>Ca đang làm việc</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="completedShifts">@Model.Count(s => s.TrangThaiCa == 2)</h3>
+            <p>Ca đã hoàn thành</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="totalRevenue">@Model.Sum(s => s.TongTienThu).ToString("N0") đ</h3>
+            <p>Tổng doanh thu</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Actions -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Danh sách ca làm việc</h3>
+        <div class="admin-card-actions">
+            <div class="input-group" style="width: 200px;">
+                <input type="date" class="form-control" id="filterDate" value="@DateTime.Today.ToString("yyyy-MM-dd")">
+                <button class="btn-primary-admin" onclick="filterByDate()">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+            <select class="form-select" id="filterStatus" onchange="filterByStatus()" style="width: 150px;">
+                <option value="">Tất cả trạng thái</option>
+                <option value="0">Chưa bắt đầu</option>
+                <option value="1">Đang làm việc</option>
+                <option value="2">Đã kết thúc</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Shifts Table -->
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>Mã ca</th>
+                    <th>Nhân viên</th>
+                    <th>Giờ nhận ca</th>
+                    <th>Giờ giao ca</th>
+                    <th>Số giờ làm</th>
+                    <th>Tiền đầu ca</th>
+                    <th>Tổng thu</th>
+                    <th>Tiền cuối ca</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var shift in Model)
+                    {
+                        <tr>
+                            <td><strong>#@shift.MaCa</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="employee-avatar">
+                                        @shift.TenNhanVien.Substring(0, 1)
+                                    </div>
+                                    <span>@shift.TenNhanVien</span>
+                                </div>
+                            </td>
+                            <td>@shift.ThoiGianNhanCa?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(shift.ThoiGianGiaoCa?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@shift.SoGioLam.ToString("F1")h</td>
+                            <td>@shift.TienDauCa.ToString("N0") đ</td>
+                            <td class="text-success fw-bold">@shift.TongTienThu.ToString("N0") đ</td>
+                            <td class="text-primary fw-bold">@shift.TienCuoiCa.ToString("N0") đ</td>
+                            <td>
+                                @if (shift.TrangThaiCa == 0)
+                                {
+                                    <span class="badge badge-secondary">
+                                        <i class="fas fa-clock"></i>
+                                        Chưa bắt đầu
+                                    </span>
+                                }
+                                else if (shift.TrangThaiCa == 1)
+                                {
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-play-circle"></i>
+                                        Đang làm việc
+                                    </span>
+                                }
+                                else if (shift.TrangThaiCa == 2)
+                                {
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-check-circle"></i>
+                                        Đã kết thúc
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" onclick="viewShiftDetail(@shift.MaCa)" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    @if (shift.TrangThaiCa == 1)
+                                    {
+                                        <button class="btn-icon btn-success" onclick="endShift(@shift.MaCa)" title="Kết thúc ca">
+                                            <i class="fas fa-stop-circle"></i>
+                                        </button>
+                                    }
+                                    <button class="btn-icon btn-primary" onclick="printShiftReport(@shift.MaCa)" title="In báo cáo">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Chưa có ca làm việc nào</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Shift Detail Modal -->
+<div class="modal fade" id="shiftDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết ca làm việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="shiftDetailContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script>
+        function viewShiftDetail(shiftId) {
+            $('#shiftDetailModal').modal('show');
+            
+            $.get('@Url.Action("GetShiftDetail", "VehicleShift", new { area = "Admin" })', { id: shiftId }, function(data) {
+                const statusText = data.trangThaiCa === 0 ? 'Chưa bắt đầu' : 
+                                   data.trangThaiCa === 1 ? 'Đang làm việc' : 'Đã kết thúc';
+                const statusClass = data.trangThaiCa === 0 ? 'secondary' : 
+                                    data.trangThaiCa === 1 ? 'success' : 'info';
+                
+                const html = `
+                    <div class="shift-detail-card">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <label>Mã ca:</label>
+                                    <strong>#${data.maCa}</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Nhân viên:</label>
+                                    <strong>${data.tenNhanVien}</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Thời gian nhận ca:</label>
+                                    <span>${new Date(data.thoiGianNhanCa).toLocaleString('vi-VN')}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Thời gian giao ca:</label>
+                                    <span>${data.thoiGianGiaoCa ? new Date(data.thoiGianGiaoCa).toLocaleString('vi-VN') : 'Chưa giao ca'}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <label>Tiền đầu ca:</label>
+                                    <strong class="text-primary">${data.tienDauCa.toLocaleString('vi-VN')} đ</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Tổng tiền thu:</label>
+                                    <strong class="text-success">${data.tongTienThu.toLocaleString('vi-VN')} đ</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Số xe vào:</label>
+                                    <strong>${data.soXeVao}</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Số xe ra:</label>
+                                    <strong>${data.soXeRa}</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Trạng thái:</label>
+                                    <span class="badge badge-${statusClass}">${statusText}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#shiftDetailContent').html(html);
+            });
+        }
+
+        function filterByDate() {
+            const date = $('#filterDate').val();
+            if (date) {
+                window.location.href = '@Url.Action("Index", "VehicleShift", new { area = "Admin" })?date=' + date;
+            }
+        }
+
+        function filterByStatus() {
+            const status = $('#filterStatus').val();
+            // Implement client-side filtering or reload with parameter
+            console.log('Filter by status:', status);
+        }
+
+        function endShift(shiftId) {
+            if (confirm('Bạn có chắc chắn muốn kết thúc ca làm việc này?')) {
+                // Call API to end shift
+                console.log('End shift:', shiftId);
+            }
+        }
+
+        function printShiftReport(shiftId) {
+            window.open('@Url.Action("PrintShiftReport", "VehicleShift", new { area = "Admin" })?id=' + shiftId, '_blank');
+        }
+    </script>
+}

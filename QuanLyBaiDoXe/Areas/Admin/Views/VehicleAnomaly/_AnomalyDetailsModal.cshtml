@@ -1,0 +1,266 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleAnomalyViewModel
+@{
+    // Helper functions cho loại sự cố
+    string GetAnomalyIcon(string loaiSuCo) => loaiSuCo switch
+    {
+        "Xe mất thẻ" => "fas fa-id-card-alt",
+        "Lỗi barrier" => "fas fa-road-barrier",
+        "Lỗi camera" => "fas fa-video-slash",
+        "Tranh chấp phí" => "fas fa-hand-holding-usd",
+        "Khẩn cấp" => "fas fa-exclamation-triangle",
+        _ => "fas fa-flag"
+    };
+    
+    string GetAnomalyBgClass(string loaiSuCo) => loaiSuCo switch
+    {
+        "Xe mất thẻ" => "bg-warning",
+        "Lỗi barrier" => "bg-danger",
+        "Lỗi camera" => "bg-info",
+        "Tranh chấp phí" => "bg-purple",
+        "Khẩn cấp" => "bg-danger pulse-badge",
+        _ => "bg-secondary"
+    };
+    
+    string GetPriorityBadge(string loaiSuCo) => loaiSuCo switch
+    {
+        "Khẩn cấp" => "<span class=\"badge bg-danger\"><i class=\"fas fa-exclamation-triangle me-1\"></i>Cao</span>",
+        "Lỗi barrier" or "Lỗi camera" => "<span class=\"badge bg-warning\"><i class=\"fas fa-exclamation me-1\"></i>Trung bình</span>",
+        _ => "<span class=\"badge bg-secondary\"><i class=\"fas fa-info-circle me-1\"></i>Thấp</span>"
+    };
+}
+
+<div class="modal-header">
+    <h5 class="modal-title">Chi tiết Sự cố #@Model.MaSuCo</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Thời gian ghi nhận</label>
+                <div>
+                    <i class="fas fa-clock text-primary me-2"></i>
+                    @Model.ThoiGianGhiNhan?.ToString("dd/MM/yyyy HH:mm:ss")
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Loại sự cố</label>
+                <div>
+                    <span class="badge @GetAnomalyBgClass(Model.LoaiSuCo)">
+                        <i class="@GetAnomalyIcon(Model.LoaiSuCo) me-1"></i>@Model.LoaiSuCo
+                    </span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mã thẻ / Biển số</label>
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.MaThe))
+                    {
+                        <span class="badge bg-primary">@Model.MaThe</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Không có</span>
+                    }
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Vị trí</label>
+                <div>
+                    <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                    @if (Model.MaViTri.HasValue)
+                    {
+                        <span>Vị trí #@Model.MaViTri</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa xác định</span>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Trạng thái xử lý</label>
+                <div>
+                    @switch (Model.TrangThaiXuLy)
+                    {
+                        case 0:
+                            <span class="status-badge danger">Chưa xử lý</span>
+                            break;
+                        case 1:
+                            <span class="status-badge warning">Đang xử lý</span>
+                            break;
+                        case 2:
+                            <span class="status-badge success">Đã xử lý</span>
+                            break;
+                    }
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nhân viên xử lý</label>
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.TenNhanVien))
+                    {
+                        <i class="fas fa-user-circle text-success me-2"></i>@Model.TenNhanVien
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa có nhân viên xử lý</span>
+                    }
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mức độ ưu tiên</label>
+                <div>
+                    @Html.Raw(GetPriorityBadge(Model.LoaiSuCo))
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label fw-bold">Mô tả chi tiết</label>
+        <div class="p-3" style="background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #21A691;">
+            @Model.MoTaChiTiet
+        </div>
+    </div>
+
+    <!-- Video & Hình ảnh -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label fw-bold">
+                    <i class="fas fa-video me-2"></i>Video Camera
+                </label>
+                <div class="border rounded p-3" style="background-color: #f8f9fa; min-height: 200px;">
+                    @if (!string.IsNullOrEmpty(Model.LinkVideo))
+                    {
+                        <video controls style="width: 100%; height: auto;">
+                            <source src="@Model.LinkVideo" type="video/mp4">
+                            Trình duyệt không hỗ trợ video.
+                        </video>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-video-slash fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Không có video</p>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-upload me-1"></i>Tải lên video
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label fw-bold">
+                    <i class="fas fa-image me-2"></i>Hình ảnh bằng chứng
+                </label>
+                <div class="border rounded p-3" style="background-color: #f8f9fa; min-height: 200px;">
+                    @if (!string.IsNullOrEmpty(Model.LinkHinhAnh))
+                    {
+                        <img src="@Model.LinkHinhAnh" alt="Evidence" class="img-fluid rounded" />
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-image fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Không có hình ảnh</p>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-upload me-1"></i>Tải lên hình ảnh
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lịch sử xử lý -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">
+            <i class="fas fa-history me-2"></i>Lịch sử xử lý
+        </label>
+        <div class="border rounded p-3" style="background-color: #f8f9fa;">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker bg-primary"></div>
+                    <div class="timeline-content">
+                        <small class="text-muted">@Model.ThoiGianGhiNhan?.ToString("dd/MM/yyyy HH:mm")</small>
+                        <p class="mb-0">Sự cố được ghi nhận vào hệ thống</p>
+                    </div>
+                </div>
+                @if (Model.TrangThaiXuLy >= 1)
+                {
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <small class="text-muted">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+                            <p class="mb-0">Nhân viên @Model.TenNhanVien được điều đến xử lý</p>
+                        </div>
+                    </div>
+                }
+                @if (Model.TrangThaiXuLy == 2)
+                {
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <small class="text-muted">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+                            <p class="mb-0">Sự cố đã được xử lý hoàn tất</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    @if (Model.TrangThaiXuLy != 2)
+    {
+        <button type="button" class="btn btn-warning" onclick="assignStaff(@Model.MaSuCo)">
+            <i class="fas fa-user-plus me-1"></i>Điều nhân viên
+        </button>
+        <button type="button" class="btn btn-success" onclick="updateStatus(@Model.MaSuCo, 2)">
+            <i class="fas fa-check me-1"></i>Hoàn thành
+        </button>
+    }
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: -21px;
+        top: 10px;
+        bottom: -10px;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -26px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+    }
+    .timeline-content {
+        padding-left: 10px;
+    }
+</style>

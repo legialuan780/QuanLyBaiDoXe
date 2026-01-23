@@ -1,0 +1,474 @@
+﻿@{
+    ViewData["Title"] = "Giám sát Sự cố Realtime";
+}
+
+<!-- Load Anomaly Type Helper -->
+<script src="~/js/anomaly-type-helper.js"></script>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-desktop me-2"></i>Giám sát Sự cố Realtime
+            <span class="badge bg-danger ms-2 pulse-animation" id="liveIndicator">LIVE</span>
+        </h1>
+        <div class="breadcrumb">
+            <a href="#">Trang chủ</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "VehicleAnomaly")">Sự cố</a>
+            <span>/</span>
+            <span>Giám sát</span>
+        </div>
+    </div>
+    <div>
+        <button class="btn-secondary-admin" onclick="toggleSound()">
+            <i class="fas fa-volume-up" id="soundIcon"></i>
+            <span id="soundText">Bật âm thanh</span>
+        </button>
+        <button class="btn-primary-admin" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
+        </button>
+    </div>
+</div>
+
+<!-- Alert Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="alert-card alert-danger">
+            <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-info">
+                <h3 id="urgentCount">0</h3>
+                <p>Khẩn cấp</p>
+            </div>
+            <div class="alert-pulse"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="alert-card alert-warning">
+            <div class="alert-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="alert-info">
+                <h3 id="pendingCount">0</h3>
+                <p>Chờ xử lý</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="alert-card alert-info">
+            <div class="alert-icon">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+            <div class="alert-info">
+                <h3 id="processingCount">0</h3>
+                <p>Đang xử lý</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="alert-card alert-success">
+            <div class="alert-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="alert-info">
+                <h3 id="avgResponseTime">0</h3>
+                <p>Thời gian TB (phút)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Danh sách sự cố realtime -->
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-list-ul me-2"></i>Sự cố đang diễn ra
+                </h3>
+                <div>
+                    <span class="badge bg-primary" id="totalAnomalies">0 sự cố</span>
+                </div>
+            </div>
+            <div class="anomaly-list" id="anomalyList" style="max-height: 600px; overflow-y: auto;">
+                <!-- Sự cố sẽ được load bằng JavaScript -->
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bản đồ vị trí & Thống kê -->
+    <div class="col-lg-4">
+        <!-- Bản đồ nhiệt -->
+        <div class="admin-card mb-3">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-map-marked-alt me-2"></i>Bản đồ vị trí
+                </h3>
+            </div>
+            <div class="parking-map">
+                <canvas id="parkingMapCanvas" width="350" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Thống kê theo loại -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-chart-pie me-2"></i>Phân loại sự cố
+                </h3>
+            </div>
+            <div id="typeStatistics">
+                <!-- Thống kê sẽ được load bằng JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audio notification -->
+<audio id="alertSound" preload="auto">
+    <source src="/sounds/alert.mp3" type="audio/mpeg">
+</audio>
+
+@section Styles {
+<style>
+    /* Thống nhất màu sắc */
+    .bg-purple {
+        background-color: #9b59b6 !important;
+        color: white;
+    }
+
+    .text-purple {
+        color: #9b59b6 !important;
+    }
+
+    .pulse-badge {
+        animation: pulse-badge 2s infinite;
+    }
+
+    @@keyframes pulse-badge {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+        }
+    }
+
+    .alert-card {
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+        .alert-card:hover {
+            transform: translateY(-5px);
+        }
+        .alert-card.alert-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        .alert-card.alert-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+        .alert-card.alert-info {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        .alert-card.alert-success {
+            background: linear-gradient(135deg, #21A691 0%, #1a8577 100%);
+            color: white;
+        }
+        .alert-icon {
+            font-size: 2.5rem;
+            opacity: 0.3;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .alert-info h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        .alert-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .alert-pulse {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        .anomaly-item {
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            animation: slideIn 0.5s;
+        }
+        .anomaly-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(5px);
+        }
+        .anomaly-item.urgent {
+            border-left-color: #e74c3c;
+            background: #fef5f5;
+        }
+        .anomaly-item.normal {
+            border-left-color: #f39c12;
+        }
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .parking-map {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+        .type-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .type-stat-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .type-stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #21A691, #87DF2C);
+            transition: width 0.5s;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let soundEnabled = false;
+        let lastAnomalyCount = 0;
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            if (soundEnabled) {
+                icon.className = 'fas fa-volume-up';
+                text.textContent = 'Tắt âm thanh';
+            } else {
+                icon.className = 'fas fa-volume-mute';
+                text.textContent = 'Bật âm thanh';
+            }
+        }
+
+        function playAlert() {
+            if (soundEnabled) {
+                const audio = document.getElementById('alertSound');
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        async function loadRealtimeData() {
+            try {
+                const response = await fetch('@Url.Action("GetRealtimeAnomalies", "AnomalyMonitor")');
+                const data = await response.json();
+                
+                // Update counters
+                const urgent = data.filter(a => a.loaiSuCo === 'Khẩn cấp').length;
+                const pending = data.filter(a => a.trangThaiXuLy === 0).length;
+                const processing = data.filter(a => a.trangThaiXuLy === 1).length;
+                
+                document.getElementById('urgentCount').textContent = urgent;
+                document.getElementById('pendingCount').textContent = pending;
+                document.getElementById('processingCount').textContent = processing;
+                document.getElementById('totalAnomalies').textContent = data.length + ' sự cố';
+                
+                // Check for new anomalies
+                if (data.length > lastAnomalyCount) {
+                    playAlert();
+                }
+                lastAnomalyCount = data.length;
+                
+                // Render list
+                renderAnomalyList(data);
+                
+                // Update map
+                updateParkingMap(data);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        function renderAnomalyList(data) {
+            const list = document.getElementById('anomalyList');
+            if (data.length === 0) {
+                list.innerHTML = '<div class="text-center py-5"><i class="fas fa-check-circle fa-3x text-success mb-3"></i><p class="text-muted">Không có sự cố đang diễn ra</p></div>';
+                return;
+            }
+            
+            list.innerHTML = data.map(item => {
+                const anomalyType = AnomalyTypeHelper.format(item.loaiSuCo);
+                const urgentClass = item.loaiSuCo === 'Khẩn cấp' ? 'urgent' : 'normal';
+                
+                return `
+                    <div class="anomaly-item ${urgentClass}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>#${item.maSuCo}</strong>
+                                ${anomalyType.badge}
+                            </div>
+                            <small class="text-muted">${formatTime(item.thoiGianGhiNhan)}</small>
+                        </div>
+                        <div class="mb-2">
+                            <i class="fas fa-id-card me-2"></i>${item.maThe || 'N/A'}
+                            ${item.maViTri ? `<i class="fas fa-map-marker-alt ms-3 me-2"></i>Vị trí #${item.maViTri}` : ''}
+                        </div>
+                        <p class="mb-2 text-muted small">${item.moTaChiTiet}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                ${item.tenNhanVien ? `<i class="fas fa-user-circle me-1"></i>${item.tenNhanVien}` : '<span class="text-muted">Chưa gán NV</span>'}
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(${item.maSuCo})">
+                                <i class="fas fa-eye"></i> Chi tiết
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateParkingMap(data) {
+            const canvas = document.getElementById('parkingMapCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw parking lot grid
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 4; j++) {
+                    ctx.strokeRect(20 + i * 65, 20 + j * 65, 60, 60);
+                }
+            }
+            
+            // Draw anomaly markers
+            data.forEach(item => {
+                if (item.maViTri) {
+                    const row = Math.floor((item.maViTri - 1) / 5);
+                    const col = (item.maViTri - 1) % 5;
+                    const x = 50 + col * 65;
+                    const y = 50 + row * 65;
+                    
+                    // Sử dụng AnomalyTypeHelper để lấy màu
+                    ctx.fillStyle = AnomalyTypeHelper.getColor(item.loaiSuCo);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Pulse effect
+                    ctx.strokeStyle = ctx.fillStyle;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 15, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        async function loadTypeStatistics() {
+            try {
+                const response = await fetch('@Url.Action("GetStatisticsByType", "AnomalyMonitor")');
+                const data = await response.json();
+                
+                const container = document.getElementById('typeStatistics');
+                const maxCount = Math.max(...data.map(d => d.count), 1);
+                
+                container.innerHTML = data.map(item => `
+                    <div class="type-stat-item">
+                        <div style="flex: 1;">
+                            <strong>${item.type}</strong>
+                            <div class="type-stat-bar">
+                                <div class="type-stat-fill" style="width: ${(item.count / maxCount) * 100}%"></div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary ms-2">${item.count}</span>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000 / 60);
+            
+            if (diff < 1) return 'Vừa xong';
+            if (diff < 60) return diff + ' phút trước';
+            if (diff < 1440) return Math.floor(diff / 60) + ' giờ trước';
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function viewDetails(id) {
+            window.location.href = '@Url.Action("Index", "VehicleAnomaly")?id=' + id;
+        }
+
+        function refreshData() {
+            loadRealtimeData();
+            loadTypeStatistics();
+        }
+
+        // Auto refresh every 5 seconds
+        setInterval(refreshData, 5000);
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+        });
+    </script>
+}

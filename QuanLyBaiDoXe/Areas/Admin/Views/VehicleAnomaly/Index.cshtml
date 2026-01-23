@@ -1,0 +1,720 @@
+﻿@model IEnumerable<QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleAnomalyViewModel>
+@{
+    ViewData["Title"] = "Quản lý Sự cố";
+    var stats = ViewBag.Statistics as QuanLyBaiDoXe.Areas.Admin.ViewModels.AnomalyStatisticsViewModel;
+    var filter = ViewBag.Filter as QuanLyBaiDoXe.Areas.Admin.ViewModels.AnomalyFilterViewModel;
+    
+    // Helper functions cho loại sự cố
+    string GetAnomalyIcon(string loaiSuCo) => loaiSuCo switch
+    {
+        "Xe mất thẻ" => "fas fa-id-card-alt",
+        "Lỗi barrier" => "fas fa-road-barrier",
+        "Lỗi camera" => "fas fa-video-slash",
+        "Tranh chấp phí" => "fas fa-hand-holding-usd",
+        "Khẩn cấp" => "fas fa-exclamation-triangle",
+        _ => "fas fa-flag"
+    };
+    
+    string GetAnomalyBgClass(string loaiSuCo) => loaiSuCo switch
+    {
+        "Xe mất thẻ" => "bg-warning",
+        "Lỗi barrier" => "bg-danger",
+        "Lỗi camera" => "bg-info",
+        "Tranh chấp phí" => "bg-purple",
+        "Khẩn cấp" => "bg-danger pulse-badge",
+        _ => "bg-secondary"
+    };
+}
+
+@section Styles {
+    <style>
+        .anomaly-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        #checkAll {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        #selectedCount {
+            font-size: 14px;
+            font-weight: 600;
+            color: #21A691;
+        }
+
+        #selectedAnomaliesList {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        #selectedAnomaliesList::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #selectedAnomaliesList::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        #selectedAnomaliesList::-webkit-scrollbar-thumb {
+            background: #21A691;
+            border-radius: 10px;
+        }
+
+        #selectedAnomaliesList::-webkit-scrollbar-thumb:hover {
+            background: #1a8577;
+        }
+
+        .bulk-anomaly-item {
+            padding: 10px;
+            border-left: 3px solid #21A691;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .bulk-anomaly-item:hover {
+            background: #f0f9f7;
+            transform: translateX(5px);
+        }
+
+        /* Thống nhất màu sắc cho các loại sự cố */
+        .bg-purple {
+            background-color: #9b59b6 !important;
+            color: white;
+        }
+
+        .text-purple {
+            color: #9b59b6 !important;
+        }
+
+        /* Hiệu ứng pulse cho sự cố khẩn cấp */
+        .pulse-badge {
+            animation: pulse-badge 2s infinite;
+        }
+
+        @@keyframes pulse-badge {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+            }
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý Sự cố</h1>
+        <div class="breadcrumb">
+            <a href="#">Trang chủ</a>
+            <span>/</span>
+            <a href="#">Báo cáo</a>
+            <span>/</span>
+            <span>Sự cố</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="createSampleData()" title="Tạo 3 sự cố mẫu để test">
+            <i class="fas fa-database"></i>
+            Tạo dữ liệu mẫu
+        </button>
+        <button class="btn btn-warning" onclick="showBulkAssignModal()" title="Giao nhiều sự cố cho nhân viên">
+            <i class="fas fa-users-cog"></i>
+            Giao sự cố
+        </button>
+        <button class="btn-secondary-admin" onclick="exportToExcel()">
+            <i class="fas fa-download"></i>
+            Xuất Excel
+        </button>
+        <button class="btn-primary-admin" onclick="showFilterModal()">
+            <i class="fas fa-filter"></i>
+            Bộ lọc
+        </button>
+    </div>
+</div>
+
+<!-- Stat Cards - Thống kê tổng quan -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@stats.TongSuCo</h3>
+            <p>Tổng sự cố</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon red">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@stats.ChuaXuLy</h3>
+            <p>Chưa xử lý</p>
+        </div>
+        <div class="stat-card-trend up">
+            <i class="fas fa-arrow-up"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-sync"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@stats.DangXuLy</h3>
+            <p>Đang xử lý</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@stats.DaXuLy</h3>
+            <p>Đã xử lý</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon purple">
+            <i class="fas fa-bolt"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@stats.KhanCap</h3>
+            <p>Khẩn cấp</p>
+        </div>
+        <div class="stat-card-trend up">
+            <i class="fas fa-exclamation"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Bảng danh sách sự cố -->
+    <div class="col-lg-12">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Danh sách Sự cố</h3>
+                <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-sm btn-outline-primary" onclick="selectAllAnomalies()" id="selectAllBtn">
+                        <i class="fas fa-check-square"></i> Chọn tất cả
+                    </button>
+                    <span class="text-muted" id="selectedCount">Đã chọn: 0</span>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="filterByType(this.value)">
+                        <option value="">Tất cả loại</option>
+                        <option value="Xe mất thẻ">Xe mất thẻ</option>
+                        <option value="Lỗi barrier">Lỗi barrier</option>
+                        <option value="Lỗi camera">Lỗi camera</option>
+                        <option value="Tranh chấp phí">Tranh chấp phí</option>
+                        <option value="Khẩn cấp">Khẩn cấp</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="filterByStatus(this.value)">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="0">Chưa xử lý</option>
+                        <option value="1">Đang xử lý</option>
+                        <option value="2">Đã xử lý</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table" id="anomalyTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="checkAll" onchange="toggleCheckAll(this)" />
+                            </th>
+                            <th style="width: 80px;">Mã SC</th>
+                            <th style="width: 150px;">Thời gian</th>
+                            <th style="width: 150px;">Loại sự cố</th>
+                            <th style="width: 120px;">Mã thẻ/Biển số</th>
+                            <th>Mô tả</th>
+                            <th style="width: 150px;">Nhân viên</th>
+                            <th style="width: 120px;">Trạng thái</th>
+                            <th style="width: 120px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr data-status="@item.TrangThaiXuLy" data-type="@item.LoaiSuCo">
+                                    <td>
+                                        <input type="checkbox" class="anomaly-checkbox" value="@item.MaSuCo" onchange="updateSelectedCount()" />
+                                    </td>
+                                    <td><strong>#@item.MaSuCo</strong></td>
+                                    <td>@item.ThoiGianGhiNhan?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge @GetAnomalyBgClass(item.LoaiSuCo)">
+                                            <i class="@GetAnomalyIcon(item.LoaiSuCo) me-1"></i>@item.LoaiSuCo
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(item.MaThe))
+                                        {
+                                            <span class="text-primary fw-bold">@item.MaThe</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 300px;" title="@item.MoTaChiTiet">
+                                            @item.MoTaChiTiet
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(item.TenNhanVien))
+                                        {
+                                            <div>
+                                                <i class="fas fa-user-circle me-1"></i>@item.TenNhanVien
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Chưa gán</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (item.TrangThaiXuLy)
+                                        {
+                                            case 0:
+                                                <span class="status-badge danger">Chưa xử lý</span>
+                                                break;
+                                            case 1:
+                                                <span class="status-badge warning">Đang xử lý</span>
+                                                break;
+                                            case 2:
+                                                <span class="status-badge success">Đã xử lý</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(@item.MaSuCo)" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            @if (item.TrangThaiXuLy != 2)
+                                            {
+                                                <button class="btn btn-sm btn-outline-success" onclick="assignStaff(@item.MaSuCo)" title="Điều nhân viên">
+                                                    <i class="fas fa-user-plus"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-warning" onclick="updateStatus(@item.MaSuCo, 2)" title="Đánh dấu đã xử lý">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Không có sự cố nào</p>
+                                    <button class="btn btn-primary mt-2" onclick="createSampleData()">
+                                        <i class="fas fa-database me-2"></i>Tạo dữ liệu mẫu
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chi tiết sự cố -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="modalContent">
+            <!-- Content sẽ được load bằng AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal điều nhân viên -->
+<div class="modal fade" id="assignStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Điều nhân viên xử lý</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="selectedAnomalyId" />
+                <div class="mb-3">
+                    <label class="form-label">Chọn nhân viên</label>
+                    <select class="form-select" id="staffSelect">
+                        <option value="">-- Chọn nhân viên --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" id="assignNote" rows="3" placeholder="Nhập ghi chú..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAssignStaff()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal giao nhiều sự cố -->
+<div class="modal fade" id="bulkAssignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-users-cog me-2"></i>Giao nhiều sự cố cho nhân viên
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="bulkSelectedInfo">Chưa chọn sự cố nào</span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Chọn nhân viên</label>
+                    <select class="form-select" id="bulkStaffSelect">
+                        <option value="">-- Chọn nhân viên --</option>
+                    </select>
+                    <small class="text-muted">Nhân viên sẽ nhận tất cả sự cố đã chọn</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Danh sách sự cố được chọn</label>
+                    <div id="selectedAnomaliesList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto; background: #f8f9fa;">
+                        <!-- Danh sách sẽ được load bằng JavaScript -->
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Ghi chú chung</label>
+                    <textarea class="form-control" id="bulkAssignNote" rows="3" placeholder="Nhập ghi chú cho tất cả sự cố..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-warning" onclick="confirmBulkAssign()">
+                    <i class="fas fa-check me-2"></i>Xác nhận giao
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal bộ lọc -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bộ lọc nâng cao</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm" asp-action="Index" method="get">
+                    <div class="mb-3">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="date" class="form-control" name="TuNgay" value="@filter?.TuNgay?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="date" class="form-control" name="DenNgay" value="@filter?.DenNgay?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Loại sự cố</label>
+                        <select class="form-select" name="LoaiSuCo">
+                            <option value="">Tất cả</option>
+                            <option value="Xe mất thẻ">Xe mất thẻ</option>
+                            <option value="Lỗi barrier">Lỗi barrier</option>
+                            <option value="Lỗi camera">Lỗi camera</option>
+                            <option value="Tranh chấp phí">Tranh chấp phí</option>
+                            <option value="Khẩn cấp">Khẩn cấp</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select" name="TrangThaiXuLy">
+                            <option value="">Tất cả</option>
+                            <option value="0">Chưa xử lý</option>
+                            <option value="1">Đang xử lý</option>
+                            <option value="2">Đã xử lý</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tìm kiếm</label>
+                        <input type="text" class="form-control" name="SearchTerm" placeholder="Mã thẻ, mô tả..." value="@filter?.SearchTerm" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="applyFilter()">Áp dụng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<!-- Load Anomaly Type Helper -->
+<script src="~/js/anomaly-type-helper.js"></script>
+    
+<script>
+    function viewDetails(id) {
+        $.get('@Url.Action("Details", "VehicleAnomaly")?id=' + id, function(data) {
+            $('#modalContent').html(data);
+            $('#detailsModal').modal('show');
+        });
+    }
+
+        function assignStaff(id) {
+            $('#selectedAnomalyId').val(id);
+            
+            // Load danh sách nhân viên
+            $.get('@Url.Action("GetStaffList", "VehicleAnomaly")', function(data) {
+                var select = $('#staffSelect');
+                select.empty();
+                select.append('<option value="">-- Chọn nhân viên --</option>');
+                
+                data.forEach(function(staff) {
+                    select.append('<option value="' + staff.id + '">' + staff.name + ' - ' + staff.phone + '</option>');
+                });
+            });
+            
+            $('#assignStaffModal').modal('show');
+        }
+
+        function confirmAssignStaff() {
+            var anomalyId = $('#selectedAnomalyId').val();
+            var staffId = $('#staffSelect').val();
+            
+            if (!staffId) {
+                alert('Vui lòng chọn nhân viên');
+                return;
+            }
+
+            $.post('@Url.Action("AssignStaff", "VehicleAnomaly")', {
+                id: anomalyId,
+                staffId: staffId
+            }, function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            });
+        }
+
+        function updateStatus(id, status) {
+            if (confirm('Xác nhận đã xử lý xong sự cố này?')) {
+                $.post('@Url.Action("UpdateStatus", "VehicleAnomaly")', {
+                    id: id,
+                    status: status,
+                    note: ''
+                }, function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                });
+            }
+        }
+
+        function filterByType(type) {
+            if (type === '') {
+                location.href = '@Url.Action("Index", "VehicleAnomaly")';
+            } else {
+                location.href = '@Url.Action("Index", "VehicleAnomaly")?LoaiSuCo=' + encodeURIComponent(type);
+            }
+        }
+
+        function filterByStatus(status) {
+            if (status === '') {
+                location.href = '@Url.Action("Index", "VehicleAnomaly")';
+            } else {
+                location.href = '@Url.Action("Index", "VehicleAnomaly")?TrangThaiXuLy=' + status;
+            }
+        }
+
+        function showFilterModal() {
+            $('#filterModal').modal('show');
+        }
+
+        function applyFilter() {
+            $('#filterForm').submit();
+        }
+
+        function exportToExcel() {
+            alert('Chức năng xuất Excel đang được phát triển');
+        }
+
+        // ===== CHỨC NĂNG MỚI =====
+        
+        // Tạo dữ liệu mẫu
+        function createSampleData() {
+            if (confirm('Bạn có muốn tạo 3 sự cố mẫu để test không?')) {
+                $.ajax({
+                    url: '@Url.Action("CreateSampleAnomalies", "VehicleAnomaly")',
+                    type: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi tạo dữ liệu mẫu');
+                    }
+                });
+            }
+        }
+
+        // Cập nhật số lượng đã chọn
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.anomaly-checkbox:checked').length;
+            document.getElementById('selectedCount').textContent = 'Đã chọn: ' + checked;
+        }
+
+        // Toggle check all
+        function toggleCheckAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.anomaly-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateSelectedCount();
+        }
+
+        // Select all button
+        function selectAllAnomalies() {
+            const checkAll = document.getElementById('checkAll');
+            checkAll.checked = !checkAll.checked;
+            toggleCheckAll(checkAll);
+        }
+
+        // Hiển thị modal giao nhiều sự cố
+        function showBulkAssignModal() {
+            const selectedIds = [];
+            document.querySelectorAll('.anomaly-checkbox:checked').forEach(cb => {
+                selectedIds.push(parseInt(cb.value));
+            });
+
+            if (selectedIds.length === 0) {
+                alert('Vui lòng chọn ít nhất một sự cố');
+                return;
+            }
+
+            // Cập nhật thông tin
+            document.getElementById('bulkSelectedInfo').textContent = 
+                `Đã chọn ${selectedIds.length} sự cố để giao cho nhân viên`;
+
+            // Load danh sách nhân viên
+            $.get('@Url.Action("GetStaffList", "VehicleAnomaly")', function(data) {
+                var select = $('#bulkStaffSelect');
+                select.empty();
+                select.append('<option value="">-- Chọn nhân viên --</option>');
+                
+                data.forEach(function(staff) {
+                    select.append('<option value="' + staff.id + '">' + staff.name + ' - ' + staff.phone + '</option>');
+                });
+            });
+
+            // Hiển thị danh sách sự cố đã chọn
+            displaySelectedAnomalies(selectedIds);
+
+            // Mở modal
+            $('#bulkAssignModal').modal('show');
+        }
+
+        // Hiển thị danh sách sự cố đã chọn
+        function displaySelectedAnomalies(selectedIds) {
+            const container = document.getElementById('selectedAnomaliesList');
+            let html = '';
+
+            selectedIds.forEach(id => {
+                const row = document.querySelector(`input[value="${id}"]`).closest('tr');
+                const maSuCo = row.querySelector('td:nth-child(2)').textContent;
+                const loaiSuCo = row.querySelector('td:nth-child(4)').textContent.trim();
+                const moTa = row.querySelector('td:nth-child(6)').textContent.trim();
+
+                html += `
+                    <div class="bulk-anomaly-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-primary">${maSuCo}</strong>
+                            <span class="badge bg-warning text-dark">${loaiSuCo}</span>
+                        </div>
+                        <small class="text-muted d-block" style="line-height: 1.4;">${moTa.substring(0, 100)}${moTa.length > 100 ? '...' : ''}</small>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html || '<div class="text-center py-3"><i class="fas fa-inbox fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Không có sự cố nào được chọn</p></div>';
+        }
+
+        // Xác nhận giao nhiều sự cố
+        function confirmBulkAssign() {
+            const staffId = $('#bulkStaffSelect').val();
+            if (!staffId) {
+                alert('Vui lòng chọn nhân viên');
+                return;
+            }
+
+            const selectedIds = [];
+            document.querySelectorAll('.anomaly-checkbox:checked').forEach(cb => {
+                selectedIds.push(parseInt(cb.value));
+            });
+
+            if (selectedIds.length === 0) {
+                alert('Không có sự cố nào được chọn');
+                return;
+            }
+
+            if (confirm(`Xác nhận giao ${selectedIds.length} sự cố cho nhân viên đã chọn?`)) {
+                $.ajax({
+                    url: '@Url.Action("AssignMultipleAnomalies", "VehicleAnomaly")',
+                    type: 'POST',
+                    data: {
+                        staffId: staffId,
+                        anomalyIds: selectedIds
+                    },
+                    traditional: true,
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            $('#bulkAssignModal').modal('hide');
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi giao sự cố');
+                    }
+                });
+            }
+        }
+
+        // Auto refresh mỗi 30 giây để cập nhật sự cố mới
+        setInterval(function() {
+            // Có thể reload page hoặc load dữ liệu mới bằng AJAX
+            // location.reload();
+        }, 30000);
+    </script>
+}

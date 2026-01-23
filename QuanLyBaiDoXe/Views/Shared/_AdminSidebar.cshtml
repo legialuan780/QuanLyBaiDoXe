@@ -216,9 +216,15 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
-                <a href="@Url.Action("Anomaly", "Report", new { area = "Admin" })" class="sidebar-nav-link">
+                <a href="@Url.Action("Index", "VehicleAnomaly", new { area = "Admin" })" class="sidebar-nav-link">
                     <i class="fas fa-flag"></i>
-                    <span>Bất thường</span>
+                    <span>Sự cố</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="@Url.Action("RealTimeMonitor", "AnomalyMonitor", new { area = "Admin" })" class="sidebar-nav-link">
+                    <i class="fas fa-desktop"></i>
+                    <span>Giám sát sự cố</span>
                 </a>
             </li>
             <li class="sidebar-nav-item">

@@ -2,6 +2,9 @@
     ViewData["Title"] = "Giám sát bãi đỗ xe";
 }
 
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <!-- Page Header -->
 <div class="page-header">
     <div>
@@ -1094,6 +1097,87 @@
                     <div class="activity-details">
                         <div class="activity-title">Xe vào: <strong>51G-11111</strong></div>
                         <div class="activity-time">10 phút trước</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Peak Hours Chart -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-chart-line"></i>
+                    Biểu đồ giờ cao điểm đỗ xe
+                </h3>
+                <div>
+                    <select class="form-select form-select-sm" id="chartTimeRange" onchange="updatePeakHoursChart()" style="width: 150px;">
+                        <option value="today">Hôm nay</option>
+                        <option value="yesterday">Hôm qua</option>
+                        <option value="week">7 ngày qua</option>
+                        <option value="month">30 ngày qua</option>
+                    </select>
+                </div>
+            </div>
+            <div class="admin-card-body">
+                <div class="chart-container">
+                    <canvas id="peakHoursChart"></canvas>
+                </div>
+                
+                <!-- Chart Statistics -->
+                <div class="chart-stats mt-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-icon peak-entry">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Giờ cao điểm vào</div>
+                                    <div class="stat-value" id="peakEntryTime">08:00 - 09:00</div>
+                                    <div class="stat-detail" id="peakEntryCount">124 xe</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-icon peak-exit">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Giờ cao điểm ra</div>
+                                    <div class="stat-value" id="peakExitTime">17:00 - 18:00</div>
+                                    <div class="stat-detail" id="peakExitCount">156 xe</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-icon avg-occupancy">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Công suất TB</div>
+                                    <div class="stat-value" id="avgOccupancy">62%</div>
+                                    <div class="stat-detail">Trong ngày</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-icon total-vehicles">
+                                    <i class="fas fa-car-side"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Tổng lượt xe</div>
+                                    <div class="stat-value" id="totalVehicles">429</div>
+                                    <div class="stat-detail">Lượt vào/ra</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3819,6 +3903,123 @@
         border-color: #4a5568;
     }
 
+    /* Peak Hours Chart Styles */
+    .chart-container {
+        position: relative;
+        height: 400px;
+        padding: 20px 10px;
+    }
+
+    .chart-stats {
+        border-top: 2px solid #e9ecef;
+        padding-top: 20px;
+    }
+
+    .stat-box {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .stat-box:hover {
+        background: #e9ecef;
+        border-color: #21A691;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(33, 166, 145, 0.2);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+    }
+
+    .stat-icon.peak-entry {
+        background: linear-gradient(135deg, #87DF2C 0%, #76c91e 100%);
+    }
+
+    .stat-icon.peak-exit {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    }
+
+    .stat-icon.avg-occupancy {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    }
+
+    .stat-icon.total-vehicles {
+        background: linear-gradient(135deg, #21A691 0%, #1a8274 100%);
+    }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+        margin-bottom: 3px;
+    }
+
+    .stat-detail {
+        font-size: 12px;
+        color: #95a5a6;
+    }
+
+    /* Dark Mode for Chart */
+    body.dark-mode .stat-box {
+        background: #374151;
+        border-color: #4a5568;
+    }
+
+    body.dark-mode .stat-box:hover {
+        background: #4b5563;
+        border-color: #87DF2C;
+    }
+
+    body.dark-mode .stat-label,
+    body.dark-mode .stat-detail {
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .stat-value {
+        color: #f7fafc;
+    }
+
+    body.dark-mode .chart-stats {
+        border-top-color: #4a5568;
+    }
+
+    /* Responsive Chart */
+    @@media (max-width: 768px) {
+        .chart-container {
+            height: 300px;
+        }
+
+        .stat-box {
+            margin-bottom: 10px;
+        }
+    }
+
 
 </style>
 
@@ -4631,8 +4832,241 @@
             updateCounterUI(counterId, counterStatus[counterId]);
         });
         
+        // Initialize Peak Hours Chart
+        initializePeakHoursChart();
+        
         console.log('VehicleVision initialized');
     });
+
+    // Peak Hours Chart Variables
+    let peakHoursChart = null;
+
+    // Sample data for peak hours
+    const peakHoursData = {
+        today: {
+            labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', 
+                     '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+            entry: [2, 1, 0, 0, 3, 8, 25, 45, 124, 98, 67, 54, 78, 65, 72, 89, 95, 112, 87, 56, 34, 23, 12, 5],
+            exit: [3, 2, 1, 0, 2, 5, 18, 32, 67, 89, 76, 62, 85, 72, 68, 92, 108, 156, 132, 78, 45, 28, 15, 8],
+            occupancy: [15, 14, 13, 13, 14, 17, 24, 37, 94, 103, 94, 86, 79, 72, 76, 73, 60, 16, 11, 9, 8, 13, 10, 7]
+        },
+        yesterday: {
+            labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', 
+                     '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+            entry: [1, 0, 0, 1, 4, 9, 28, 52, 118, 92, 71, 58, 82, 69, 75, 85, 99, 108, 82, 51, 31, 20, 10, 4],
+            exit: [2, 1, 0, 0, 3, 7, 21, 35, 72, 95, 81, 68, 89, 76, 71, 88, 105, 149, 127, 72, 41, 25, 13, 6],
+            occupancy: [14, 13, 13, 14, 15, 17, 24, 41, 87, 84, 74, 64, 57, 50, 54, 51, 45, 4, 9, 8, 8, 13, 10, 8]
+        }
+    };
+
+    function initializePeakHoursChart() {
+        const ctx = document.getElementById('peakHoursChart');
+        if (!ctx) return;
+
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const gridColor = isDarkMode ? '#4a5568' : '#e9ecef';
+        const textColor = isDarkMode ? '#f7fafc' : '#2c3e50';
+
+        const data = peakHoursData.today;
+
+        peakHoursChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Xe vào',
+                        data: data.entry,
+                        borderColor: '#87DF2C',
+                        backgroundColor: 'rgba(135, 223, 44, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#87DF2C',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Xe ra',
+                        data: data.exit,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#ff6b6b',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Số xe đang đỗ',
+                        data: data.occupancy,
+                        borderColor: '#21A691',
+                        backgroundColor: 'rgba(33, 166, 145, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#21A691',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            },
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: isDarkMode ? '#1a202c' : '#fff',
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        borderColor: gridColor,
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y + ' xe';
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: gridColor,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: gridColor,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: {
+                                size: 11
+                            },
+                            callback: function(value) {
+                                return value + ' xe';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update statistics
+        updateChartStatistics(data);
+    }
+
+    function updatePeakHoursChart() {
+        const timeRange = document.getElementById('chartTimeRange').value;
+        const data = peakHoursData[timeRange] || peakHoursData.today;
+
+        if (!peakHoursChart) {
+            initializePeakHoursChart();
+            return;
+        }
+
+        // Update chart data
+        peakHoursChart.data.labels = data.labels;
+        peakHoursChart.data.datasets[0].data = data.entry;
+        peakHoursChart.data.datasets[1].data = data.exit;
+        peakHoursChart.data.datasets[2].data = data.occupancy;
+        peakHoursChart.update();
+
+        // Update statistics
+        updateChartStatistics(data);
+
+        // Show notification
+        const rangeText = {
+            'today': 'Hôm nay',
+            'yesterday': 'Hôm qua',
+            'week': '7 ngày qua',
+            'month': '30 ngày qua'
+        };
+        showNotification('success', 'Đã cập nhật biểu đồ', `Hiển thị dữ liệu: ${rangeText[timeRange]}`);
+    }
+
+    function updateChartStatistics(data) {
+        // Find peak entry time
+        const maxEntry = Math.max(...data.entry);
+        const peakEntryIndex = data.entry.indexOf(maxEntry);
+        document.getElementById('peakEntryTime').textContent = data.labels[peakEntryIndex];
+        document.getElementById('peakEntryCount').textContent = maxEntry + ' xe';
+
+        // Find peak exit time
+        const maxExit = Math.max(...data.exit);
+        const peakExitIndex = data.exit.indexOf(maxExit);
+        document.getElementById('peakExitTime').textContent = data.labels[peakExitIndex];
+        document.getElementById('peakExitCount').textContent = maxExit + ' xe';
+
+        // Calculate average occupancy
+        const avgOcc = Math.round(data.occupancy.reduce((a, b) => a + b, 0) / data.occupancy.length / 80 * 100);
+        document.getElementById('avgOccupancy').textContent = avgOcc + '%';
+
+        // Calculate total vehicles
+        const totalVehicles = data.entry.reduce((a, b) => a + b, 0);
+        document.getElementById('totalVehicles').textContent = totalVehicles;
+    }
+
+    // Update chart when dark mode toggles
+    function updateChartTheme() {
+        if (peakHoursChart) {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const gridColor = isDarkMode ? '#4a5568' : '#e9ecef';
+            const textColor = isDarkMode ? '#f7fafc' : '#2c3e50';
+
+            peakHoursChart.options.plugins.legend.labels.color = textColor;
+            peakHoursChart.options.plugins.tooltip.backgroundColor = isDarkMode ? '#1a202c' : '#fff';
+            peakHoursChart.options.plugins.tooltip.titleColor = textColor;
+            peakHoursChart.options.plugins.tooltip.bodyColor = textColor;
+            peakHoursChart.options.plugins.tooltip.borderColor = gridColor;
+            peakHoursChart.options.scales.x.grid.color = gridColor;
+            peakHoursChart.options.scales.x.ticks.color = textColor;
+            peakHoursChart.options.scales.y.grid.color = gridColor;
+            peakHoursChart.options.scales.y.ticks.color = textColor;
+            
+            peakHoursChart.update();
+        }
+    }
 
     // Camera Functions - CCTV Parking Lot Surveillance Videos
     const cameraVideoUrls = {

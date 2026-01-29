@@ -118,7 +118,7 @@
                 <div id="compactView" class="compact-view" style="display: none;">
                     <div class="compact-sections">
                         <!-- Section A - Xe máy -->
-                        <div class="compact-section" onclick="toggleCompactSection('section-a')">
+                        <div class="compact-section" id="section-a" onclick="toggleCompactSection('section-a', event)">
                             <div class="compact-section-header">
                                 <div class="compact-section-icon motorcycle-icon">
                                     <i class="fas fa-motorcycle"></i>
@@ -143,10 +143,155 @@
                                 <div class="compact-progress-fill occupied-fill" style="width: 60%"></div>
                                 <div class="compact-progress-fill reserved-fill" style="width: 2.5%"></div>
                             </div>
+                            
+                            <!-- Expanded Content -->
+                            <div class="compact-section-expanded" style="display: none;">
+                                <div class="expanded-grid motorcycle-grid">
+                                    <div class="parking-slot motorcycle available" data-slot="A01" onclick="viewSlotDetails('A01'); event.stopPropagation();">
+                                        <span class="slot-number">A01</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A02" onclick="viewSlotDetails('A02'); event.stopPropagation();">
+                                        <span class="slot-number">A02</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A03" onclick="viewSlotDetails('A03'); event.stopPropagation();">
+                                        <span class="slot-number">A03</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A04" onclick="viewSlotDetails('A04'); event.stopPropagation();">
+                                        <span class="slot-number">A04</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A05" onclick="viewSlotDetails('A05'); event.stopPropagation();">
+                                        <span class="slot-number">A05</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A06" onclick="viewSlotDetails('A06'); event.stopPropagation();">
+                                        <span class="slot-number">A06</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A07" onclick="viewSlotDetails('A07'); event.stopPropagation();">
+                                        <span class="slot-number">A07</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A08" onclick="viewSlotDetails('A08'); event.stopPropagation();">
+                                        <span class="slot-number">A08</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A09" onclick="viewSlotDetails('A09'); event.stopPropagation();">
+                                        <span class="slot-number">A09</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A10" onclick="viewSlotDetails('A10'); event.stopPropagation();">
+                                        <span class="slot-number">A10</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A11" onclick="viewSlotDetails('A11'); event.stopPropagation();">
+                                        <span class="slot-number">A11</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A12" onclick="viewSlotDetails('A12'); event.stopPropagation();">
+                                        <span class="slot-number">A12</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A13" onclick="viewSlotDetails('A13'); event.stopPropagation();">
+                                        <span class="slot-number">A13</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A14" onclick="viewSlotDetails('A14'); event.stopPropagation();">
+                                        <span class="slot-number">A14</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A15" onclick="viewSlotDetails('A15'); event.stopPropagation();">
+                                        <span class="slot-number">A15</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A16" onclick="viewSlotDetails('A16'); event.stopPropagation();">
+                                        <span class="slot-number">A16</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A17" onclick="viewSlotDetails('A17'); event.stopPropagation();">
+                                        <span class="slot-number">A17</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A18" onclick="viewSlotDetails('A18'); event.stopPropagation();">
+                                        <span class="slot-number">A18</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A19" onclick="viewSlotDetails('A19'); event.stopPropagation();">
+                                        <span class="slot-number">A19</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A20" onclick="viewSlotDetails('A20'); event.stopPropagation();">
+                                        <span class="slot-number">A20</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A21" onclick="viewSlotDetails('A21'); event.stopPropagation();">
+                                        <span class="slot-number">A21</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A22" onclick="viewSlotDetails('A22'); event.stopPropagation();">
+                                        <span class="slot-number">A22</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A23" onclick="viewSlotDetails('A23'); event.stopPropagation();">
+                                        <span class="slot-number">A23</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A24" onclick="viewSlotDetails('A24'); event.stopPropagation();">
+                                        <span class="slot-number">A24</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A25" onclick="viewSlotDetails('A25'); event.stopPropagation();">
+                                        <span class="slot-number">A25</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A26" onclick="viewSlotDetails('A26'); event.stopPropagation();">
+                                        <span class="slot-number">A26</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle reserved" data-slot="A27" onclick="viewSlotDetails('A27'); event.stopPropagation();">
+                                        <span class="slot-number">A27</span>
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A28" onclick="viewSlotDetails('A28'); event.stopPropagation();">
+                                        <span class="slot-number">A28</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A29" onclick="viewSlotDetails('A29'); event.stopPropagation();">
+                                        <span class="slot-number">A29</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A30" onclick="viewSlotDetails('A30'); event.stopPropagation();">
+                                        <span class="slot-number">A30</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A31" onclick="viewSlotDetails('A31'); event.stopPropagation();">
+                                        <span class="slot-number">A31</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A32" onclick="viewSlotDetails('A32'); event.stopPropagation();">
+                                        <span class="slot-number">A32</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A33" onclick="viewSlotDetails('A33'); event.stopPropagation();">
+                                        <span class="slot-number">A33</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A34" onclick="viewSlotDetails('A34'); event.stopPropagation();">
+                                        <span class="slot-number">A34</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A35" onclick="viewSlotDetails('A35'); event.stopPropagation();">
+                                        <span class="slot-number">A35</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A36" onclick="viewSlotDetails('A36'); event.stopPropagation();">
+                                        <span class="slot-number">A36</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A37" onclick="viewSlotDetails('A37'); event.stopPropagation();">
+                                        <span class="slot-number">A37</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A38" onclick="viewSlotDetails('A38'); event.stopPropagation();">
+                                        <span class="slot-number">A38</span>
+                                    </div>
+                                    <div class="parking-slot motorcycle occupied" data-slot="A39" onclick="viewSlotDetails('A39'); event.stopPropagation();">
+                                        <span class="slot-number">A39</span>
+                                        <i class="fas fa-motorcycle"></i>
+                                    </div>
+                                    <div class="parking-slot motorcycle available" data-slot="A40" onclick="viewSlotDetails('A40'); event.stopPropagation();">
+                                        <span class="slot-number">A40</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Section B - Ô tô 4 chỗ -->
-                        <div class="compact-section" onclick="toggleCompactSection('section-b')">
+                        <div class="compact-section" id="section-b" onclick="toggleCompactSection('section-b', event)">
                             <div class="compact-section-header">
                                 <div class="compact-section-icon car-icon">
                                     <i class="fas fa-car"></i>
@@ -171,10 +316,87 @@
                                 <div class="compact-progress-fill occupied-fill" style="width: 40%"></div>
                                 <div class="compact-progress-fill maintenance-fill" style="width: 5%"></div>
                             </div>
+                            
+                            <!-- Expanded Content -->
+                            <div class="compact-section-expanded" style="display: none;">
+                                <div class="expanded-grid car-grid">
+                                    <div class="parking-slot car occupied" data-slot="B01" onclick="viewSlotDetails('B01'); event.stopPropagation();">
+                                        <span class="slot-number">B01</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B02" onclick="viewSlotDetails('B02'); event.stopPropagation();">
+                                        <span class="slot-number">B02</span>
+                                    </div>
+                                    <div class="parking-slot car reserved" data-slot="B03" onclick="viewSlotDetails('B03'); event.stopPropagation();">
+                                        <span class="slot-number">B03</span>
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B04" onclick="viewSlotDetails('B04'); event.stopPropagation();">
+                                        <span class="slot-number">B04</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B05" onclick="viewSlotDetails('B05'); event.stopPropagation();">
+                                        <span class="slot-number">B05</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B06" onclick="viewSlotDetails('B06'); event.stopPropagation();">
+                                        <span class="slot-number">B06</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car maintenance" data-slot="B07" onclick="viewSlotDetails('B07'); event.stopPropagation();">
+                                        <span class="slot-number">B07</span>
+                                        <i class="fas fa-tools"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B08" onclick="viewSlotDetails('B08'); event.stopPropagation();">
+                                        <span class="slot-number">B08</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B09" onclick="viewSlotDetails('B09'); event.stopPropagation();">
+                                        <span class="slot-number">B09</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B10" onclick="viewSlotDetails('B10'); event.stopPropagation();">
+                                        <span class="slot-number">B10</span>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B11" onclick="viewSlotDetails('B11'); event.stopPropagation();">
+                                        <span class="slot-number">B11</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B12" onclick="viewSlotDetails('B12'); event.stopPropagation();">
+                                        <span class="slot-number">B12</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B13" onclick="viewSlotDetails('B13'); event.stopPropagation();">
+                                        <span class="slot-number">B13</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B14" onclick="viewSlotDetails('B14'); event.stopPropagation();">
+                                        <span class="slot-number">B14</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B15" onclick="viewSlotDetails('B15'); event.stopPropagation();">
+                                        <span class="slot-number">B15</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B16" onclick="viewSlotDetails('B16'); event.stopPropagation();">
+                                        <span class="slot-number">B16</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B17" onclick="viewSlotDetails('B17'); event.stopPropagation();">
+                                        <span class="slot-number">B17</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B18" onclick="viewSlotDetails('B18'); event.stopPropagation();">
+                                        <span class="slot-number">B18</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="parking-slot car available" data-slot="B19" onclick="viewSlotDetails('B19'); event.stopPropagation();">
+                                        <span class="slot-number">B19</span>
+                                    </div>
+                                    <div class="parking-slot car occupied" data-slot="B20" onclick="viewSlotDetails('B20'); event.stopPropagation();">
+                                        <span class="slot-number">B20</span>
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Section C - Ô tô 7 chỗ -->
-                        <div class="compact-section" onclick="toggleCompactSection('section-c')">
+                        <div class="compact-section" id="section-c" onclick="toggleCompactSection('section-c', event)">
                             <div class="compact-section-header">
                                 <div class="compact-section-icon suv-icon">
                                     <i class="fas fa-shuttle-van"></i>
@@ -199,10 +421,58 @@
                                 <div class="compact-progress-fill occupied-fill" style="width: 33%"></div>
                                 <div class="compact-progress-fill reserved-fill" style="width: 8.3%"></div>
                             </div>
+                            
+                            <!-- Expanded Content -->
+                            <div class="compact-section-expanded" style="display: none;">
+                                <div class="expanded-grid suv-grid">
+                                    <div class="parking-slot suv occupied" data-slot="C01" onclick="viewSlotDetails('C01'); event.stopPropagation();">
+                                        <span class="slot-number">C01</span>
+                                        <i class="fas fa-shuttle-van"></i>
+                                    </div>
+                                    <div class="parking-slot suv available" data-slot="C02" onclick="viewSlotDetails('C02'); event.stopPropagation();">
+                                        <span class="slot-number">C02</span>
+                                    </div>
+                                    <div class="parking-slot suv occupied" data-slot="C03" onclick="viewSlotDetails('C03'); event.stopPropagation();">
+                                        <span class="slot-number">C03</span>
+                                        <i class="fas fa-shuttle-van"></i>
+                                    </div>
+                                    <div class="parking-slot suv available" data-slot="C04" onclick="viewSlotDetails('C04'); event.stopPropagation();">
+                                        <span class="slot-number">C04</span>
+                                    </div>
+                                    <div class="parking-slot suv reserved" data-slot="C05" onclick="viewSlotDetails('C05'); event.stopPropagation();">
+                                        <span class="slot-number">C05</span>
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="parking-slot suv available" data-slot="C06" onclick="viewSlotDetails('C06'); event.stopPropagation();">
+                                        <span class="slot-number">C06</span>
+                                    </div>
+                                    <div class="parking-slot suv occupied" data-slot="C07" onclick="viewSlotDetails('C07'); event.stopPropagation();">
+                                        <span class="slot-number">C07</span>
+                                        <i class="fas fa-shuttle-van"></i>
+                                    </div>
+                                    <div class="parking-slot suv available" data-slot="C08" onclick="viewSlotDetails('C08'); event.stopPropagation();">
+                                        <span class="slot-number">C08</span>
+                                    </div>
+                                    <div class="parking-slot suv occupied" data-slot="C09" onclick="viewSlotDetails('C09'); event.stopPropagation();">
+                                        <span class="slot-number">C09</span>
+                                        <i class="fas fa-shuttle-van"></i>
+                                    </div>
+                                    <div class="parking-slot suv available" data-slot="C10" onclick="viewSlotDetails('C10'); event.stopPropagation();">
+                                        <span class="slot-number">C10</span>
+                                    </div>
+                                    <div class="parking-slot suv occupied" data-slot="C11" onclick="viewSlotDetails('C11'); event.stopPropagation();">
+                                        <span class="slot-number">C11</span>
+                                        <i class="fas fa-shuttle-van"></i>
+                                    </div>
+                                    <div class="parking-slot suv available" data-slot="C12" onclick="viewSlotDetails('C12'); event.stopPropagation();">
+                                        <span class="slot-number">C12</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Section D - Xe tải -->
-                        <div class="compact-section" onclick="toggleCompactSection('section-d')">
+                        <div class="compact-section" id="section-d" onclick="toggleCompactSection('section-d', event)">
                             <div class="compact-section-header">
                                 <div class="compact-section-icon truck-icon">
                                     <i class="fas fa-truck"></i>
@@ -224,6 +494,40 @@
                             </div>
                             <div class="compact-progress-bar">
                                 <div class="compact-progress-fill occupied-fill" style="width: 50%"></div>
+                            </div>
+                            
+                            <!-- Expanded Content -->
+                            <div class="compact-section-expanded" style="display: none;">
+                                <div class="expanded-grid truck-grid">
+                                    <div class="parking-slot truck occupied" data-slot="D01" onclick="viewSlotDetails('D01'); event.stopPropagation();">
+                                        <span class="slot-number">D01</span>
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="parking-slot truck available" data-slot="D02" onclick="viewSlotDetails('D02'); event.stopPropagation();">
+                                        <span class="slot-number">D02</span>
+                                    </div>
+                                    <div class="parking-slot truck occupied" data-slot="D03" onclick="viewSlotDetails('D03'); event.stopPropagation();">
+                                        <span class="slot-number">D03</span>
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="parking-slot truck available" data-slot="D04" onclick="viewSlotDetails('D04'); event.stopPropagation();">
+                                        <span class="slot-number">D04</span>
+                                    </div>
+                                    <div class="parking-slot truck occupied" data-slot="D05" onclick="viewSlotDetails('D05'); event.stopPropagation();">
+                                        <span class="slot-number">D05</span>
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="parking-slot truck available" data-slot="D06" onclick="viewSlotDetails('D06'); event.stopPropagation();">
+                                        <span class="slot-number">D06</span>
+                                    </div>
+                                    <div class="parking-slot truck available" data-slot="D07" onclick="viewSlotDetails('D07'); event.stopPropagation();">
+                                        <span class="slot-number">D07</span>
+                                    </div>
+                                    <div class="parking-slot truck occupied" data-slot="D08" onclick="viewSlotDetails('D08'); event.stopPropagation();">
+                                        <span class="slot-number">D08</span>
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1085,7 +1389,138 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" onclick="navigateToSlot()">Dẫn đường</button>
+                <button type="button" class="btn btn-primary" onclick="navigateToSlot()">
+                    <i class="fas fa-route"></i>
+                    Dẫn đường
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Modal -->
+<div class="modal fade" id="navigationModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-route"></i>
+                    Dẫn đường đến chỗ đỗ <span id="navSlotNumber"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Map with route -->
+                    <div class="col-lg-8">
+                        <div class="navigation-map-container">
+                            <div class="navigation-info-bar">
+                                <div class="nav-info-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Vị trí: <strong id="navSlotLocation"></strong></span>
+                                </div>
+                                <div class="nav-info-item">
+                                    <i class="fas fa-route"></i>
+                                    <span>Khoảng cách: <strong id="navDistance"></strong></span>
+                                </div>
+                                <div class="nav-info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Thời gian: <strong id="navTime"></strong></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Navigation Map -->
+                            <div class="navigation-map" id="navigationMap">
+                                <!-- Entry point -->
+                                <div class="nav-entry-point" id="navEntryPoint">
+                                    <i class="fas fa-flag"></i>
+                                    <span>Bắt đầu</span>
+                                </div>
+                                
+                                <!-- Route path will be drawn here -->
+                                <svg class="route-svg" id="routeSvg">
+                                    <!-- Path will be dynamically created -->
+                                </svg>
+                                
+                                <!-- Zones -->
+                                <div class="nav-zone zone-a-nav" data-zone="A">
+                                    <div class="nav-zone-label">
+                                        <i class="fas fa-motorcycle"></i>
+                                        <span>Khu A</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="nav-zone zone-b-nav" data-zone="B">
+                                    <div class="nav-zone-label">
+                                        <i class="fas fa-car"></i>
+                                        <span>Khu B</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="nav-zone zone-c-nav" data-zone="C">
+                                    <div class="nav-zone-label">
+                                        <i class="fas fa-shuttle-van"></i>
+                                        <span>Khu C</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="nav-zone zone-d-nav" data-zone="D">
+                                    <div class="nav-zone-label">
+                                        <i class="fas fa-truck"></i>
+                                        <span>Khu D</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Target slot marker -->
+                                <div class="nav-target-marker" id="navTargetMarker">
+                                    <div class="marker-pulse"></div>
+                                    <i class="fas fa-map-pin"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step by step directions -->
+                    <div class="col-lg-4">
+                        <div class="navigation-steps-container">
+                            <h6 class="steps-title">
+                                <i class="fas fa-list-ol"></i>
+                                Hướng dẫn từng bước
+                            </h6>
+                            <div class="navigation-steps" id="navigationSteps">
+                                <!-- Steps will be dynamically added -->
+                            </div>
+                            
+                            <div class="navigation-legend mt-3">
+                                <h6 class="legend-title-small">Chú thích:</h6>
+                                <div class="legend-items-small">
+                                    <div class="legend-item-small">
+                                        <i class="fas fa-flag" style="color: #87DF2C;"></i>
+                                        <span>Điểm bắt đầu</span>
+                                    </div>
+                                    <div class="legend-item-small">
+                                        <i class="fas fa-map-pin" style="color: #e74c3c;"></i>
+                                        <span>Vị trí đỗ</span>
+                                    </div>
+                                    <div class="legend-item-small">
+                                        <div style="width: 20px; height: 3px; background: #21A691; border-radius: 2px;"></div>
+                                        <span>Đường đi</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Đóng
+                </button>
+                <button type="button" class="btn btn-success" onclick="printNavigation()">
+                    <i class="fas fa-print"></i>
+                    In hướng dẫn
+                </button>
             </div>
         </div>
     </div>
@@ -1132,7 +1567,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/9RBEgtJ72vU?autoplay=1&mute=1&loop=1&playlist=9RBEgtJ72vU&controls=0" 
+                                    src="https://www.youtube.com/embed/5_XSYlAfJZM?autoplay=1&mute=1&loop=1&playlist=5_XSYlAfJZM&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1154,7 +1589,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/wqctLW0Hb_0?autoplay=1&mute=1&loop=1&playlist=wqctLW0Hb_0&controls=0" 
+                                    src="https://www.youtube.com/embed/Vrxyr1CjiSM?autoplay=1&mute=1&loop=1&playlist=Vrxyr1CjiSM&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1176,7 +1611,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/MNn9qKG2UFI?autoplay=1&mute=1&loop=1&playlist=MNn9qKG2UFI&controls=0" 
+                                    src="https://www.youtube.com/embed/CevxZvSJLk8?autoplay=1&mute=1&loop=1&playlist=CevxZvSJLk8&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1198,7 +1633,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/H1jZjKaB4pE?autoplay=1&mute=1&loop=1&playlist=H1jZjKaB4pE&controls=0" 
+                                    src="https://www.youtube.com/embed/jmRfToI-cC4?autoplay=1&mute=1&loop=1&playlist=jmRfToI-cC4&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1221,7 +1656,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/EXBEmVgDXZY?autoplay=1&mute=1&loop=1&playlist=EXBEmVgDXZY&controls=0" 
+                                    src="https://www.youtube.com/embed/l_MyUGq7pgs?autoplay=1&mute=1&loop=1&playlist=l_MyUGq7pgs&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1243,7 +1678,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/NyLF8nHIquM?autoplay=1&mute=1&loop=1&playlist=NyLF8nHIquM&controls=0" 
+                                    src="https://www.youtube.com/embed/MNn9qKG2UFI?autoplay=1&mute=1&loop=1&playlist=MNn9qKG2UFI&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1265,7 +1700,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/vKNFGGbW95M?autoplay=1&mute=1&loop=1&playlist=vKNFGGbW95M&controls=0" 
+                                    src="https://www.youtube.com/embed/NyLF8nHIquM?autoplay=1&mute=1&loop=1&playlist=NyLF8nHIquM&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1287,7 +1722,7 @@
                             </div>
                             <div class="camera-placeholder">
                                 <iframe width="100%" height="100%" 
-                                    src="https://www.youtube.com/embed/1EiC9bvVGnk?autoplay=1&mute=1&loop=1&playlist=1EiC9bvVGnk&controls=0" 
+                                    src="https://www.youtube.com/embed/1-b7RmmeLtk?autoplay=1&mute=1&loop=1&playlist=1-b7RmmeLtk&controls=0&modestbranding=1&rel=0" 
                                     frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
                                 </iframe>
                             </div>
@@ -1482,6 +1917,12 @@
     .parking-slot.available {
         background-color: #87DF2C;
         border-color: #76c91e;
+        cursor: help;
+    }
+
+    .parking-slot.available:hover {
+        transform: scale(1.03);
+        box-shadow: 0 2px 8px rgba(135, 223, 44, 0.4);
     }
 
     .parking-slot.occupied {
@@ -1497,7 +1938,11 @@
     .parking-slot.maintenance {
         background-color: #95a5a6;
         border-color: #7f8c8d;
-        cursor: not-allowed;
+        cursor: help;
+    }
+
+    .parking-slot.maintenance:hover {
+        transform: scale(1.03);
     }
 
     .slot-number {
@@ -1966,6 +2411,75 @@
 
     .compact-progress-fill.maintenance-fill {
         background: #95a5a6;
+    }
+
+    /* Compact Section Expanded Content */
+    .compact-section-expanded {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #e9ecef;
+        animation: expandSection 0.3s ease-out;
+    }
+
+    @@keyframes expandSection {
+        from {
+            opacity: 0;
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 1000px;
+        }
+    }
+
+    .compact-section.expanded .compact-expand-btn i {
+        transform: rotate(180deg);
+    }
+
+    .compact-section.expanded {
+        border-color: #21A691;
+        box-shadow: 0 6px 20px rgba(33, 166, 145, 0.2);
+    }
+
+    .expanded-grid {
+        display: grid;
+        gap: 10px;
+        padding: 10px 0;
+    }
+
+    .expanded-grid.motorcycle-grid {
+        grid-template-columns: repeat(10, 1fr);
+    }
+
+    .expanded-grid.car-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .expanded-grid.suv-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .expanded-grid.truck-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Responsive for expanded grid */
+    @@media (max-width: 768px) {
+        .expanded-grid.motorcycle-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .expanded-grid.car-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .expanded-grid.suv-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .expanded-grid.truck-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
 
@@ -2489,6 +3003,384 @@
         }
     }
 
+    /* Navigation Modal Styles */
+    .navigation-map-container {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navigation-info-bar {
+        display: flex;
+        justify-content: space-around;
+        padding: 12px;
+        background: linear-gradient(135deg, #21A691 0%, #1a8274 100%);
+        border-radius: 8px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: white;
+        font-size: 13px;
+    }
+
+    .nav-info-item i {
+        font-size: 16px;
+    }
+
+    .navigation-map {
+        position: relative;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        height: 500px;
+        overflow: hidden;
+    }
+
+    .route-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    .route-path {
+        fill: none;
+        stroke: #21A691;
+        stroke-width: 4;
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: drawPath 2s ease-in-out forwards;
+    }
+
+    .route-arrow {
+        fill: #21A691;
+        animation: fadeIn 0.5s ease-in-out 2s forwards;
+        opacity: 0;
+    }
+
+    @@keyframes drawPath {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @@keyframes fadeIn {
+        to {
+            opacity: 1;
+        }
+    }
+
+    .nav-entry-point {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #87DF2C;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        box-shadow: 0 4px 12px rgba(135, 223, 44, 0.4);
+        z-index: 10;
+        animation: bounce 2s infinite;
+    }
+
+    .nav-zone {
+        position: absolute;
+        border: 3px solid #21A691;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .nav-zone.highlight {
+        border-color: #87DF2C;
+        background: rgba(135, 223, 44, 0.1);
+        box-shadow: 0 4px 16px rgba(135, 223, 44, 0.4);
+        transform: scale(1.05);
+    }
+
+    .zone-a-nav {
+        top: 80px;
+        left: 30px;
+        width: 200px;
+        height: 150px;
+    }
+
+    .zone-b-nav {
+        top: 80px;
+        right: 30px;
+        width: 200px;
+        height: 150px;
+    }
+
+    .zone-c-nav {
+        bottom: 80px;
+        left: 30px;
+        width: 200px;
+        height: 150px;
+    }
+
+    .zone-d-nav {
+        bottom: 80px;
+        right: 30px;
+        width: 200px;
+        height: 150px;
+    }
+
+    .nav-zone-label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        color: #21A691;
+        font-size: 14px;
+    }
+
+    .nav-zone-label i {
+        font-size: 18px;
+    }
+
+    .nav-target-marker {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        z-index: 15;
+        animation: markerBounce 1.5s infinite;
+    }
+
+    .nav-target-marker i {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 32px;
+        color: #e74c3c;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .marker-pulse {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(231, 76, 60, 0.4);
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes markerBounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Navigation Steps */
+    .navigation-steps-container {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-height: 580px;
+        overflow-y: auto;
+    }
+
+    .steps-title {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .navigation-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .nav-step {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 3px solid #21A691;
+        transition: all 0.3s ease;
+        animation: slideIn 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    .nav-step:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .nav-step-number {
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(135deg, #21A691 0%, #1a8274 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .nav-step-content {
+        flex: 1;
+    }
+
+    .nav-step-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+
+    .nav-step-description {
+        color: #6c757d;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .nav-step-icon {
+        font-size: 24px;
+        color: #21A691;
+        flex-shrink: 0;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Add delay to each step */
+    .nav-step:nth-child(1) { animation-delay: 0.1s; }
+    .nav-step:nth-child(2) { animation-delay: 0.2s; }
+    .nav-step:nth-child(3) { animation-delay: 0.3s; }
+    .nav-step:nth-child(4) { animation-delay: 0.4s; }
+    .nav-step:nth-child(5) { animation-delay: 0.5s; }
+    .nav-step:nth-child(6) { animation-delay: 0.6s; }
+
+    .navigation-legend {
+        padding-top: 15px;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .legend-title-small {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .legend-items-small {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .legend-item-small {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    /* Responsive Navigation */
+    @@media (max-width: 992px) {
+        .navigation-map {
+            height: 400px;
+        }
+
+        .nav-zone {
+            width: 150px !important;
+            height: 120px !important;
+        }
+
+        .navigation-steps-container {
+            margin-top: 20px;
+            max-height: 400px;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .navigation-info-bar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .navigation-map {
+            height: 300px;
+        }
+
+        .nav-zone {
+            width: 100px !important;
+            height: 80px !important;
+        }
+
+        .nav-zone-label {
+            font-size: 11px;
+        }
+
+        .zone-a-nav {
+            top: 60px;
+            left: 15px;
+        }
+
+        .zone-b-nav {
+            top: 60px;
+            right: 15px;
+        }
+
+        .zone-c-nav {
+            bottom: 60px;
+            left: 15px;
+        }
+
+        .zone-d-nav {
+            bottom: 60px;
+            right: 15px;
+        }
+    }
+
     /* Camera View Styles */
     .camera-controls {
         display: flex;
@@ -2624,6 +3516,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        border: none;
     }
 
     /* Single Camera View */
@@ -2656,6 +3549,7 @@
         left: 0;
         width: 100%;
         height: 100%;
+        border: none;
     }
 
     .camera-single-controls {
@@ -2749,6 +3643,32 @@
         
         if (!slot) return;
 
+        // Check if slot is available - only show notification, don't open modal
+        if (slot.status === 'available') {
+            // Determine vehicle type from slot number
+            let vehicleType = '';
+            const zone = slotNumber.charAt(0);
+            switch(zone) {
+                case 'A':
+                    vehicleType = 'Xe máy';
+                    break;
+                case 'B':
+                    vehicleType = 'Ô tô 4 chỗ';
+                    break;
+                case 'C':
+                    vehicleType = 'Ô tô 7 chỗ / SUV';
+                    break;
+                case 'D':
+                    vehicleType = 'Xe tải';
+                    break;
+            }
+            
+            showNotification('success', `Vị trí ${slotNumber} đang trống`, 
+                `Vị trí này dành cho ${vehicleType}. Bạn có thể đỗ xe tại đây!`);
+            return; // Don't open modal for available slots
+        }
+
+        // Only show modal for occupied, reserved, or maintenance slots
         document.getElementById('modalSlotNumber').textContent = slotNumber;
 
         // Status
@@ -3065,8 +3985,214 @@
     }
 
     function navigateToSlot() {
-        showNotification('info', 'Chức năng dẫn đường', 'Tính năng này sẽ dẫn đường đến chỗ đỗ');
+        const slotNumber = document.getElementById('modalSlotNumber').textContent;
+        const slot = parkingData[slotNumber];
+        
+        if (!slot) return;
+        
+        // Close slot details modal
+        const slotModal = bootstrap.Modal.getInstance(document.getElementById('slotDetailsModal'));
+        if (slotModal) {
+            slotModal.hide();
+        }
+        
+        // Wait a bit for the first modal to close
+        setTimeout(() => {
+            // Open navigation modal
+            showNavigationModal(slotNumber);
+        }, 300);
     }
+
+    function showNavigationModal(slotNumber) {
+        // Get zone from slot number (A01 -> A, B01 -> B, etc.)
+        const zone = slotNumber.charAt(0);
+        const slotNum = parseInt(slotNumber.substring(1));
+        
+        // Update modal title
+        document.getElementById('navSlotNumber').textContent = slotNumber;
+        document.getElementById('navSlotLocation').textContent = `Khu ${zone} - Vị trí ${slotNumber}`;
+        
+        // Calculate distance and time based on zone
+        const distanceMap = {
+            'A': { distance: '45m', time: '1 phút' },
+            'B': { distance: '50m', time: '1.5 phút' },
+            'C': { distance: '70m', time: '2 phút' },
+            'D': { distance: '75m', time: '2.5 phút' }
+        };
+        
+        const zoneInfo = distanceMap[zone] || { distance: '50m', time: '1.5 phút' };
+        document.getElementById('navDistance').textContent = zoneInfo.distance;
+        document.getElementById('navTime').textContent = zoneInfo.time;
+        
+        // Position target marker
+        positionTargetMarker(zone);
+        
+        // Draw route
+        drawRoute(zone);
+        
+        // Generate steps
+        generateNavigationSteps(zone, slotNumber);
+        
+        // Highlight target zone
+        highlightZone(zone);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('navigationModal'));
+        modal.show();
+    }
+
+    function positionTargetMarker(zone) {
+        const marker = document.getElementById('navTargetMarker');
+        const positions = {
+            'A': { top: '155px', left: '130px' },
+            'B': { top: '155px', right: '130px', left: 'auto' },
+            'C': { bottom: '155px', left: '130px', top: 'auto' },
+            'D': { bottom: '155px', right: '130px', top: 'auto', left: 'auto' }
+        };
+        
+        const pos = positions[zone];
+        if (pos) {
+            marker.style.top = pos.top || 'auto';
+            marker.style.left = pos.left || 'auto';
+            marker.style.right = pos.right || 'auto';
+            marker.style.bottom = pos.bottom || 'auto';
+        }
+    }
+
+    function drawRoute(zone) {
+        const svg = document.getElementById('routeSvg');
+        svg.innerHTML = ''; // Clear previous routes
+        
+        // Define paths for each zone
+        const paths = {
+            'A': 'M 50% 20 L 50% 120 L 130 155',
+            'B': 'M 50% 20 L 50% 120 L 70% 155',
+            'C': 'M 50% 20 L 50% 280 L 130 345',
+            'D': 'M 50% 20 L 50% 280 L 70% 345'
+        };
+        
+        // Create path element
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', paths[zone] || paths['A']);
+        path.setAttribute('class', 'route-path');
+        path.setAttribute('stroke', '#21A691');
+        path.setAttribute('stroke-width', '4');
+        path.setAttribute('fill', 'none');
+        
+        svg.appendChild(path);
+        
+        // Add animated dots along the path
+        addAnimatedDots(svg, paths[zone]);
+    }
+
+    function addAnimatedDots(svg, pathData) {
+        // Create 3 animated dots that move along the path
+        for (let i = 0; i < 3; i++) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', '4');
+            circle.setAttribute('fill', '#87DF2C');
+            circle.setAttribute('opacity', '0.8');
+            
+            // Create animateMotion for the dot
+            const animateMotion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+            animateMotion.setAttribute('dur', '3s');
+            animateMotion.setAttribute('repeatCount', 'indefinite');
+            animateMotion.setAttribute('begin', `${i * 1}s`);
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            
+            animateMotion.appendChild(path);
+            circle.appendChild(animateMotion);
+            svg.appendChild(circle);
+        }
+    }
+
+    function generateNavigationSteps(zone, slotNumber) {
+        const stepsContainer = document.getElementById('navigationSteps');
+        stepsContainer.innerHTML = '';
+        
+        // Define steps based on zone
+        const stepsMap = {
+            'A': [
+                { icon: 'fa-door-open', title: 'Bắt đầu từ cổng vào chính', description: 'Đi qua cổng vào A hoặc B' },
+                { icon: 'fa-arrow-right', title: 'Đi thẳng vào trong', description: 'Di chuyển thẳng theo đường chính khoảng 30m' },
+                { icon: 'fa-arrow-left', title: 'Rẽ trái vào Khu A', description: 'Rẽ trái khi thấy biển chỉ dẫn "Khu A - Xe máy"' },
+                { icon: 'fa-motorcycle', title: `Tìm vị trí ${slotNumber}`, description: 'Vị trí đỗ nằm ở phía bên trái, hàng thứ ' + Math.ceil(parseInt(slotNumber.substring(1)) / 10) },
+                { icon: 'fa-check-circle', title: 'Đỗ xe và hoàn tất', description: 'Đỗ xe vào vị trí, nhớ khóa xe và giữ vé' }
+            ],
+            'B': [
+                { icon: 'fa-door-open', title: 'Bắt đầu từ cổng vào chính', description: 'Đi qua cổng vào A hoặc B' },
+                { icon: 'fa-arrow-right', title: 'Đi thẳng vào trong', description: 'Di chuyển thẳng theo đường chính khoảng 30m' },
+                { icon: 'fa-arrow-right', title: 'Rẽ phải vào Khu B', description: 'Rẽ phải khi thấy biển chỉ dẫn "Khu B - Ô tô 4 chỗ"' },
+                { icon: 'fa-car', title: `Tìm vị trí ${slotNumber}`, description: 'Vị trí đỗ nằm ở phía bên phải, hàng thứ ' + Math.ceil(parseInt(slotNumber.substring(1)) / 5) },
+                { icon: 'fa-check-circle', title: 'Đỗ xe và hoàn tất', description: 'Đỗ xe vào vị trí, nhớ khóa xe và giữ vé' }
+            ],
+            'C': [
+                { icon: 'fa-door-open', title: 'Bắt đầu từ cổng vào chính', description: 'Đi qua cổng vào A hoặc B' },
+                { icon: 'fa-arrow-down', title: 'Đi thẳng qua quầy thu phí', description: 'Di chuyển thẳng qua khu vực quầy thu phí' },
+                { icon: 'fa-arrow-left', title: 'Rẽ trái vào Khu C', description: 'Rẽ trái khi thấy biển chỉ dẫn "Khu C - Ô tô 7 chỗ"' },
+                { icon: 'fa-shuttle-van', title: `Tìm vị trí ${slotNumber}`, description: 'Vị trí đỗ nằm ở phía bên trái, hàng thứ ' + Math.ceil(parseInt(slotNumber.substring(1)) / 4) },
+                { icon: 'fa-check-circle', title: 'Đỗ xe và hoàn tất', description: 'Đỗ xe vào vị trí, nhớ khóa xe và giữ vé' }
+            ],
+            'D': [
+                { icon: 'fa-door-open', title: 'Bắt đầu từ cổng vào chính', description: 'Đi qua cổng vào A hoặc B' },
+                { icon: 'fa-arrow-down', title: 'Đi thẳng qua quầy thu phí', description: 'Di chuyển thẳng qua khu vực quầy thu phí' },
+                { icon: 'fa-arrow-right', title: 'Rẽ phải vào Khu D', description: 'Rẽ phải khi thấy biển chỉ dẫn "Khu D - Xe tải"' },
+                { icon: 'fa-truck', title: `Tìm vị trí ${slotNumber}`, description: 'Vị trí đỗ nằm ở phía bên phải, hàng thứ ' + Math.ceil(parseInt(slotNumber.substring(1)) / 4) },
+                { icon: 'fa-check-circle', title: 'Đỗ xe và hoàn tất', description: 'Đỗ xe vào vị trí, nhớ khóa xe và giữ vé' }
+            ]
+        };
+        
+        const steps = stepsMap[zone] || stepsMap['A'];
+        
+        steps.forEach((step, index) => {
+            const stepElement = document.createElement('div');
+            stepElement.className = 'nav-step';
+            stepElement.innerHTML = `
+                <div class="nav-step-number">${index + 1}</div>
+                <div class="nav-step-icon">
+                    <i class="fas ${step.icon}"></i>
+                </div>
+                <div class="nav-step-content">
+                    <div class="nav-step-title">${step.title}</div>
+                    <div class="nav-step-description">${step.description}</div>
+                </div>
+            `;
+            stepsContainer.appendChild(stepElement);
+        });
+    }
+
+    function highlightZone(zone) {
+        // Remove previous highlights
+        document.querySelectorAll('.nav-zone').forEach(el => {
+            el.classList.remove('highlight');
+        });
+        
+        // Add highlight to target zone
+        const targetZone = document.querySelector(`.zone-${zone.toLowerCase()}-nav`);
+        if (targetZone) {
+            setTimeout(() => {
+                targetZone.classList.add('highlight');
+            }, 2000); // Highlight after route animation
+        }
+    }
+
+    function printNavigation() {
+        window.print();
+    }
+
+    // Clean up when navigation modal closes
+    document.getElementById('navigationModal')?.addEventListener('hidden.bs.modal', function () {
+        const svg = document.getElementById('routeSvg');
+        if (svg) {
+            svg.innerHTML = '';
+        }
+        
+        document.querySelectorAll('.nav-zone').forEach(el => {
+            el.classList.remove('highlight');
+        });
+    });
 
     function refreshParkingLot() {
         // Simulate refresh
@@ -3215,12 +4341,52 @@
         }
     }
 
-    function toggleCompactSection(sectionId) {
-        // Prevent default click behavior
-        event.stopPropagation();
+    function toggleCompactSection(sectionId, event) {
+        // Prevent default and stop propagation
+        if (event) {
+            event.stopPropagation();
+        }
         
-        // In future, could expand to show detailed grid for specific section
-        showNotification('info', 'Chi tiết khu vực', 'Chức năng xem chi tiết từng khu đang phát triển');
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        
+        const expandedContent = section.querySelector('.compact-section-expanded');
+        const expandBtn = section.querySelector('.compact-expand-btn');
+        
+        // Check if already expanded
+        const isExpanded = section.classList.contains('expanded');
+        
+        // Collapse all other sections first
+        document.querySelectorAll('.compact-section').forEach(s => {
+            if (s.id !== sectionId) {
+                s.classList.remove('expanded');
+                const content = s.querySelector('.compact-section-expanded');
+                const btn = s.querySelector('.compact-expand-btn');
+                if (content) content.style.display = 'none';
+                if (btn) btn.querySelector('i').style.transform = '';
+            }
+        });
+        
+        // Toggle current section
+        if (isExpanded) {
+            // Collapse
+            section.classList.remove('expanded');
+            if (expandedContent) expandedContent.style.display = 'none';
+            if (expandBtn) expandBtn.querySelector('i').style.transform = '';
+            showNotification('info', 'Đã thu gọn', `Đã thu gọn ${section.querySelector('.compact-section-title').textContent}`);
+        } else {
+            // Expand
+            section.classList.add('expanded');
+            if (expandedContent) {
+                expandedContent.style.display = 'block';
+                // Smooth scroll to section
+                setTimeout(() => {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+            if (expandBtn) expandBtn.querySelector('i').style.transform = 'rotate(180deg)';
+            showNotification('success', 'Đã mở rộng', `Hiển thị chi tiết ${section.querySelector('.compact-section-title').textContent}`);
+        }
     }
 
     // Initialize on page load
@@ -3238,16 +4404,23 @@
         console.log('VehicleVision initialized');
     });
 
-    // Camera Functions
+    // Camera Functions - CCTV Parking Lot Surveillance Videos
     const cameraVideoUrls = {
-        'gate-in-a': 'https://www.youtube.com/embed/9RBEgtJ72vU?autoplay=1&mute=1&loop=1&playlist=9RBEgtJ72vU',
-        'gate-in-b': 'https://www.youtube.com/embed/wqctLW0Hb_0?autoplay=1&mute=1&loop=1&playlist=wqctLW0Hb_0',
-        'gate-out-a': 'https://www.youtube.com/embed/MNn9qKG2UFI?autoplay=1&mute=1&loop=1&playlist=MNn9qKG2UFI',
-        'gate-out-b': 'https://www.youtube.com/embed/H1jZjKaB4pE?autoplay=1&mute=1&loop=1&playlist=H1jZjKaB4pE',
-        'area-a': 'https://www.youtube.com/embed/EXBEmVgDXZY?autoplay=1&mute=1&loop=1&playlist=EXBEmVgDXZY',
-        'area-b': 'https://www.youtube.com/embed/NyLF8nHIquM?autoplay=1&mute=1&loop=1&playlist=NyLF8nHIquM',
-        'area-c': 'https://www.youtube.com/embed/vKNFGGbW95M?autoplay=1&mute=1&loop=1&playlist=vKNFGGbW95M',
-        'area-d': 'https://www.youtube.com/embed/1EiC9bvVGnk?autoplay=1&mute=1&loop=1&playlist=1EiC9bvVGnk'
+        // Cổng vào - Parking Entrance Gates
+        'gate-in-a': 'https://www.youtube.com/embed/5_XSYlAfJZM?autoplay=1&mute=1&loop=1&playlist=5_XSYlAfJZM&controls=0&modestbranding=1&rel=0',
+        'gate-in-b': 'https://www.youtube.com/embed/Vrxyr1CjiSM?autoplay=1&mute=1&loop=1&playlist=Vrxyr1CjiSM&controls=0&modestbranding=1&rel=0',
+        
+        // Cổng ra - Parking Exit Gates
+        'gate-out-a': 'https://www.youtube.com/embed/CevxZvSJLk8?autoplay=1&mute=1&loop=1&playlist=CevxZvSJLk8&controls=0&modestbranding=1&rel=0',
+        'gate-out-b': 'https://www.youtube.com/embed/jmRfToI-cC4?autoplay=1&mute=1&loop=1&playlist=jmRfToI-cC4&controls=0&modestbranding=1&rel=0',
+        
+        // Khu xe máy - Motorcycle Parking Area
+        'area-a': 'https://www.youtube.com/embed/l_MyUGq7pgs?autoplay=1&mute=1&loop=1&playlist=l_MyUGq7pgs&controls=0&modestbranding=1&rel=0',
+        
+        // Khu ô tô - Car Parking Areas
+        'area-b': 'https://www.youtube.com/embed/MNn9qKG2UFI?autoplay=1&mute=1&loop=1&playlist=MNn9qKG2UFI&controls=0&modestbranding=1&rel=0',
+        'area-c': 'https://www.youtube.com/embed/NyLF8nHIquM?autoplay=1&mute=1&loop=1&playlist=NyLF8nHIquM&controls=0&modestbranding=1&rel=0',
+        'area-d': 'https://www.youtube.com/embed/1-b7RmmeLtk?autoplay=1&mute=1&loop=1&playlist=1-b7RmmeLtk&controls=0&modestbranding=1&rel=0'
     };
 
     const cameraNames = {

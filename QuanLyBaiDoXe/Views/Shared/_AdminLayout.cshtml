@@ -144,6 +144,109 @@
             background-color: #fff5f5;
             color: #c53030;
         }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .admin-header {
+            background-color: #2d3748;
+            border-bottom-color: #4a5568;
+        }
+
+        body.dark-mode .admin-sidebar {
+            background-color: #2d3748;
+            border-right-color: #4a5568;
+        }
+
+        body.dark-mode .sidebar-brand-text,
+        body.dark-mode .sidebar-nav-link {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .sidebar-nav-link:hover {
+            background-color: #4a5568;
+        }
+
+        body.dark-mode .admin-card {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .header-user-name,
+        body.dark-mode .dropdown-user-name {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .header-user-role,
+        body.dark-mode .dropdown-user-email {
+            color: #a0aec0;
+        }
+
+        body.dark-mode .header-user:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .header-user-dropdown {
+            background-color: #2d3748;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .dropdown-header {
+            border-bottom-color: #4a5568;
+        }
+
+        body.dark-mode .dropdown-item-custom {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .dropdown-item-custom:hover {
+            background-color: #4a5568;
+        }
+
+        body.dark-mode .dropdown-divider-custom {
+            background-color: #4a5568;
+        }
+
+        body.dark-mode .header-icon-btn {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .header-search input {
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+
+        body.dark-mode .header-search input::placeholder {
+            color: #a0aec0;
+        }
+
+        body.dark-mode .stat-card {
+            background-color: #2d3748;
+            border-color: #4a5568;
+        }
+
+        body.dark-mode .page-header,
+        body.dark-mode .page-title {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .breadcrumb a {
+            color: #63b3ed;
+        }
+
+        body.dark-mode .btn-primary-admin {
+            background-color: #3182ce;
+        }
+
+        body.dark-mode .btn-secondary-admin {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
     </style>
     
     @await RenderSectionAsync("Styles", required: false)
@@ -213,6 +316,10 @@
                                     <i class="fas fa-key"></i>
                                     <span>Đổi mật khẩu</span>
                                 </a>
+                                <a href="#" class="dropdown-item-custom" id="toggleThemeBtn">
+                                    <i class="fas fa-moon" id="themeIcon"></i>
+                                    <span id="themeText">Đổi giao diện tối</span>
+                                </a>
                                 <div class="dropdown-divider-custom"></div>
                                 <form action="/Account/Logout" method="post" style="margin: 0;">
                                     @Html.AntiForgeryToken()
@@ -267,6 +374,88 @@
             $('.header-user-dropdown').on('click', function(e) {
                 e.stopPropagation();
             });
+
+            // Dark Mode Toggle
+            const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            // Check for saved theme preference or default to 'light'
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            
+            // Apply saved theme on page load
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Đổi giao diện sáng';
+            }
+            
+            // Toggle theme
+            toggleThemeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                document.body.classList.toggle('dark-mode');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    // Switch to dark mode
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.className = 'fas fa-sun';
+                    themeText.textContent = 'Đổi giao diện sáng';
+                    
+                    // Show notification
+                    showThemeNotification('Đã chuyển sang giao diện tối', 'success');
+                } else {
+                    // Switch to light mode
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.className = 'fas fa-moon';
+                    themeText.textContent = 'Đổi giao diện tối';
+                    
+                    // Show notification
+                    showThemeNotification('Đã chuyển sang giao diện sáng', 'success');
+                }
+            });
+            
+            // Function to show notification
+            function showThemeNotification(message, type) {
+                const bgColors = {
+                    'success': '#87DF2C',
+                    'info': '#21A691'
+                };
+                
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    background: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    z-index: 9999;
+                    min-width: 300px;
+                    border-left: 4px solid ${bgColors[type] || '#21A691'};
+                `;
+                
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <i class="fas fa-check-circle" style="color: ${bgColors[type] || '#21A691'}; font-size: 20px; margin-top: 2px;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Giao diện</div>
+                            <div style="font-size: 13px; color: #6c757d;">${message}</div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.transition = 'opacity 0.3s ease';
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
         });
     </script>
     

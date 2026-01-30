@@ -1,5 +1,5 @@
-@*
-    Helper ?? th?ng nh?t hi?n th? icon v� m�u s?c cho c�c lo?i s? c?
+﻿@*
+    Helper ?? th?ng nh?t hi?n th? icon và màu s?c cho các lo?i s? c?
 *@
 
 @functions {
@@ -7,11 +7,11 @@
     {
         return loaiSuCo switch
         {
-            "Xe m?t th?" => "fas fa-id-card-alt",
-            "L?i barrier" => "fas fa-road-barrier",
-            "L?i camera" => "fas fa-video-slash",
-            "Tranh ch?p ph�" => "fas fa-hand-holding-usd",
-            "Kh?n c?p" => "fas fa-exclamation-triangle",
+            "Xe mất thẻ" => "fas fa-id-card-alt",
+            "Lỗi barrier" => "fas fa-road-barrier",
+            "Lỗi camera" => "fas fa-video-slash",
+            "Tranh chấp phí" => "fas fa-hand-holding-usd",
+            "Khẩn cấp" => "fas fa-exclamation-triangle",
             _ => "fas fa-flag"
         };
     }
@@ -20,11 +20,11 @@
     {
         return loaiSuCo switch
         {
-            "Xe m?t th?" => "warning",
-            "L?i barrier" => "danger",
-            "L?i camera" => "info",
-            "Tranh ch?p ph�" => "purple",
-            "Kh?n c?p" => "danger",
+            "Xe mất thẻ" => "warning",
+            "Lỗi barrier" => "danger",
+            "Lỗi camera" => "info",
+            "Tranh chấp phí" => "purple",
+            "Khấn cấp" => "danger",
             _ => "secondary"
         };
     }
@@ -33,11 +33,11 @@
     {
         return loaiSuCo switch
         {
-            "Xe m?t th?" => "bg-warning",
-            "L?i barrier" => "bg-danger",
-            "L?i camera" => "bg-info",
-            "Tranh ch?p ph�" => "bg-purple",
-            "Kh?n c?p" => "bg-danger",
+            "Xe mất thẻ" => "bg-warning",
+            "Lỗi barrier" => "bg-danger",
+            "Lỗi camera" => "bg-info",
+            "Tranh chấp phí" => "bg-purple",
+            "Khẩn cấp" => "bg-danger",
             _ => "bg-secondary"
         };
     }
@@ -46,18 +46,18 @@
     {
         return loaiSuCo switch
         {
-            "Xe m?t th?" => "#f39c12",
-            "L?i barrier" => "#e74c3c",
-            "L?i camera" => "#3498db",
-            "Tranh ch?p ph�" => "#9b59b6",
-            "Kh?n c?p" => "#e74c3c",
+            "Xe mất thẻ" => "#f39c12",
+            "Lỗi barrier" => "#e74c3c",
+            "Lỗi camera" => "#3498db",
+            "Tranh chấp phí" => "#9b59b6",
+            "Khẩn cấp" => "#e74c3c",
             _ => "#95a5a6"
         };
     }
 }
 
 @*
-    CSS cho m�u purple (th�m v�o n?u ch?a c�)
+    CSS cho màu purple (thêm vào n?u ch?a có)
 *@
 <style>
     .bg-purple {

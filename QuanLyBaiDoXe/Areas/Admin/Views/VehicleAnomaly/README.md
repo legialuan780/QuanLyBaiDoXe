@@ -38,38 +38,7 @@ POST /Admin/VehicleAnomaly/AssignStaff        // Điều nhân viên
 GET  /Admin/VehicleAnomaly/GetStaffList       // Danh sách nhân viên
 ```
 
-### 2. Giám sát Realtime (AnomalyMonitorController)
-**Đường dẫn:** `/Admin/AnomalyMonitor/RealTimeMonitor`
-
-#### Tính năng:
-- **Màn hình giám sát trực tiếp**:
-  - Cập nhật tự động mỗi 5 giây
-  - Cảnh báo âm thanh khi có sự cố mới
-  - Badge LIVE hiển thị trạng thái
-
-- **Thống kê tổng quan**:
-  - Số sự cố khẩn cấp
-  - Số sự cố chờ xử lý
-  - Số sự cố đang xử lý
-  - Thời gian xử lý trung bình
-
-- **Bản đồ nhiệt**:
-  - Hiển thị vị trí sự cố trên sơ đồ bãi xe
-  - Mã màu theo mức độ nghiêm trọng
-  - Hiệu ứng pulse cho sự cố mới
-
-- **Phân tích theo loại**:
-  - Biểu đồ thanh ngang
-  - Số lượng và tỷ lệ đã xử lý
-
-#### API Endpoints:
-```csharp
-GET /Admin/AnomalyMonitor/GetRealtimeAnomalies    // Lấy sự cố realtime
-GET /Admin/AnomalyMonitor/GetStatisticsByTime     // Thống kê theo thời gian
-GET /Admin/AnomalyMonitor/GetStatisticsByType     // Thống kê theo loại
-```
-
-### 3. Chi tiết Sự cố (_AnomalyDetailsModal)
+### 2. Chi tiết Sự cố (_AnomalyDetailsModal)
 **View:** Partial view hiển thị trong modal
 
 #### Thông tin hiển thị:

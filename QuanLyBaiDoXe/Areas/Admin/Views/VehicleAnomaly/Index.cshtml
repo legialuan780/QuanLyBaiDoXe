@@ -46,6 +46,28 @@
             color: #21A691;
         }
 
+        /* Highlight dòng khi được chọn */
+        .row-selected {
+            background-color: #e8f5f3 !important;
+            border-left: 3px solid #21A691 !important;
+            transition: all 0.3s ease;
+        }
+
+        .row-selected:hover {
+            background-color: #d4ede9 !important;
+        }
+
+        /* Animation khi chọn */
+        .row-selected td {
+            color: #1a8577 !important;
+            font-weight: 500 !important;
+        }
+
+        /* Đảm bảo table row có transition smooth */
+        #anomalyTable tbody tr {
+            transition: all 0.2s ease;
+        }
+
         #selectedAnomaliesList {
             max-height: 250px;
             overflow-y: auto;
@@ -207,7 +229,7 @@
                         <i class="fas fa-check-square"></i> Chọn tất cả
                     </button>
                     <span class="text-muted" id="selectedCount">Đã chọn: 0</span>
-                    <select class="form-select form-select-sm" style="width: auto;" onchange="filterByType(this.value)">
+                    <select class="form-select form-select-sm" id="typeFilter" style="width: auto;" onchange="applyFilters()">
                         <option value="">Tất cả loại</option>
                         <option value="Xe mất thẻ">Xe mất thẻ</option>
                         <option value="Lỗi barrier">Lỗi barrier</option>
@@ -216,12 +238,15 @@
                         <option value="Khẩn cấp">Khẩn cấp</option>
                         <option value="Khác">Khác</option>
                     </select>
-                    <select class="form-select form-select-sm" style="width: auto;" onchange="filterByStatus(this.value)">
+                    <select class="form-select form-select-sm" id="statusFilter" style="width: auto;" onchange="applyFilters()">
                         <option value="">Tất cả trạng thái</option>
                         <option value="0">Chưa xử lý</option>
                         <option value="1">Đang xử lý</option>
                         <option value="2">Đã xử lý</option>
                     </select>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()" title="Xóa bộ lọc">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
             <div class="table-responsive">
@@ -535,19 +560,80 @@
             }
         }
 
-        function filterByType(type) {
-            if (type === '') {
-                location.href = '@Url.Action("Index", "VehicleAnomaly")';
-            } else {
-                location.href = '@Url.Action("Index", "VehicleAnomaly")?LoaiSuCo=' + encodeURIComponent(type);
-            }
+        // Lọc kết hợp theo loại và trạng thái (client-side - không reload trang)
+        function applyFilters() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#anomalyTable tbody tr');
+            
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                // Bỏ qua row thông báo "Không có sự cố nào"
+                if (row.cells.length === 1) return;
+                
+                const rowType = row.getAttribute('data-type');
+                const rowStatus = row.getAttribute('data-status');
+                
+                let showRow = true;
+                
+                // Filter theo loại
+                if (typeFilter !== '' && rowType !== typeFilter) {
+                    showRow = false;
+                }
+                
+                // Filter theo trạng thái
+                if (statusFilter !== '' && rowStatus !== statusFilter) {
+                    showRow = false;
+                }
+                
+                // Hiển thị hoặc ẩn row (giữ nguyên class row-selected nếu đã chọn)
+                if (showRow) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Hiển thị thông báo nếu không có kết quả
+            showNoResultsMessage(visibleCount);
+            
+            // Cập nhật số lượng đã chọn (giữ nguyên highlight)
+            updateSelectedCount();
         }
-
-        function filterByStatus(status) {
-            if (status === '') {
-                location.href = '@Url.Action("Index", "VehicleAnomaly")';
+        
+        // Reset bộ lọc
+        function resetFilters() {
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            applyFilters();
+        }
+        
+        // Hiển thị thông báo không có kết quả
+        function showNoResultsMessage(visibleCount) {
+            const tbody = document.querySelector('#anomalyTable tbody');
+            let noResultRow = tbody.querySelector('.no-result-row');
+            
+            if (visibleCount === 0) {
+                if (!noResultRow) {
+                    noResultRow = document.createElement('tr');
+                    noResultRow.className = 'no-result-row';
+                    noResultRow.innerHTML = `
+                        <td colspan="9" class="text-center py-4">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Không tìm thấy sự cố nào phù hợp với bộ lọc</p>
+                            <button class="btn btn-sm btn-outline-primary" onclick="resetFilters()">
+                                <i class="fas fa-redo me-1"></i>Xóa bộ lọc
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(noResultRow);
+                }
             } else {
-                location.href = '@Url.Action("Index", "VehicleAnomaly")?TrangThaiXuLy=' + status;
+                if (noResultRow) {
+                    noResultRow.remove();
+                }
             }
         }
 
@@ -578,16 +664,56 @@
         }
 
 
-        // Cập nhật số lượng đã chọn
+        // Cập nhật số lượng đã chọn và highlight dòng
         function updateSelectedCount() {
-            const checked = document.querySelectorAll('.anomaly-checkbox:checked').length;
-            document.getElementById('selectedCount').textContent = 'Đã chọn: ' + checked;
+            const allCheckboxes = document.querySelectorAll('.anomaly-checkbox');
+            const visibleCheckboxes = Array.from(allCheckboxes).filter(cb => {
+                const row = cb.closest('tr');
+                return row && row.style.display !== 'none';
+            });
+            const checkedBoxes = visibleCheckboxes.filter(cb => cb.checked);
+            
+            const countText = `Đã chọn: ${checkedBoxes.length}`;
+            document.getElementById('selectedCount').textContent = countText;
+            
+            // Highlight các dòng được chọn
+            allCheckboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                if (row) {
+                    if (cb.checked) {
+                        row.classList.add('row-selected');
+                    } else {
+                        row.classList.remove('row-selected');
+                    }
+                }
+            });
+            
+            // Cập nhật trạng thái checkbox "Chọn tất cả"
+            const checkAllBox = document.getElementById('checkAll');
+            if (visibleCheckboxes.length > 0) {
+                checkAllBox.checked = checkedBoxes.length === visibleCheckboxes.length;
+                checkAllBox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < visibleCheckboxes.length;
+            } else {
+                checkAllBox.checked = false;
+                checkAllBox.indeterminate = false;
+            }
         }
 
         // Toggle check all
         function toggleCheckAll(checkbox) {
             const checkboxes = document.querySelectorAll('.anomaly-checkbox');
-            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            checkboxes.forEach(cb => {
+                const row = cb.closest('tr');
+                if (row && row.style.display !== 'none') {
+                    cb.checked = checkbox.checked;
+                    // Highlight ngay lập tức
+                    if (checkbox.checked) {
+                        row.classList.add('row-selected');
+                    } else {
+                        row.classList.remove('row-selected');
+                    }
+                }
+            });
             updateSelectedCount();
         }
 

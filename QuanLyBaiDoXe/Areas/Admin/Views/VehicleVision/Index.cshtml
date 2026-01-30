@@ -42,7 +42,7 @@
             <i class="fas fa-parking"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="totalSlots">80</h3>
+            <h3 id="totalSlots">100</h3>
             <p>Tổng chỗ đỗ</p>
         </div>
     </div>
@@ -51,12 +51,12 @@
             <i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="availableSlots">38</h3>
+            <h3 id="availableSlots">45</h3>
             <p>Chỗ trống</p>
         </div>
         <div class="stat-card-trend up">
             <i class="fas fa-arrow-up"></i>
-            47.5%
+            45%
         </div>
     </div>
     <div class="stat-card">
@@ -64,12 +64,12 @@
             <i class="fas fa-car"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="occupiedSlots">39</h3>
+            <h3 id="occupiedSlots">52</h3>
             <p>Đang sử dụng</p>
         </div>
         <div class="stat-card-trend">
             <i class="fas fa-minus"></i>
-            48.7%
+            52%
         </div>
     </div>
     <div class="stat-card">
@@ -533,6 +533,113 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Section E - Nhân viên -->
+                        <div class="compact-section employee-section" id="section-e" onclick="toggleCompactSection('section-e', event)">
+                            <div class="compact-section-header">
+                                <div class="compact-section-icon employee-icon">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="compact-section-info">
+                                    <h4 class="compact-section-title">
+                                        Khu E - Nhân viên
+                                        <span class="vip-badge">VIP</span>
+                                    </h4>
+                                    <div class="compact-section-stats">
+                                        <span class="stat-badge available-badge">8 trống</span>
+                                        <span class="stat-badge occupied-badge">12 đỗ</span>
+                                    </div>
+                                </div>
+                                <div class="compact-section-summary">
+                                    <div class="summary-percentage">60%</div>
+                                    <div class="summary-total">20 chỗ</div>
+                                </div>
+                                <button class="compact-expand-btn">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="compact-progress-bar">
+                                <div class="compact-progress-fill occupied-fill employee-fill" style="width: 60%"></div>
+                            </div>
+                            
+                            <!-- Expanded Content -->
+                            <div class="compact-section-expanded" style="display: none;">
+                                <div class="expanded-grid employee-grid">
+                                    <div class="parking-slot employee occupied" data-slot="E01" onclick="viewSlotDetails('E01'); event.stopPropagation();">
+                                        <span class="slot-number">E01</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E02" onclick="viewSlotDetails('E02'); event.stopPropagation();">
+                                        <span class="slot-number">E02</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E03" onclick="viewSlotDetails('E03'); event.stopPropagation();">
+                                        <span class="slot-number">E03</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E04" onclick="viewSlotDetails('E04'); event.stopPropagation();">
+                                        <span class="slot-number">E04</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E05" onclick="viewSlotDetails('E05'); event.stopPropagation();">
+                                        <span class="slot-number">E05</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E06" onclick="viewSlotDetails('E06'); event.stopPropagation();">
+                                        <span class="slot-number">E06</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E07" onclick="viewSlotDetails('E07'); event.stopPropagation();">
+                                        <span class="slot-number">E07</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E08" onclick="viewSlotDetails('E08'); event.stopPropagation();">
+                                        <span class="slot-number">E08</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E09" onclick="viewSlotDetails('E09'); event.stopPropagation();">
+                                        <span class="slot-number">E09</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E10" onclick="viewSlotDetails('E10'); event.stopPropagation();">
+                                        <span class="slot-number">E10</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E11" onclick="viewSlotDetails('E11'); event.stopPropagation();">
+                                        <span class="slot-number">E11</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E12" onclick="viewSlotDetails('E12'); event.stopPropagation();">
+                                        <span class="slot-number">E12</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E13" onclick="viewSlotDetails('E13'); event.stopPropagation();">
+                                        <span class="slot-number">E13</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E14" onclick="viewSlotDetails('E14'); event.stopPropagation();">
+                                        <span class="slot-number">E14</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E15" onclick="viewSlotDetails('E15'); event.stopPropagation();">
+                                        <span class="slot-number">E15</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E16" onclick="viewSlotDetails('E16'); event.stopPropagation();">
+                                        <span class="slot-number">E16</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E17" onclick="viewSlotDetails('E17'); event.stopPropagation();">
+                                        <span class="slot-number">E17</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E18" onclick="viewSlotDetails('E18'); event.stopPropagation();">
+                                        <span class="slot-number">E18</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="parking-slot employee available" data-slot="E19" onclick="viewSlotDetails('E19'); event.stopPropagation();">
+                                        <span class="slot-number">E19</span>
+                                    </div>
+                                    <div class="parking-slot employee occupied" data-slot="E20" onclick="viewSlotDetails('E20'); event.stopPropagation();">
+                                        <span class="slot-number">E20</span>
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -867,6 +974,93 @@
                             <div class="parking-slot truck occupied" data-slot="D08" onclick="viewSlotDetails('D08')">
                                 <span class="slot-number">D08</span>
                                 <i class="fas fa-truck"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section E - Nhân viên -->
+                    <div class="parking-section">
+                        <div class="section-header employee-header">
+                            <i class="fas fa-user-tie"></i>
+                            Khu E - Nhân viên (20 chỗ)
+                            <span class="employee-badge">VIP</span>
+                        </div>
+                        <div class="parking-grid employee-grid">
+                            <!-- Row 1 -->
+                            <div class="parking-slot employee occupied" data-slot="E01" onclick="viewSlotDetails('E01')">
+                                <span class="slot-number">E01</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E02" onclick="viewSlotDetails('E02')">
+                                <span class="slot-number">E02</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee available" data-slot="E03" onclick="viewSlotDetails('E03')">
+                                <span class="slot-number">E03</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E04" onclick="viewSlotDetails('E04')">
+                                <span class="slot-number">E04</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E05" onclick="viewSlotDetails('E05')">
+                                <span class="slot-number">E05</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <!-- Row 2 -->
+                            <div class="parking-slot employee available" data-slot="E06" onclick="viewSlotDetails('E06')">
+                                <span class="slot-number">E06</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E07" onclick="viewSlotDetails('E07')">
+                                <span class="slot-number">E07</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee available" data-slot="E08" onclick="viewSlotDetails('E08')">
+                                <span class="slot-number">E08</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E09" onclick="viewSlotDetails('E09')">
+                                <span class="slot-number">E09</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E10" onclick="viewSlotDetails('E10')">
+                                <span class="slot-number">E10</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <!-- Row 3 -->
+                            <div class="parking-slot employee available" data-slot="E11" onclick="viewSlotDetails('E11')">
+                                <span class="slot-number">E11</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E12" onclick="viewSlotDetails('E12')">
+                                <span class="slot-number">E12</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee available" data-slot="E13" onclick="viewSlotDetails('E13')">
+                                <span class="slot-number">E13</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E14" onclick="viewSlotDetails('E14')">
+                                <span class="slot-number">E14</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee available" data-slot="E15" onclick="viewSlotDetails('E15')">
+                                <span class="slot-number">E15</span>
+                            </div>
+                            <!-- Row 4 -->
+                            <div class="parking-slot employee occupied" data-slot="E16" onclick="viewSlotDetails('E16')">
+                                <span class="slot-number">E16</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee available" data-slot="E17" onclick="viewSlotDetails('E17')">
+                                <span class="slot-number">E17</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E18" onclick="viewSlotDetails('E18')">
+                                <span class="slot-number">E18</span>
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                            <div class="parking-slot employee available" data-slot="E19" onclick="viewSlotDetails('E19')">
+                                <span class="slot-number">E19</span>
+                            </div>
+                            <div class="parking-slot employee occupied" data-slot="E20" onclick="viewSlotDetails('E20')">
+                                <span class="slot-number">E20</span>
+                                <i class="fas fa-id-badge"></i>
                             </div>
                         </div>
                     </div>
@@ -1934,6 +2128,23 @@
         gap: 10px;
     }
 
+    .section-header.employee-header {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+
+    .employee-badge,
+    .vip-badge {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
     .parking-grid {
         display: grid;
         gap: 10px;
@@ -1953,6 +2164,10 @@
 
     .truck-grid {
         grid-template-columns: repeat(4, 1fr);
+    }
+
+    .employee-grid {
+        grid-template-columns: repeat(5, 1fr);
     }
 
     .parking-slot {
@@ -1991,6 +2206,29 @@
     .parking-slot.truck {
         aspect-ratio: 6/5;
         min-height: 85px;
+    }
+
+    /* Nhân viên - chữ nhật nhỏ dài */
+    .parking-slot.employee {
+        aspect-ratio: 3/2;
+        min-height: 55px;
+        border-color: #f39c12;
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+    }
+
+    .parking-slot.employee.available {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.1) 0%, #87DF2C 100%);
+        border-color: #f39c12;
+    }
+
+    .parking-slot.employee.occupied {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, #ff6b6b 100%);
+        border-color: #e67e22;
+    }
+
+    .parking-slot.employee.reserved {
+        background: linear-gradient(135deg, rgba(243, 156, 18, 0.3) 0%, #ffa500 100%);
+        border-color: #f39c12;
     }
 
     .parking-slot:hover {
@@ -2056,6 +2294,11 @@
 
     .parking-slot.truck i {
         font-size: 22px;
+    }
+
+    .parking-slot.employee i {
+        font-size: 18px;
+        color: #f39c12;
     }
 
     .gate-actions {
@@ -2333,6 +2576,10 @@
         .truck-grid {
             grid-template-columns: repeat(2, 1fr);
         }
+
+        .employee-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
     }
 
     /* Compact View Styles */
@@ -2393,6 +2640,23 @@
 
     .compact-section-icon.truck-icon {
         background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    }
+
+    .compact-section-icon.employee-icon {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+
+    .compact-section.employee-section {
+        border: 2px solid #f39c12;
+    }
+
+    .compact-section.employee-section:hover {
+        border-color: #e67e22;
+        box-shadow: 0 4px 12px rgba(243, 156, 18, 0.2);
+    }
+
+    .compact-progress-fill.employee-fill {
+        background: #f39c12;
     }
 
     .compact-section-info {
@@ -2563,6 +2827,10 @@
 
         .expanded-grid.truck-grid {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .expanded-grid.employee-grid {
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 
@@ -4051,7 +4319,27 @@
         'D01': { status: 'occupied', vehicle: { plate: '51G-99999', type: 'Xe tải', entryTime: '2025-01-23 06:00' } },
         'D02': { status: 'available', vehicle: null },
         'D03': { status: 'occupied', vehicle: { plate: '30E-55555', type: 'Xe tải', entryTime: '2025-01-23 08:30' } },
-        'D04': { status: 'available', vehicle: null }
+        'D04': { status: 'available', vehicle: null },
+        'E01': { status: 'occupied', vehicle: { plate: 'NV-001', type: 'Nhân viên', entryTime: '2025-01-23 07:00' } },
+        'E02': { status: 'occupied', vehicle: { plate: 'NV-002', type: 'Nhân viên', entryTime: '2025-01-23 07:15' } },
+        'E03': { status: 'available', vehicle: null },
+        'E04': { status: 'occupied', vehicle: { plate: 'NV-004', type: 'Nhân viên', entryTime: '2025-01-23 07:30' } },
+        'E05': { status: 'occupied', vehicle: { plate: 'NV-005', type: 'Nhân viên', entryTime: '2025-01-23 07:45' } },
+        'E06': { status: 'available', vehicle: null },
+        'E07': { status: 'occupied', vehicle: { plate: 'NV-007', type: 'Nhân viên', entryTime: '2025-01-23 08:00' } },
+        'E08': { status: 'available', vehicle: null },
+        'E09': { status: 'occupied', vehicle: { plate: 'NV-009', type: 'Nhân viên', entryTime: '2025-01-23 08:15' } },
+        'E10': { status: 'occupied', vehicle: { plate: 'NV-010', type: 'Nhân viên', entryTime: '2025-01-23 08:30' } },
+        'E11': { status: 'available', vehicle: null },
+        'E12': { status: 'occupied', vehicle: { plate: 'NV-012', type: 'Nhân viên', entryTime: '2025-01-23 08:45' } },
+        'E13': { status: 'available', vehicle: null },
+        'E14': { status: 'occupied', vehicle: { plate: 'NV-014', type: 'Nhân viên', entryTime: '2025-01-23 09:00' } },
+        'E15': { status: 'available', vehicle: null },
+        'E16': { status: 'occupied', vehicle: { plate: 'NV-016', type: 'Nhân viên', entryTime: '2025-01-23 09:15' } },
+        'E17': { status: 'available', vehicle: null },
+        'E18': { status: 'occupied', vehicle: { plate: 'NV-018', type: 'Nhân viên', entryTime: '2025-01-23 09:30' } },
+        'E19': { status: 'available', vehicle: null },
+        'E20': { status: 'occupied', vehicle: { plate: 'NV-020', type: 'Nhân viên', entryTime: '2025-01-23 09:45' } }
     };
 
     // Gate status tracking

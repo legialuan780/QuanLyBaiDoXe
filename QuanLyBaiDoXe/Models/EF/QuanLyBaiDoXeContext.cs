@@ -65,9 +65,13 @@ public partial class QuanLyBaiDoXeContext : DbContext
             entity.Property(e => e.TienDauCa)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.TongTienThu)
+            entity.Property(e => e.TongTienHeThong)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.TienMatBanGiao)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.GhiChuBanGiao).HasMaxLength(255);
             entity.Property(e => e.TrangThaiCa).HasDefaultValue(0);
 
             entity.HasOne(d => d.MaNhanVienNavigation).WithMany(p => p.CaLamViecs)

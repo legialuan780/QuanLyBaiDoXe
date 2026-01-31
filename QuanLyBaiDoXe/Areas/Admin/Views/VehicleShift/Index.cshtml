@@ -18,9 +18,9 @@
         </div>
     </div>
     <div class="page-header-actions">
-        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })'">
-            <i class="fas fa-calendar-alt"></i>
-            Lịch làm việc
+        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("WeeklySchedule", "VehicleShift", new { area = "Admin" })'">
+            <i class="fas fa-calendar-week"></i>
+            Lập lịch tuần
         </button>
         <button class="btn-secondary-admin" onclick="location.href='@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })'">
             <i class="fas fa-clock"></i>
@@ -49,8 +49,8 @@
             <i class="fas fa-user-clock"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="activeShifts">@Model.Count(s => s.TrangThaiCa == 1)</h3>
-            <p>Ca đang làm việc</p>
+            <h3 id="activeShifts">@Model.Count(s => s.TrangThaiCa == 0)</h3>
+            <p>Ca đang trực</p>
         </div>
     </div>
     <div class="stat-card">
@@ -58,8 +58,8 @@
             <i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="completedShifts">@Model.Count(s => s.TrangThaiCa == 2)</h3>
-            <p>Ca đã hoàn thành</p>
+            <h3 id="completedShifts">@Model.Count(s => s.TrangThaiCa == 1)</h3>
+            <p>Ca đã chốt</p>
         </div>
     </div>
     <div class="stat-card">
@@ -67,8 +67,8 @@
             <i class="fas fa-money-bill-wave"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="totalRevenue">@Model.Sum(s => s.TongTienThu).ToString("N0") đ</h3>
-            <p>Tổng doanh thu</p>
+            <h3 id="totalRevenue">@Model.Sum(s => s.TongTienHeThong).ToString("N0") đ</h3>
+            <p>Tổng doanh thu hệ thống</p>
         </div>
     </div>
 </div>
@@ -86,9 +86,8 @@
             </div>
             <select class="form-select" id="filterStatus" onchange="filterByStatus()" style="width: 150px;">
                 <option value="">Tất cả trạng thái</option>
-                <option value="0">Chưa bắt đầu</option>
-                <option value="1">Đang làm việc</option>
-                <option value="2">Đã kết thúc</option>
+                <option value="0">Đang trực</option>
+                <option value="1">Đã chốt</option>
             </select>
         </div>
     </div>
@@ -104,8 +103,9 @@
                     <th>Giờ giao ca</th>
                     <th>Số giờ làm</th>
                     <th>Tiền đầu ca</th>
-                    <th>Tổng thu</th>
-                    <th>Tiền cuối ca</th>
+                    <th>Tiền HT</th>
+                    <th>Tiền bàn giao</th>
+                    <th>Chênh lệch</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
                 </tr>
@@ -129,28 +129,24 @@
                             <td>@(shift.ThoiGianGiaoCa?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                             <td>@shift.SoGioLam.ToString("F1")h</td>
                             <td>@shift.TienDauCa.ToString("N0") đ</td>
-                            <td class="text-success fw-bold">@shift.TongTienThu.ToString("N0") đ</td>
-                            <td class="text-primary fw-bold">@shift.TienCuoiCa.ToString("N0") đ</td>
+                            <td class="text-info fw-bold">@shift.TongTienHeThong.ToString("N0") đ</td>
+                            <td class="text-success fw-bold">@shift.TienMatBanGiao.ToString("N0") đ</td>
+                            <td class="@(shift.ChenhLech >= 0 ? "text-success" : "text-danger") fw-bold">
+                                @shift.ChenhLech.ToString("N0") đ
+                            </td>
                             <td>
                                 @if (shift.TrangThaiCa == 0)
                                 {
-                                    <span class="badge badge-secondary">
-                                        <i class="fas fa-clock"></i>
-                                        Chưa bắt đầu
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-play-circle"></i>
+                                        Đang trực
                                     </span>
                                 }
                                 else if (shift.TrangThaiCa == 1)
                                 {
-                                    <span class="badge badge-success">
-                                        <i class="fas fa-play-circle"></i>
-                                        Đang làm việc
-                                    </span>
-                                }
-                                else if (shift.TrangThaiCa == 2)
-                                {
                                     <span class="badge badge-info">
                                         <i class="fas fa-check-circle"></i>
-                                        Đã kết thúc
+                                        Đã chốt
                                     </span>
                                 }
                             </td>
@@ -159,9 +155,9 @@
                                     <button class="btn-icon" onclick="viewShiftDetail(@shift.MaCa)" title="Xem chi tiết">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    @if (shift.TrangThaiCa == 1)
+                                    @if (shift.TrangThaiCa == 0)
                                     {
-                                        <button class="btn-icon btn-success" onclick="endShift(@shift.MaCa)" title="Kết thúc ca">
+                                        <button class="btn-icon btn-success" onclick="endShift(@shift.MaCa)" title="Chốt ca">
                                             <i class="fas fa-stop-circle"></i>
                                         </button>
                                     }
@@ -176,7 +172,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="10" class="text-center">
+                        <td colspan="11" class="text-center">
                             <div class="empty-state">
                                 <i class="fas fa-inbox"></i>
                                 <p>Chưa có ca làm việc nào</p>
@@ -208,18 +204,221 @@
     </div>
 </div>
 
+<!-- Add Shift Modal -->
+<div class="modal fade" id="addShiftModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Mở ca làm việc mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addShiftForm">
+                    <div class="mb-3">
+                        <label class="form-label">Chọn nhân viên <span class="text-danger">*</span></label>
+                        <select class="form-select" id="employeeSelect" name="MaNhanVien" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tiền đầu ca <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="TienDauCa" value="0" required min="0" step="1000">
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Ca làm việc sẽ bắt đầu ngay khi được tạo
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn-primary-admin" onclick="createShift()">
+                    <i class="fas fa-check"></i>
+                    Mở ca
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- End Shift Modal -->
+<div class="modal fade" id="endShiftModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-stop-circle"></i>
+                    Chốt ca làm việc
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="endShiftForm">
+                    <input type="hidden" id="endShiftId" name="MaCa">
+                    
+                    <div class="shift-summary mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <label>Tiền đầu ca:</label>
+                                <div class="fw-bold text-primary" id="summaryTienDauCa">0 đ</div>
+                            </div>
+                            <div class="col-6">
+                                <label>Tiền hệ thống:</label>
+                                <div class="fw-bold text-info" id="summaryTongTienHeThong">0 đ</div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label>Tiền cuối ca (tính toán):</label>
+                                <div class="fw-bold text-success fs-5" id="summaryTienCuoiCa">0 đ</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Tiền mặt bàn giao <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="tienMatBanGiao" name="TienMatBanGiao" required min="0" step="1000" oninput="calculateDifference()">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Chênh lệch:</label>
+                        <div class="fw-bold fs-5" id="chenhLech">0 đ</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú bàn giao</label>
+                        <textarea class="form-control" name="GhiChuBanGiao" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn-primary-admin" onclick="confirmEndShift()">
+                    <i class="fas fa-check"></i>
+                    Chốt ca
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
     <script>
+        // Load danh sách nhân viên khi mở modal
+        $('#addShiftModal').on('show.bs.modal', function() {
+            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', function(data) {
+                const select = $('#employeeSelect');
+                select.empty();
+                select.append('<option value="">-- Chọn nhân viên --</option>');
+                data.forEach(emp => {
+                    select.append(`<option value="${emp.maNhanVien}">${emp.hoTen} (${emp.chucVu})</option>`);
+                });
+            });
+        });
+
+        // Tạo ca mới
+        function createShift() {
+            const formData = {
+                MaNhanVien: parseInt($('#employeeSelect').val()),
+                TienDauCa: parseFloat($('input[name="TienDauCa"]').val())
+            };
+
+            if (!formData.MaNhanVien) {
+                alert('Vui lòng chọn nhân viên');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("CreateShift", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi tạo ca');
+                }
+            });
+        }
+
+        let currentShiftData = {};
+        
+        // Mở modal chốt ca
+        function endShift(shiftId) {
+            $.get('@Url.Action("GetShiftDetail", "VehicleShift", new { area = "Admin" })', { id: shiftId }, function(data) {
+                currentShiftData = data;
+                $('#endShiftId').val(data.maCa);
+                $('#summaryTienDauCa').text(data.tienDauCa.toLocaleString('vi-VN') + ' đ');
+                $('#summaryTongTienHeThong').text(data.tongTienHeThong.toLocaleString('vi-VN') + ' đ');
+                $('#summaryTienCuoiCa').text((data.tienDauCa + data.tongTienHeThong).toLocaleString('vi-VN') + ' đ');
+                $('#tienMatBanGiao').val(data.tienDauCa + data.tongTienHeThong);
+                calculateDifference();
+                $('#endShiftModal').modal('show');
+            });
+        }
+
+        // Tính chênh lệch
+        function calculateDifference() {
+            const tienCuoiCa = currentShiftData.tienDauCa + currentShiftData.tongTienHeThong;
+            const tienMatBanGiao = parseFloat($('#tienMatBanGiao').val()) || 0;
+            const chenhLech = tienMatBanGiao - tienCuoiCa;
+            
+            const chenhLechEl = $('#chenhLech');
+            chenhLechEl.text(chenhLech.toLocaleString('vi-VN') + ' đ');
+            
+            if (chenhLech >= 0) {
+                chenhLechEl.removeClass('text-danger').addClass('text-success');
+            } else {
+                chenhLechEl.removeClass('text-success').addClass('text-danger');
+            }
+        }
+
+        // Xác nhận chốt ca
+        function confirmEndShift() {
+            const formData = {
+                MaCa: parseInt($('#endShiftId').val()),
+                TienMatBanGiao: parseFloat($('#tienMatBanGiao').val()),
+                GhiChuBanGiao: $('textarea[name="GhiChuBanGiao"]').val()
+            };
+
+            $.ajax({
+                url: '@Url.Action("EndShift", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi chốt ca');
+                }
+            });
+        }
+
+        // Xem chi tiết ca
         function viewShiftDetail(shiftId) {
             $('#shiftDetailModal').modal('show');
             
             $.get('@Url.Action("GetShiftDetail", "VehicleShift", new { area = "Admin" })', { id: shiftId }, function(data) {
-                const statusText = data.trangThaiCa === 0 ? 'Chưa bắt đầu' : 
-                                   data.trangThaiCa === 1 ? 'Đang làm việc' : 'Đã kết thúc';
-                const statusClass = data.trangThaiCa === 0 ? 'secondary' : 
-                                    data.trangThaiCa === 1 ? 'success' : 'info';
+                const statusText = data.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt';
+                const statusClass = data.trangThaiCa === 0 ? 'success' : 'info';
+                const chenhLech = data.tienMatBanGiao - (data.tienDauCa + data.tongTienHeThong);
                 
                 const html = `
                     <div class="shift-detail-card">
@@ -241,6 +440,10 @@
                                     <label>Thời gian giao ca:</label>
                                     <span>${data.thoiGianGiaoCa ? new Date(data.thoiGianGiaoCa).toLocaleString('vi-VN') : 'Chưa giao ca'}</span>
                                 </div>
+                                <div class="detail-item">
+                                    <label>Trạng thái:</label>
+                                    <span class="badge badge-${statusClass}">${statusText}</span>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="detail-item">
@@ -248,8 +451,16 @@
                                     <strong class="text-primary">${data.tienDauCa.toLocaleString('vi-VN')} đ</strong>
                                 </div>
                                 <div class="detail-item">
-                                    <label>Tổng tiền thu:</label>
-                                    <strong class="text-success">${data.tongTienThu.toLocaleString('vi-VN')} đ</strong>
+                                    <label>Tiền hệ thống:</label>
+                                    <strong class="text-info">${data.tongTienHeThong.toLocaleString('vi-VN')} đ</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Tiền bàn giao:</label>
+                                    <strong class="text-success">${data.tienMatBanGiao.toLocaleString('vi-VN')} đ</strong>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Chênh lệch:</label>
+                                    <strong class="${chenhLech >= 0 ? 'text-success' : 'text-danger'}">${chenhLech.toLocaleString('vi-VN')} đ</strong>
                                 </div>
                                 <div class="detail-item">
                                     <label>Số xe vào:</label>
@@ -259,12 +470,17 @@
                                     <label>Số xe ra:</label>
                                     <strong>${data.soXeRa}</strong>
                                 </div>
-                                <div class="detail-item">
-                                    <label>Trạng thái:</label>
-                                    <span class="badge badge-${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        ${data.ghiChuBanGiao ? `
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <strong>Ghi chú:</strong> ${data.ghiChuBanGiao}
                                 </div>
                             </div>
                         </div>
+                        ` : ''}
                     </div>
                 `;
                 
@@ -281,15 +497,20 @@
 
         function filterByStatus() {
             const status = $('#filterStatus').val();
-            // Implement client-side filtering or reload with parameter
-            console.log('Filter by status:', status);
-        }
-
-        function endShift(shiftId) {
-            if (confirm('Bạn có chắc chắn muốn kết thúc ca làm việc này?')) {
-                // Call API to end shift
-                console.log('End shift:', shiftId);
+            const rows = $('tbody tr');
+            
+            if (!status) {
+                rows.show();
+                return;
             }
+            
+            rows.each(function() {
+                const badge = $(this).find('.badge');
+                const text = badge.text().trim();
+                const show = (status === '0' && text.includes('Đang trực')) ||
+                             (status === '1' && text.includes('Đã chốt'));
+                $(this).toggle(show);
+            });
         }
 
         function printShiftReport(shiftId) {

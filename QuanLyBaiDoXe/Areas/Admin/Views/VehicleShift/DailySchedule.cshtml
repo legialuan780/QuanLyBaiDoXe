@@ -1,0 +1,519 @@
+@model QuanLyBaiDoXe.Areas.Admin.ViewModels.DailyScheduleViewModel
+
+@{
+    ViewData["Title"] = "L?ch làm vi?c hôm nay";
+    var selectedDate = Model.SelectedDate;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-calendar-day"></i>
+            L?ch làm vi?c
+        </h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang ch?</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })">Ca làm vi?c</a>
+            <span>/</span>
+            <span>L?ch làm vi?c</span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-secondary-admin" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+            Quay l?i
+        </button>
+        <button class="btn-primary-admin" onclick="printSchedule()">
+            <i class="fas fa-print"></i>
+            In l?ch
+        </button>
+    </div>
+</div>
+
+<!-- Date Navigator -->
+<div class="admin-card">
+    <div class="date-navigator">
+        <button class="btn-secondary-admin" onclick="previousDay()">
+            <i class="fas fa-chevron-left"></i>
+            Hôm qua
+        </button>
+        <div class="date-selector">
+            <input type="date" class="form-control form-control-lg" id="selectedDate" 
+                   value="@selectedDate.ToString("yyyy-MM-dd")" onchange="changeDate()">
+            <h3 class="current-date">
+                <i class="fas fa-calendar-alt"></i>
+                @selectedDate.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+            </h3>
+            <button class="btn-primary-admin btn-sm" onclick="goToToday()">
+                <i class="fas fa-calendar-day"></i>
+                Hôm nay
+            </button>
+        </div>
+        <button class="btn-secondary-admin" onclick="nextDay()">
+            Ngày mai
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.ActiveShifts.Count</h3>
+            <p>Ca ?ang tr?c</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.ScheduledShifts.Count</h3>
+            <p>Ca ?ã x?p l?ch</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.ActiveEmployees</h3>
+            <p>Nhân viên ?ang làm</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="currentTime">--:--</h3>
+            <p>Gi? hi?n t?i</p>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline View -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">
+            <i class="fas fa-timeline"></i>
+            Timeline ca làm vi?c
+        </h3>
+        <div class="admin-card-actions">
+            <div class="view-toggle">
+                <button class="btn-toggle active" data-view="timeline" onclick="switchView('timeline')">
+                    <i class="fas fa-stream"></i>
+                    Timeline
+                </button>
+                <button class="btn-toggle" data-view="grid" onclick="switchView('grid')">
+                    <i class="fas fa-th"></i>
+                    L??i
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Container -->
+    <div id="timelineView" class="daily-timeline-container">
+        <!-- Time Scale -->
+        <div class="time-scale">
+            @for (int hour = 0; hour < 24; hour++)
+            {
+                var isCurrentHour = selectedDate.Date == DateTime.Today && hour == DateTime.Now.Hour;
+                <div class="time-mark @(isCurrentHour ? "current" : "")" style="left: @((hour * 100.0 / 24))%">
+                    <span class="time-label">@hour.ToString("D2"):00</span>
+                    <div class="time-line"></div>
+                </div>
+            }
+            
+            <!-- Current Time Indicator -->
+            @if (selectedDate.Date == DateTime.Today)
+            {
+                var currentPercent = (DateTime.Now.Hour * 60 + DateTime.Now.Minute) / (24.0 * 60) * 100;
+                <div class="current-time-indicator" style="left: @currentPercent.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)%">
+                    <div class="time-line-current"></div>
+                    <div class="time-marker">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Shift Tracks -->
+        <div class="shift-tracks">
+            @foreach (var employee in Model.AllEmployees)
+            {
+                var employeeShifts = Model.ActiveShifts.Where(s => s.MaNhanVien == employee.MaNhanVien).ToList();
+                var scheduledShift = Model.ScheduledShifts.FirstOrDefault(s => s.MaNhanVien == employee.MaNhanVien);
+                
+                <div class="shift-track" data-employee-id="@employee.MaNhanVien">
+                    <div class="track-header">
+                        <div class="employee-info-compact">
+                            <div class="employee-avatar-small">@employee.HoTen.Substring(0, 1)</div>
+                            <div>
+                                <div class="employee-name-compact">@employee.HoTen</div>
+                                <div class="employee-role-compact">@employee.ChucVuText</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="track-timeline">
+                        @if (scheduledShift != null)
+                        {
+                            // Tính toán v? trí và ?? r?ng d?a trên ca làm vi?c
+                            var (startHour, endHour) = scheduledShift.CaLamViec switch
+                            {
+                                1 => (6, 14),   // Ca sáng: 6h-14h
+                                2 => (14, 22),  // Ca chi?u: 14h-22h
+                                3 => (22, 6),   // Ca ?êm: 22h-6h (qua ngày)
+                                _ => (0, 0)
+                            };
+
+                            if (scheduledShift.CaLamViec == 3) // Ca ?êm ??c bi?t
+                            {
+                                // Ph?n 1: 22h - 24h
+                                var leftPos1 = (22.0 / 24) * 100;
+                                var width1 = (2.0 / 24) * 100;
+                                <div class="shift-block shift-night" style="left: @leftPos1.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)%; width: @width1.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)%"
+                                     onclick="openShiftDetail(@employee.MaNhanVien, '@scheduledShift.NgayLamViec')">
+                                    <div class="shift-content">
+                                        <div class="shift-time">22:00 - 24:00</div>
+                                        <div class="shift-name">Ca ?êm</div>
+                                    </div>
+                                </div>
+
+                                // Ph?n 2: 0h - 6h
+                                var leftPos2 = 0;
+                                var width2 = (6.0 / 24) * 100;
+                                <div class="shift-block shift-night" style="left: @leftPos2%; width: @width2.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)%"
+                                     onclick="openShiftDetail(@employee.MaNhanVien, '@scheduledShift.NgayLamViec')">
+                                    <div class="shift-content">
+                                        <div class="shift-time">00:00 - 06:00</div>
+                                        <div class="shift-name">Ca ?êm</div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                var leftPos = (startHour / 24.0) * 100;
+                                var width = ((endHour - startHour) / 24.0) * 100;
+                                var shiftClass = scheduledShift.CaLamViec switch
+                                {
+                                    1 => "shift-morning",
+                                    2 => "shift-afternoon",
+                                    _ => ""
+                                };
+
+                                <div class="shift-block @shiftClass" style="left: @leftPos.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)%; width: @width.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)%"
+                                     onclick="openShiftDetail(@employee.MaNhanVien, '@scheduledShift.NgayLamViec')">
+                                    <div class="shift-content">
+                                        <div class="shift-time">@startHour.ToString("D2"):00 - @endHour.ToString("D2"):00</div>
+                                        <div class="shift-name">@scheduledShift.TenCa</div>
+                                        @if (!string.IsNullOrEmpty(scheduledShift.GhiChu))
+                                        {
+                                            <div class="shift-note-small">@scheduledShift.GhiChu</div>
+                                        }
+                                    </div>
+                                    
+                                    @if (employeeShifts.Any())
+                                    {
+                                        var activeShift = employeeShifts.First();
+                                        <div class="shift-status active">
+                                            <i class="fas fa-circle"></i>
+                                            ?ang tr?c
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-shift-message">
+                                <i class="fas fa-calendar-times"></i>
+                                <span>Không có ca</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Grid View (Alternative) -->
+    <div id="gridView" class="schedule-grid-container" style="display: none;">
+        <div class="schedule-grid">
+            @foreach (var employee in Model.AllEmployees)
+            {
+                var scheduledShift = Model.ScheduledShifts.FirstOrDefault(s => s.MaNhanVien == employee.MaNhanVien);
+                var activeShift = Model.ActiveShifts.FirstOrDefault(s => s.MaNhanVien == employee.MaNhanVien);
+                
+                <div class="schedule-card @(activeShift != null ? "active-shift" : "")">
+                    <div class="schedule-card-header">
+                        <div class="employee-avatar-medium">@employee.HoTen.Substring(0, 1)</div>
+                        <div class="employee-details">
+                            <h5>@employee.HoTen</h5>
+                            <span class="badge badge-info">@employee.ChucVuText</span>
+                        </div>
+                    </div>
+                    <div class="schedule-card-body">
+                        @if (scheduledShift != null)
+                        {
+                            var (startHour, endHour) = scheduledShift.CaLamViec switch
+                            {
+                                1 => (6, 14),
+                                2 => (14, 22),
+                                3 => (22, 6),
+                                _ => (0, 0)
+                            };
+                            var shiftClass = scheduledShift.CaLamViec switch
+                            {
+                                1 => "shift-morning",
+                                2 => "shift-afternoon",
+                                3 => "shift-night",
+                                _ => ""
+                            };
+
+                            <div class="shift-info @shiftClass">
+                                <div class="shift-icon">
+                                    @if (scheduledShift.CaLamViec == 1)
+                                    {
+                                        <i class="fas fa-sun"></i>
+                                    }
+                                    else if (scheduledShift.CaLamViec == 2)
+                                    {
+                                        <i class="fas fa-cloud-sun"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-moon"></i>
+                                    }
+                                </div>
+                                <div class="shift-details">
+                                    <h6>@scheduledShift.TenCa</h6>
+                                    <p>@startHour.ToString("D2"):00 - @(scheduledShift.CaLamViec == 3 ? "06" : endHour.ToString("D2")):00</p>
+                                    @if (!string.IsNullOrEmpty(scheduledShift.GhiChu))
+                                    {
+                                        <small class="text-muted">@scheduledShift.GhiChu</small>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (activeShift != null)
+                            {
+                                <div class="active-status">
+                                    <i class="fas fa-circle pulse"></i>
+                                    <strong>?ang tr?c</strong>
+                                    <span>t? @activeShift.ThoiGianNhanCa?.ToString("HH:mm")</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="inactive-status">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Ch?a nh?n ca</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-shift">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>Không có ca làm vi?c</p>
+                            </div>
+                        }
+                    </div>
+                    <div class="schedule-card-footer">
+                        <button class="btn-sm btn-secondary-admin" onclick="viewEmployeeDetail(@employee.MaNhanVien)">
+                            <i class="fas fa-eye"></i>
+                            Chi ti?t
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Shift Detail Modal -->
+<div class="modal fade" id="shiftDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    Chi ti?t ca làm vi?c
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="shiftDetailContent">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>?ang t?i...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script>
+        let currentView = 'timeline';
+
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            $('#currentTime').text(timeStr);
+
+            // Update current time indicator position
+            const currentPercent = (now.getHours() * 60 + now.getMinutes()) / (24 * 60) * 100;
+            $('.current-time-indicator').css('left', currentPercent + '%');
+        }
+
+        setInterval(updateCurrentTime, 1000);
+        updateCurrentTime();
+
+        function previousDay() {
+            const currentDate = new Date($('#selectedDate').val());
+            currentDate.setDate(currentDate.getDate() - 1);
+            goToDate(currentDate);
+        }
+
+        function nextDay() {
+            const currentDate = new Date($('#selectedDate').val());
+            currentDate.setDate(currentDate.getDate() + 1);
+            goToDate(currentDate);
+        }
+
+        function changeDate() {
+            const selectedDate = new Date($('#selectedDate').val());
+            goToDate(selectedDate);
+        }
+
+        function goToToday() {
+            goToDate(new Date());
+        }
+
+        function goToDate(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            window.location.href = '@Url.Action("DailySchedule", "VehicleShift", new { area = "Admin" })?year=' + year + '&month=' + month + '&day=' + day;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            $('.btn-toggle').removeClass('active');
+            $(`.btn-toggle[data-view="${view}"]`).addClass('active');
+            
+            if (view === 'timeline') {
+                $('#timelineView').show();
+                $('#gridView').hide();
+            } else {
+                $('#timelineView').hide();
+                $('#gridView').show();
+            }
+        }
+
+        function openShiftDetail(employeeId, date) {
+            $('#shiftDetailModal').modal('show');
+            
+            $.get('@Url.Action("GetShiftDetailForDate", "VehicleShift", new { area = "Admin" })', 
+                { employeeId: employeeId, date: date },
+                function(data) {
+                    if (data.success) {
+                        let html = `
+                            <div class="shift-detail-content">
+                                <div class="employee-section">
+                                    <div class="employee-avatar-large">${data.employeeName.substring(0, 1)}</div>
+                                    <h4>${data.employeeName}</h4>
+                                    <span class="badge badge-info">${data.role}</span>
+                                </div>
+                                
+                                <div class="shift-section">
+                                    <h6><i class="fas fa-clock"></i> Thông tin ca làm vi?c</h6>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <label>Ca làm vi?c:</label>
+                                            <strong>${data.shiftName}</strong>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Th?i gian:</label>
+                                            <strong>${data.startTime} - ${data.endTime}</strong>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Tr?ng thái:</label>
+                                            ${data.isActive ? 
+                                                '<span class="badge badge-success"><i class="fas fa-circle pulse"></i> ?ang tr?c</span>' : 
+                                                '<span class="badge badge-secondary">Ch?a nh?n ca</span>'}
+                                        </div>
+                                        ${data.note ? `
+                                        <div class="info-item full-width">
+                                            <label>Ghi chú:</label>
+                                            <p>${data.note}</p>
+                                        </div>` : ''}
+                                    </div>
+                                </div>
+
+                                ${data.isActive && data.activeShift ? `
+                                <div class="active-shift-section">
+                                    <h6><i class="fas fa-user-clock"></i> Ca ?ang tr?c</h6>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <label>Gi? nh?n ca:</label>
+                                            <strong>${new Date(data.activeShift.thoiGianNhanCa).toLocaleTimeString('vi-VN')}</strong>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Ti?n ??u ca:</label>
+                                            <strong>${data.activeShift.tienDauCa.toLocaleString()} ?</strong>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>T?ng ti?n HT:</label>
+                                            <strong class="text-success">${data.activeShift.tongTienHeThong.toLocaleString()} ?</strong>
+                                        </div>
+                                    </div>
+                                </div>` : ''}
+                            </div>
+                        `;
+                        $('#shiftDetailContent').html(html);
+                    } else {
+                        $('#shiftDetailContent').html(`
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ${data.message || 'Không tìm th?y thông tin ca làm vi?c'}
+                            </div>
+                        `);
+                    }
+                }
+            ).fail(function() {
+                $('#shiftDetailContent').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i>
+                        Có l?i x?y ra khi t?i thông tin ca làm vi?c
+                    </div>
+                `);
+            });
+        }
+
+        function viewEmployeeDetail(employeeId) {
+            window.location.href = '@Url.Action("EmployeeList", "VehicleShift", new { area = "Admin" })?employeeId=' + employeeId;
+        }
+
+        function printSchedule() {
+            window.print();
+        }
+
+        // Auto refresh every 5 minutes
+        setInterval(function() {
+            location.reload();
+        }, 5 * 60 * 1000);
+    </script>
+}

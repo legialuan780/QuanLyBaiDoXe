@@ -1,0 +1,445 @@
+@model QuanLyBaiDoXe.Areas.Admin.ViewModels.ShiftCalendarViewModel
+
+@{
+    ViewData["Title"] = "L?ch ca làm vi?c";
+    var today = DateTime.Today;
+}
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+<!-- Google Calendar Style Layout -->
+<div class="gcal-layout">
+    <!-- Header Bar -->
+    <div class="gcal-header">
+        <div class="gcal-header-left">
+            <button class="gcal-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="gcal-logo">
+                <i class="fas fa-calendar-alt"></i>
+                <span>L?ch Ca Làm Vi?c</span>
+            </div>
+        </div>
+
+        <div class="gcal-header-center">
+            <button class="gcal-today-btn" onclick="goToToday()">Hôm nay</button>
+            <button class="gcal-nav-btn" onclick="previousWeek()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="gcal-nav-btn" onclick="nextWeek()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <h2 class="gcal-period-title">Tháng @Model.SelectedMonth, @Model.SelectedYear</h2>
+        </div>
+
+        <div class="gcal-header-right">
+            <button class="gcal-icon-btn" title="Tìm ki?m">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="gcal-icon-btn" title="Tr? giúp">
+                <i class="fas fa-question-circle"></i>
+            </button>
+            <button class="gcal-icon-btn" title="Cài ??t">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="gcal-view-selector">
+                <select class="gcal-view-select" onchange="changeView(this.value)">
+                    <option value="month" selected>Tháng</option>
+                    <option value="week">Tu?n</option>
+                    <option value="day">Ngày</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="gcal-main">
+        <!-- Sidebar -->
+        <div class="gcal-sidebar">
+            <button class="gcal-create-btn">
+                <i class="fas fa-plus"></i>
+                <span>M? ca m?i</span>
+            </button>
+
+            <!-- Mini Calendar -->
+            <div class="gcal-mini-calendar">
+                <div class="mini-cal-header">
+                    <button class="mini-cal-nav" onclick="previousMonth()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h3 class="mini-cal-title">Tháng @Model.SelectedMonth</h3>
+                    <button class="mini-cal-nav" onclick="nextMonth()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="mini-cal-body">
+                    <div class="mini-cal-weekdays">
+                        <div>CN</div>
+                        <div>T2</div>
+                        <div>T3</div>
+                        <div>T4</div>
+                        <div>T5</div>
+                        <div>T6</div>
+                        <div>T7</div>
+                    </div>
+                    <div class="mini-cal-days">
+                        @{
+                            var firstDay = new DateTime(Model.SelectedYear, Model.SelectedMonth, 1);
+                            var startDayOfWeek = (int)firstDay.DayOfWeek;
+                            var totalDays = DateTime.DaysInMonth(Model.SelectedYear, Model.SelectedMonth);
+                            
+                            // Previous month days
+                            var prevMonth = firstDay.AddMonths(-1);
+                            var prevMonthDays = DateTime.DaysInMonth(prevMonth.Year, prevMonth.Month);
+                            
+                            for (int i = startDayOfWeek - 1; i >= 0; i--)
+                            {
+                                <div class="mini-day other-month">@(prevMonthDays - i)</div>
+                            }
+
+                            // Current month days
+                            for (int day = 1; day <= totalDays; day++)
+                            {
+                                var date = new DateTime(Model.SelectedYear, Model.SelectedMonth, day);
+                                var isToday = date.Date == today;
+                                var hasShifts = Model.ShiftsByDate.ContainsKey(date.Date);
+                                
+                                <div class="mini-day @(isToday ? "today" : "") @(hasShifts ? "has-event" : "")" 
+                                     onclick="selectDate('@date.ToString("yyyy-MM-dd")')">
+                                    @day
+                                </div>
+                            }
+
+                            // Next month days
+                            var remaining = 7 - ((startDayOfWeek + totalDays) % 7);
+                            if (remaining < 7)
+                            {
+                                for (int i = 1; i <= remaining; i++)
+                                {
+                                    <div class="mini-day other-month">@i</div>
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="gcal-sidebar-section">
+                <h4 class="section-title">Th?ng kê tháng</h4>
+                <div class="stat-item-simple">
+                    <i class="fas fa-play-circle text-success"></i>
+                    <span>@Model.MonthStats.TotalActiveShifts ca ?ang tr?c</span>
+                </div>
+                <div class="stat-item-simple">
+                    <i class="fas fa-check-circle text-info"></i>
+                    <span>@Model.MonthStats.TotalCompletedShifts ca ?ã ch?t</span>
+                </div>
+                <div class="stat-item-simple">
+                    <i class="fas fa-clock text-warning"></i>
+                    <span>@Model.MonthStats.TotalWorkHours.ToString("F0") gi? làm</span>
+                </div>
+            </div>
+
+            <!-- My Calendars -->
+            <div class="gcal-sidebar-section">
+                <h4 class="section-title">B? l?c</h4>
+                <div class="calendar-item">
+                    <input type="checkbox" id="filter-active" checked>
+                    <label for="filter-active">
+                        <span class="cal-color active"></span>
+                        <span>Ca ?ang tr?c</span>
+                    </label>
+                </div>
+                <div class="calendar-item">
+                    <input type="checkbox" id="filter-completed" checked>
+                    <label for="filter-completed">
+                        <span class="cal-color completed"></span>
+                        <span>Ca ?ã ch?t</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="gcal-content">
+            <div class="gcal-week-header">
+                @{
+                    var weekDays = new[] { "Ch? nh?t", "Th? hai", "Th? ba", "Th? t?", "Th? n?m", "Th? sáu", "Th? b?y" };
+                    for (int i = 0; i < 7; i++)
+                    {
+                        <div class="week-header-day">
+                            <div class="day-name">@weekDays[i]</div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="gcal-month-grid">
+                @{
+                    var mainFirstDay = new DateTime(Model.SelectedYear, Model.SelectedMonth, 1);
+                    var mainLastDay = mainFirstDay.AddMonths(1).AddDays(-1);
+                    var mainStartWeekDay = (int)mainFirstDay.DayOfWeek;
+                    var mainTotalDays = mainLastDay.Day;
+                    
+                    // Previous month days
+                    var mainPrevMonthLastDay = mainFirstDay.AddDays(-1);
+                    var mainPrevMonthDays = mainPrevMonthLastDay.Day;
+                    
+                    for (int i = mainStartWeekDay - 1; i >= 0; i--)
+                    {
+                        var prevDay = mainPrevMonthDays - i;
+                        <div class="gcal-day other-month">
+                            <div class="day-number">@prevDay</div>
+                        </div>
+                    }
+
+                    // Current month days
+                    for (int day = 1; day <= mainTotalDays; day++)
+                    {
+                        var currentDate = new DateTime(Model.SelectedYear, Model.SelectedMonth, day);
+                        var isToday = currentDate.Date == today;
+                        var shiftsOnDay = Model.ShiftsByDate.ContainsKey(currentDate.Date) 
+                            ? Model.ShiftsByDate[currentDate.Date] 
+                            : new List<QuanLyBaiDoXe.Areas.Admin.ViewModels.ShiftViewModel>();
+                        
+                        <div class="gcal-day @(isToday ? "today" : "")" onclick="openDayDetail('@currentDate.ToString("yyyy-MM-dd")')">
+                            <div class="day-number">
+                                @day
+                                @if (isToday)
+                                {
+                                    <span class="today-marker"></span>
+                                }
+                            </div>
+                            <div class="day-events">
+                                @foreach (var shift in shiftsOnDay.Take(3))
+                                {
+                                    var eventClass = shift.TrangThaiCa == 0 ? "event-item active" : "event-item completed";
+                                    var timeText = shift.ThoiGianNhanCa?.ToString("HH:mm") ?? "";
+                                    
+                                    <div class="@eventClass" title="@shift.TenNhanVien">
+                                        <span class="event-time">@timeText</span>
+                                        <span class="event-title">@shift.TenNhanVien</span>
+                                    </div>
+                                }
+                                @if (shiftsOnDay.Count > 3)
+                                {
+                                    <div class="event-more">+@(shiftsOnDay.Count - 3) ca khác</div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    // Next month days
+                    var mainTotalCells = mainStartWeekDay + mainTotalDays;
+                    var mainRemainingCells = 7 - (mainTotalCells % 7);
+                    if (mainRemainingCells < 7)
+                    {
+                        for (int i = 1; i <= mainRemainingCells; i++)
+                        {
+                            <div class="gcal-day other-month">
+                                <div class="day-number">@i</div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal fade" id="dayDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-day"></i>
+                    Chi ti?t ca làm vi?c - <span id="modalDateText"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="dayDetailContent">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">?ang t?i...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script>
+        function previousMonth() {
+            let month = parseInt($('#monthSelect').val()) - 1;
+            let year = parseInt($('#yearSelect').val());
+            
+            if (month < 1) {
+                month = 12;
+                year--;
+            }
+            
+            goToMonth(month, year);
+        }
+
+        function nextMonth() {
+            let month = parseInt($('#monthSelect').val()) + 1;
+            let year = parseInt($('#yearSelect').val());
+            
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+            
+            goToMonth(month, year);
+        }
+
+        function changeMonth() {
+            const month = $('#monthSelect').val();
+            const year = $('#yearSelect').val();
+            goToMonth(month, year);
+        }
+
+        function goToMonth(month, year) {
+            window.location.href = '@Url.Action("ShiftCalendar", "VehicleShift", new { area = "Admin" })?month=' + month + '&year=' + year;
+        }
+
+        function goToToday() {
+            const today = new Date();
+            goToMonth(today.getMonth() + 1, today.getFullYear());
+        }
+
+        function openDayDetail(date) {
+            $('#dayDetailModal').modal('show');
+            
+            const dateObj = new Date(date);
+            const dateText = dateObj.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            $('#modalDateText').text(dateText);
+
+            $.get('@Url.Action("GetShiftsForDate", "VehicleShift", new { area = "Admin" })', 
+                { date: date },
+                function(data) {
+                    if (data.success && data.shifts && data.shifts.length > 0) {
+                        let html = `
+                            <div class="day-detail-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-list-ul text-primary"></i>
+                                    <strong>${data.shifts.length}</strong>
+                                    <span>T?ng ca</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-play-circle text-success"></i>
+                                    <strong>${data.activeCount}</strong>
+                                    <span>?ang tr?c</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-check-circle text-info"></i>
+                                    <strong>${data.completedCount}</strong>
+                                    <span>?ã ch?t</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-money-bill-wave text-teal"></i>
+                                    <strong>${data.totalRevenue.toLocaleString('vi-VN')} ?</strong>
+                                    <span>Doanh thu</span>
+                                </div>
+                            </div>
+                            <div class="table-responsive mt-4">
+                                <table class="table admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã ca</th>
+                                            <th>Nhân viên</th>
+                                            <th>Gi? nh?n ca</th>
+                                            <th>Gi? giao ca</th>
+                                            <th>S? gi?</th>
+                                            <th>Doanh thu</th>
+                                            <th>Tr?ng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                        data.shifts.forEach(shift => {
+                            const statusClass = shift.trangThaiCa === 0 ? 'success' : 'info';
+                            const statusText = shift.trangThaiCa === 0 ? '?ang tr?c' : '?ã ch?t';
+                            const checkIn = shift.thoiGianNhanCa ? new Date(shift.thoiGianNhanCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '-';
+                            const checkOut = shift.thoiGianGiaoCa ? new Date(shift.thoiGianGiaoCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '-';
+                            const workHours = shift.soGioLam ? shift.soGioLam.toFixed(1) : '0';
+
+                            html += `
+                                <tr>
+                                    <td><strong>#${shift.maCa}</strong></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="employee-avatar-small">${shift.tenNhanVien.substring(0, 1)}</div>
+                                            <span>${shift.tenNhanVien}</span>
+                                        </div>
+                                    </td>
+                                    <td>${checkIn}</td>
+                                    <td>${checkOut}</td>
+                                    <td><strong>${workHours}h</strong></td>
+                                    <td class="text-success"><strong>${shift.tongTienHeThong.toLocaleString('vi-VN')} ?</strong></td>
+                                    <td>
+                                        <span class="badge badge-${statusClass}">
+                                            <i class="fas fa-${shift.trangThaiCa === 0 ? 'play' : 'check'}-circle"></i>
+                                            ${statusText}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-icon" onclick="viewShiftDetailFromModal(${shift.maCa})" title="Xem chi ti?t">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+
+                        $('#dayDetailContent').html(html);
+                    } else {
+                        $('#dayDetailContent').html(`
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                <h5>Không có ca làm vi?c</h5>
+                                <p>Ch?a có ca làm vi?c nào ???c ghi nh?n trong ngày này</p>
+                            </div>
+                        `);
+                    }
+                }
+            ).fail(function() {
+                $('#dayDetailContent').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Có l?i x?y ra khi t?i d? li?u
+                    </div>
+                `);
+            });
+        }
+
+        function viewShiftDetailFromModal(shiftId) {
+            window.open('@Url.Action("Index", "VehicleShift", new { area = "Admin" })?shiftId=' + shiftId, '_blank');
+        }
+
+        // Keyboard shortcuts
+        $(document).keydown(function(e) {
+            if (e.key === 'ArrowLeft') previousMonth();
+            if (e.key === 'ArrowRight') nextMonth();
+            if (e.key === 't' || e.key === 'T') goToToday();
+        });
+    </script>
+}

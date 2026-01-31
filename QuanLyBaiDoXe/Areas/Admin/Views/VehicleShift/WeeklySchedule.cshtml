@@ -1,0 +1,522 @@
+@model QuanLyBaiDoXe.Areas.Admin.ViewModels.WeeklyScheduleViewModel
+
+@{
+    ViewData["Title"] = "L?p l?ch làm vi?c tu?n";
+    var weekStart = Model.WeekStart;
+    var weekEnd = Model.WeekEnd;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-calendar-week"></i>
+            L?p l?ch làm vi?c tu?n
+        </h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang ch?</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })">Ca làm vi?c</a>
+            <span>/</span>
+            <span>L?p l?ch tu?n</span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-secondary-admin" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+            Quay l?i
+        </button>
+        <button class="btn-success-admin" onclick="saveWeeklySchedule()">
+            <i class="fas fa-save"></i>
+            L?u l?ch tu?n
+        </button>
+    </div>
+</div>
+
+<!-- Week Selector -->
+<div class="admin-card">
+    <div class="week-selector">
+        <button class="btn-secondary-admin" onclick="previousWeek()">
+            <i class="fas fa-chevron-left"></i>
+            Tu?n tr??c
+        </button>
+        <div class="week-display">
+            <input type="hidden" id="weekStartDate" value="@weekStart.ToString("yyyy-MM-dd")">
+            <h4>
+                <i class="fas fa-calendar"></i>
+                Tu?n t? <strong>@weekStart.ToString("dd/MM/yyyy")</strong> ??n <strong>@weekEnd.ToString("dd/MM/yyyy")</strong>
+            </h4>
+            <input type="date" class="form-control" id="customWeekDate" value="@weekStart.ToString("yyyy-MM-dd")" onchange="goToWeek()">
+        </div>
+        <button class="btn-secondary-admin" onclick="nextWeek()">
+            Tu?n sau
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.Employees.Count</h3>
+            <p>Nhân viên</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="totalShiftsScheduled">0</h3>
+            <p>Ca ?ã x?p</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="totalHoursScheduled">0h</h3>
+            <p>T?ng gi?</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="employeesAssigned">0</h3>
+            <p>Nhân viên ???c phân</p>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Schedule Grid -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">
+            <i class="fas fa-table"></i>
+            B?ng l?ch tu?n
+        </h3>
+        <div class="admin-card-actions">
+            <button class="btn-secondary-admin btn-sm" onclick="clearAllSchedule()">
+                <i class="fas fa-eraser"></i>
+                Xóa t?t c?
+            </button>
+            <button class="btn-primary-admin btn-sm" onclick="autoAssign()">
+                <i class="fas fa-magic"></i>
+                T? ??ng phân ca
+            </button>
+        </div>
+    </div>
+
+    <div class="weekly-schedule-container">
+        <!-- Shift Type Legend -->
+        <div class="shift-legend">
+            <h6>Chú thích:</h6>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="shift-badge shift-morning">Sáng</div>
+                    <span>6h - 14h</span>
+                </div>
+                <div class="legend-item">
+                    <div class="shift-badge shift-afternoon">Chi?u</div>
+                    <span>14h - 22h</span>
+                </div>
+                <div class="legend-item">
+                    <div class="shift-badge shift-night">?êm</div>
+                    <span>22h - 6h</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Table -->
+        <div class="table-responsive">
+            <table class="table weekly-schedule-table">
+                <thead>
+                    <tr>
+                        <th class="employee-column">Nhân viên</th>
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            var date = weekStart.AddDays(i);
+                            var isToday = date.Date == DateTime.Today;
+                            <th class="day-column @(isToday ? "today" : "")">
+                                <div class="day-header">
+                                    <div class="day-name">@date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</div>
+                                    <div class="day-date">@date.ToString("dd/MM")</div>
+                                </div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var emp in Model.Employees)
+                    {
+                        <tr data-employee-id="@emp.MaNhanVien">
+                            <td class="employee-column">
+                                <div class="employee-info">
+                                    <div class="employee-avatar-small">@emp.HoTen.Substring(0, 1)</div>
+                                    <div>
+                                        <div class="employee-name">@emp.HoTen</div>
+                                        <div class="employee-role">@emp.ChucVuText</div>
+                                    </div>
+                                </div>
+                            </td>
+                            @for (int i = 0; i < 7; i++)
+                            {
+                                var date = weekStart.AddDays(i);
+                                var dateStr = date.ToString("yyyy-MM-dd");
+                                var isToday = date.Date == DateTime.Today;
+                                var existingShift = Model.ExistingSchedules.FirstOrDefault(s => 
+                                    s.MaNhanVien == emp.MaNhanVien && 
+                                    s.NgayLamViec.HasValue && 
+                                    s.NgayLamViec.Value == DateOnly.FromDateTime(date));
+                                
+                                <td class="shift-cell @(isToday ? "today" : "")" data-date="@dateStr" data-employee-id="@emp.MaNhanVien">
+                                    <div class="shift-selector" onclick="openShiftSelector(@emp.MaNhanVien, '@dateStr', '@emp.HoTen')">
+                                        @if (existingShift != null)
+                                        {
+                                            var shiftClass = existingShift.CaLamViec switch
+                                            {
+                                                1 => "shift-morning",
+                                                2 => "shift-afternoon",
+                                                3 => "shift-night",
+                                                _ => ""
+                                            };
+                                            var shiftText = existingShift.CaLamViec switch
+                                            {
+                                                1 => "Sáng",
+                                                2 => "Chi?u",
+                                                3 => "?êm",
+                                                _ => ""
+                                            };
+                                            <div class="shift-badge @shiftClass" data-shift-id="@existingShift.MaLich" data-shift-type="@existingShift.CaLamViec">
+                                                <i class="fas fa-clock"></i>
+                                                @shiftText
+                                                <button class="btn-remove-shift" onclick="removeShift(event, @existingShift.MaLich)" title="Xóa">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            if (!string.IsNullOrEmpty(existingShift.GhiChu))
+                                            {
+                                                <small class="shift-note">@existingShift.GhiChu</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="empty-shift">
+                                                <i class="fas fa-plus"></i>
+                                                <span>Thêm ca</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Shift Selector Modal -->
+<div class="modal fade" id="shiftSelectorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-clock"></i>
+                    Ch?n ca làm vi?c
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="selectedEmployeeId">
+                <input type="hidden" id="selectedDate">
+                <input type="hidden" id="existingScheduleId">
+
+                <div class="employee-select-info mb-3">
+                    <div class="employee-avatar-large" id="modalEmployeeAvatar"></div>
+                    <h5 id="modalEmployeeName" class="text-center mb-2"></h5>
+                    <p class="text-center text-muted mb-0">
+                        <i class="fas fa-calendar"></i>
+                        <span id="modalDate"></span>
+                    </p>
+                </div>
+
+                <div class="shift-options">
+                    <div class="shift-option" onclick="selectShift(1)">
+                        <div class="shift-option-icon shift-morning">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="shift-option-info">
+                            <h6>Ca sáng</h6>
+                            <p>6:00 - 14:00</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+
+                    <div class="shift-option" onclick="selectShift(2)">
+                        <div class="shift-option-icon shift-afternoon">
+                            <i class="fas fa-cloud-sun"></i>
+                        </div>
+                        <div class="shift-option-info">
+                            <h6>Ca chi?u</h6>
+                            <p>14:00 - 22:00</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+
+                    <div class="shift-option" onclick="selectShift(3)">
+                        <div class="shift-option-icon shift-night">
+                            <i class="fas fa-moon"></i>
+                        </div>
+                        <div class="shift-option-info">
+                            <h6>Ca ?êm</h6>
+                            <p>22:00 - 6:00</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="form-label">Ghi chú (tùy ch?n)</label>
+                    <textarea class="form-control" id="shiftNote" rows="2" placeholder="Nh?p ghi chú..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">H?y</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+@section Scripts {
+    <script>
+        let selectedShiftType = 0;
+        let scheduleChanges = [];
+
+        function previousWeek() {
+            const currentDate = new Date($('#weekStartDate').val());
+            currentDate.setDate(currentDate.getDate() - 7);
+            goToSpecificWeek(currentDate);
+        }
+
+        function nextWeek() {
+            const currentDate = new Date($('#weekStartDate').val());
+            currentDate.setDate(currentDate.getDate() + 7);
+            goToSpecificWeek(currentDate);
+        }
+
+        function goToWeek() {
+            const selectedDate = new Date($('#customWeekDate').val());
+            goToSpecificWeek(selectedDate);
+        }
+
+        function goToSpecificWeek(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            window.location.href = '@Url.Action("WeeklySchedule", "VehicleShift", new { area = "Admin" })?year=' + year + '&month=' + month + '&day=' + day;
+        }
+
+        function openShiftSelector(employeeId, date, employeeName) {
+            $('#selectedEmployeeId').val(employeeId);
+            $('#selectedDate').val(date);
+            $('#modalEmployeeName').text(employeeName);
+            $('#modalEmployeeAvatar').text(employeeName.substring(0, 1));
+            
+            const dateObj = new Date(date);
+            const dateFormatted = dateObj.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            $('#modalDate').text(dateFormatted);
+
+            // Check if there's existing shift
+            const cell = $(`td[data-employee-id="${employeeId}"][data-date="${date}"]`);
+            const existingBadge = cell.find('.shift-badge[data-shift-id]');
+            if (existingBadge.length > 0) {
+                $('#existingScheduleId').val(existingBadge.data('shift-id'));
+                const note = cell.find('.shift-note').text();
+                $('#shiftNote').val(note);
+            } else {
+                $('#existingScheduleId').val('');
+                $('#shiftNote').val('');
+            }
+
+            $('#shiftSelectorModal').modal('show');
+        }
+
+        function selectShift(shiftType) {
+            const employeeId = parseInt($('#selectedEmployeeId').val());
+            const date = $('#selectedDate').val();
+            const note = $('#shiftNote').val();
+            const existingId = $('#existingScheduleId').val();
+
+            const data = {
+                MaNhanVien: employeeId,
+                NgayLamViec: date,
+                CaLamViec: shiftType,
+                GhiChu: note,
+                MaLich: existingId ? parseInt(existingId) : null
+            };
+
+            $.ajax({
+                url: '@Url.Action("SaveShiftSchedule", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    if (response.success) {
+                        // Update UI
+                        updateShiftCell(employeeId, date, shiftType, note, response.scheduleId);
+                        $('#shiftSelectorModal').modal('hide');
+                        updateStats();
+                        
+                        toastr.success('?ã l?u ca làm vi?c');
+                    } else {
+                        toastr.error(response.message || 'Có l?i x?y ra');
+                    }
+                },
+                error: function() {
+                    toastr.error('Không th? l?u ca làm vi?c');
+                }
+            });
+        }
+
+        function updateShiftCell(employeeId, date, shiftType, note, scheduleId) {
+            const cell = $(`td[data-employee-id="${employeeId}"][data-date="${date}"]`);
+            
+            const shiftClass = shiftType === 1 ? 'shift-morning' : shiftType === 2 ? 'shift-afternoon' : 'shift-night';
+            const shiftText = shiftType === 1 ? 'Sáng' : shiftType === 2 ? 'Chi?u' : '?êm';
+            
+            let html = `
+                <div class="shift-badge ${shiftClass}" data-shift-id="${scheduleId}" data-shift-type="${shiftType}">
+                    <i class="fas fa-clock"></i>
+                    ${shiftText}
+                    <button class="btn-remove-shift" onclick="removeShift(event, ${scheduleId})" title="Xóa">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            if (note) {
+                html += `<small class="shift-note">${note}</small>`;
+            }
+
+            cell.find('.shift-selector').html(html);
+        }
+
+        function removeShift(event, scheduleId) {
+            event.stopPropagation();
+            
+            if (!confirm('B?n có ch?c mu?n xóa ca này?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("DeleteShiftSchedule", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { id: scheduleId },
+                success: function(response) {
+                    if (response.success) {
+                        // Update UI - find and remove the shift badge
+                        const badge = $(`.shift-badge[data-shift-id="${scheduleId}"]`);
+                        const cell = badge.closest('.shift-selector');
+                        cell.html(`
+                            <div class="empty-shift">
+                                <i class="fas fa-plus"></i>
+                                <span>Thêm ca</span>
+                            </div>
+                        `);
+                        updateStats();
+                        toastr.success('?ã xóa ca làm vi?c');
+                    } else {
+                        toastr.error(response.message || 'Có l?i x?y ra');
+                    }
+                },
+                error: function() {
+                    toastr.error('Không th? xóa ca làm vi?c');
+                }
+            });
+        }
+
+        function clearAllSchedule() {
+            if (!confirm('B?n có ch?c mu?n xóa toàn b? l?ch tu?n này?')) {
+                return;
+            }
+
+            const weekStart = $('#weekStartDate').val();
+
+            $.ajax({
+                url: '@Url.Action("ClearWeekSchedule", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { weekStart: weekStart },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        toastr.error(response.message || 'Có l?i x?y ra');
+                    }
+                },
+                error: function() {
+                    toastr.error('Không th? xóa l?ch');
+                }
+            });
+        }
+
+        function autoAssign() {
+            const weekStart = $('#weekStartDate').val();
+
+            $.ajax({
+                url: '@Url.Action("AutoAssignWeek", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { weekStart: weekStart },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('?ã t? ??ng phân ca');
+                        location.reload();
+                    } else {
+                        toastr.error(response.message || 'Có l?i x?y ra');
+                    }
+                },
+                error: function() {
+                    toastr.error('Không th? t? ??ng phân ca');
+                }
+            });
+        }
+
+        function saveWeeklySchedule() {
+            toastr.success('L?ch ???c l?u t? ??ng khi b?n thêm/s?a ca');
+        }
+
+        function updateStats() {
+            const totalShifts = $('.shift-badge[data-shift-id]').length;
+            const totalHours = totalShifts * 8;
+            const employeesWithShifts = new Set();
+            
+            $('.shift-badge[data-shift-id]').each(function() {
+                const employeeId = $(this).closest('tr').data('employee-id');
+                employeesWithShifts.add(employeeId);
+            });
+
+            $('#totalShiftsScheduled').text(totalShifts);
+            $('#totalHoursScheduled').text(totalHours + 'h');
+            $('#employeesAssigned').text(employeesWithShifts.size);
+        }
+
+        $(document).ready(function() {
+            updateStats();
+        });
+    </script>
+}

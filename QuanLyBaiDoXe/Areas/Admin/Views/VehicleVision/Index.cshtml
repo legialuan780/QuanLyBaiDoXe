@@ -1190,41 +1190,45 @@
             </div>
             <div class="counter-status-list">
                 <div class="counter-status-item">
-                    <div class="counter-icon active" id="counter-1-icon">
+                    <div class="counter-icon inactive" id="counter-1-icon">
                         <i class="fas fa-cash-register"></i>
                     </div>
                     <div class="counter-info">
                         <div class="counter-name">Quầy 1</div>
-                        <div class="counter-staff">NV: Nguyễn Văn A</div>
-                        <div class="counter-revenue">2.5M VNĐ</div>
+                        <div class="counter-staff" id="counter-1-staff">
+                            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                        </div>
+                        <div class="counter-revenue" id="counter-1-revenue">-- VNĐ</div>
                     </div>
                     <div class="counter-status">
-                        <span class="status-indicator online" id="counter-1-indicator"></span>
-                        <span class="status-text" id="counter-1-text">Đang hoạt động</span>
+                        <span class="status-indicator offline" id="counter-1-indicator"></span>
+                        <span class="status-text" id="counter-1-text">Đang tải...</span>
                     </div>
                     <div class="counter-actions">
-                        <button class="btn btn-sm btn-outline-danger" id="btn-counter-1" onclick="toggleCounter('counter-1', 'Quầy 1')" title="Đóng quầy">
-                            <i class="fas fa-times-circle"></i>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-counter-1" disabled title="Đang tải...">
+                            <i class="fas fa-spinner fa-spin"></i>
                         </button>
                     </div>
                 </div>
 
                 <div class="counter-status-item">
-                    <div class="counter-icon active" id="counter-2-icon">
+                    <div class="counter-icon inactive" id="counter-2-icon">
                         <i class="fas fa-cash-register"></i>
                     </div>
                     <div class="counter-info">
                         <div class="counter-name">Quầy 2</div>
-                        <div class="counter-staff">NV: Trần Thị B</div>
-                        <div class="counter-revenue">1.8M VNĐ</div>
+                        <div class="counter-staff" id="counter-2-staff">
+                            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                        </div>
+                        <div class="counter-revenue" id="counter-2-revenue">-- VNĐ</div>
                     </div>
                     <div class="counter-status">
-                        <span class="status-indicator online" id="counter-2-indicator"></span>
-                        <span class="status-text" id="counter-2-text">Đang hoạt động</span>
+                        <span class="status-indicator offline" id="counter-2-indicator"></span>
+                        <span class="status-text" id="counter-2-text">Đang tải...</span>
                     </div>
                     <div class="counter-actions">
-                        <button class="btn btn-sm btn-outline-danger" id="btn-counter-2" onclick="toggleCounter('counter-2', 'Quầy 2')" title="Đóng quầy">
-                            <i class="fas fa-times-circle"></i>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-counter-2" disabled title="Đang tải...">
+                            <i class="fas fa-spinner fa-spin"></i>
                         </button>
                     </div>
                 </div>
@@ -1235,16 +1239,18 @@
                     </div>
                     <div class="counter-info">
                         <div class="counter-name">Quầy 3</div>
-                        <div class="counter-staff">NV: Chưa phân công</div>
-                        <div class="counter-revenue">0 VNĐ</div>
+                        <div class="counter-staff" id="counter-3-staff">
+                            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                        </div>
+                        <div class="counter-revenue" id="counter-3-revenue">-- VNĐ</div>
                     </div>
                     <div class="counter-status">
                         <span class="status-indicator offline" id="counter-3-indicator"></span>
-                        <span class="status-text" id="counter-3-text">Không hoạt động</span>
+                        <span class="status-text" id="counter-3-text">Đang tải...</span>
                     </div>
                     <div class="counter-actions">
-                        <button class="btn btn-sm btn-outline-success" id="btn-counter-3" onclick="toggleCounter('counter-3', 'Quầy 3')" title="Mở quầy">
-                            <i class="fas fa-check-circle"></i>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-counter-3" disabled title="Đang tải...">
+                            <i class="fas fa-spinner fa-spin"></i>
                         </button>
                     </div>
                 </div>
@@ -4350,10 +4356,10 @@
         'gate-out-b': { isOpen: true, isMaintenance: false, name: 'Cổng ra B' }
     };
 
-    // Counter status tracking
+    // Counter status tracking - MẶC ĐỊNH TẤT CẢ ĐÓNG
     const counterStatus = {
-        'counter-1': { isActive: true, name: 'Quầy 1' },
-        'counter-2': { isActive: true, name: 'Quầy 2' },
+        'counter-1': { isActive: false, name: 'Quầy 1' },
+        'counter-2': { isActive: false, name: 'Quầy 2' },
         'counter-3': { isActive: false, name: 'Quầy 3' }
     };
 
@@ -5536,6 +5542,230 @@
         
         // Reset to grid view
         switchCameraView('all');
+    });
+
+    // ===== QUẦY TÍNH TIỀN - REAL-TIME STATUS =====
+    
+    // Lấy data từ server-side (ViewBag)
+    const serverCountersData = @Html.Raw(Json.Serialize(ViewBag.CountersStatus ?? new List<object>()));
+    
+    // Load trạng thái quầy từ server data
+    function loadCountersStatus() {
+        console.log('Loading counters status from server data...');
+        
+        if (!serverCountersData || serverCountersData.length === 0) {
+            console.log('No server data - fetching from API...');
+            fetchCountersStatusFromAPI();
+            return;
+        }
+        
+        console.log('Server Data:', serverCountersData);
+        
+        // Render từ server data
+        serverCountersData.forEach(counterData => {
+            console.log(`Rendering counter ${counterData.counter}:`, counterData);
+            updateCounterDisplay({
+                counter: counterData.counter,
+                isActive: counterData.isActive,
+                employee: counterData.isActive ? {
+                    hoTen: counterData.employeeName,
+                    maNhanVienFormatted: counterData.employeeCode
+                } : null,
+                shift: counterData.isActive ? {
+                    soGioLam: counterData.shiftHours
+                } : null,
+                revenue: counterData.revenue,
+                revenueFormatted: counterData.revenueFormatted
+            });
+        });
+    }
+    
+    // Fallback: Fetch từ API nếu không có server data
+    function fetchCountersStatusFromAPI() {
+        fetch('@Url.Action("GetAllCountersStatus", "VehicleShift", new { area = "Admin" })')
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Response:', data);
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(counterData => {
+                        updateCounterDisplay(counterData);
+                    });
+                } else {
+                    // Không có data - hiển thị tất cả quầy ĐÓNG
+                    for (let i = 1; i <= 3; i++) {
+                        updateCounterDisplay({
+                            counter: i,
+                            isActive: false,
+                            employee: null,
+                            shift: null,
+                            revenue: 0,
+                            revenueFormatted: '0 VNĐ'
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching counters status:', error);
+                // Nếu API lỗi - hiển thị tất cả quầy ĐÓNG
+                for (let i = 1; i <= 3; i++) {
+                    updateCounterDisplay({
+                        counter: i,
+                        isActive: false,
+                        employee: null,
+                        shift: null,
+                        revenue: 0,
+                        revenueFormatted: '0 VNĐ'
+                    });
+                }
+            });
+    }
+
+    // Cập nhật hiển thị quầy
+    function updateCounterDisplay(counterData) {
+        const counterId = counterData.counter;
+        
+        // Lấy các elements
+        const staffElement = document.getElementById(`counter-${counterId}-staff`);
+        const revenueElement = document.getElementById(`counter-${counterId}-revenue`);
+        const iconElement = document.getElementById(`counter-${counterId}-icon`);
+        const indicatorElement = document.getElementById(`counter-${counterId}-indicator`);
+        const textElement = document.getElementById(`counter-${counterId}-text`);
+        const buttonElement = document.getElementById(`btn-counter-${counterId}`);
+
+        if (counterData.isActive && counterData.employee) {
+            // Quầy đang hoạt động
+            iconElement.className = 'counter-icon active';
+            staffElement.innerHTML = `<strong>NV: ${counterData.employee.hoTen}</strong>`;
+            revenueElement.textContent = counterData.revenueFormatted;
+            indicatorElement.className = 'status-indicator online';
+            textElement.textContent = 'Đang hoạt động';
+            
+            // Cập nhật nút đóng quầy
+            buttonElement.className = 'btn btn-sm btn-outline-danger';
+            buttonElement.title = 'Đóng quầy và chốt ca';
+            buttonElement.innerHTML = '<i class="fas fa-times-circle"></i>';
+            buttonElement.disabled = false;
+            buttonElement.onclick = () => closeCounterConfirm(counterId);
+            
+            // Hiển thị thông tin ca làm việc
+            if (counterData.shift && counterData.shift.soGioLam) {
+                staffElement.innerHTML = `<strong>NV: ${counterData.employee.hoTen}</strong><br>
+                    <small style="color: #6c757d;">Ca: ${counterData.shift.soGioLam.toFixed(1)}h</small>`;
+            }
+        } else {
+            // Quầy không hoạt động
+            iconElement.className = 'counter-icon inactive';
+            staffElement.innerHTML = '<span style="color: #95a5a6;">NV: Chưa phân công</span>';
+            revenueElement.textContent = counterData.revenueFormatted || '0 VNĐ';
+            indicatorElement.className = 'status-indicator offline';
+            textElement.textContent = 'Không hoạt động';
+            
+            // Cập nhật nút phân công
+            buttonElement.className = 'btn btn-sm btn-outline-success';
+            buttonElement.title = 'Phân công nhân viên';
+            buttonElement.innerHTML = '<i class="fas fa-user-plus"></i>';
+            buttonElement.disabled = false;
+            buttonElement.onclick = () => openAssignModal(counterId);
+        }
+
+        // Cập nhật trạng thái cũ (compatibility)
+        if (!counterStatus[`counter-${counterId}`]) {
+            counterStatus[`counter-${counterId}`] = {};
+        }
+        counterStatus[`counter-${counterId}`].isActive = counterData.isActive;
+    }
+
+    // Đóng quầy với confirm
+    function closeCounterConfirm(counterNumber) {
+        if (confirm(`Bạn có chắc chắn muốn đóng Quầy ${counterNumber}?`)) {
+            const tienMat = prompt('Nhập số tiền mặt bàn giao (VNĐ):', '0');
+            if (tienMat === null) return;
+
+            const ghiChu = prompt('Ghi chú:', '') || '';
+
+            closeCounterAPI(counterNumber, parseFloat(tienMat) || 0, ghiChu);
+        }
+    }
+
+    // API đóng quầy
+    function closeCounterAPI(counterNumber, tienMat, ghiChu) {
+        $.ajax({
+            url: '@Url.Action("CloseCounter", "VehicleShift", new { area = "Admin" })',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                Counter: counterNumber,
+                TienMatBanGiao: tienMat,
+                GhiChu: ghiChu
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showNotification('success', `Đã đóng Quầy ${counterNumber}`, 
+                        `Doanh thu: ${(response.revenue / 1000000).toFixed(1)}M VNĐ`);
+                    loadCountersStatus();
+                } else {
+                    showNotification('error', 'Lỗi', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                showNotification('error', 'Lỗi', 'Không thể đóng quầy: ' + error);
+            }
+        });
+    }
+
+    // Mở modal phân công
+    function openAssignModal(counterNumber) {
+        if (confirm(`Bạn muốn phân công nhân viên vào Quầy ${counterNumber}?`)) {
+            // Redirect đến EmployeeList với counter được chọn sẵn
+            window.location.href = `@Url.Action("EmployeeList", "VehicleShift", new { area = "Admin" })?selectedCounter=${counterNumber}`;
+        }
+    }
+
+    // Override toggleCounter function (legacy support)
+    function toggleCounter(counterId, counterName) {
+        const counterNumber = parseInt(counterId.split('-')[1]);
+        const counter = counterStatus[counterId];
+        
+        if (!counter) {
+            // Nếu chưa có data, reload
+            console.log('Loading counter status...');
+            loadCountersStatus();
+            return;
+        }
+
+        if (counter.isActive) {
+            // Đóng quầy
+            closeCounterConfirm(counterNumber);
+        } else {
+            // Mở quầy - redirect đến phân công
+            openAssignModal(counterNumber);
+        }
+    }
+
+    // Auto-refresh counters status mỗi 10 giây
+    let counterRefreshInterval;
+    
+    // Khởi động auto-refresh khi page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - initializing counter status');
+        
+        // Load ngay lần đầu (dùng server data)
+        loadCountersStatus();
+        
+        // Sau đó refresh mỗi 10 giây bằng API
+        counterRefreshInterval = setInterval(() => {
+            console.log('Auto-refreshing counters...');
+            fetchCountersStatusFromAPI();
+        }, 10000); // 10 seconds
+    });
+
+    // Dừng auto-refresh khi page unload
+    window.addEventListener('beforeunload', function() {
+        if (counterRefreshInterval) {
+            clearInterval(counterRefreshInterval);
+            counterRefreshInterval = null;
+        }
     });
 
 </script>

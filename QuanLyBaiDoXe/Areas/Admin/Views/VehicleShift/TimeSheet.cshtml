@@ -1,9 +1,10 @@
-﻿@model List<QuanLyBaiDoXe.Areas.Admin.ViewModels.EmployeeTimeSheetViewModel>
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.ShiftCalendarViewModel
 
 @{
-    ViewData["Title"] = "Bảng chấm công";
+    ViewData["Title"] = "Lịch trực";
     var selectedMonth = (int)ViewBag.SelectedMonth;
     var selectedYear = (int)ViewBag.SelectedYear;
+    var dailyShifts = ViewBag.DailyShifts as List<QuanLyBaiDoXe.Areas.Admin.ViewModels.DailyShiftViewModel>;
 }
 
 <!-- Page Header -->
@@ -11,14 +12,14 @@
     <div>
         <h1 class="page-title">
             <i class="fas fa-clock"></i>
-            Bảng chấm công
+            Lịch trực
         </h1>
         <div class="breadcrumb">
             <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
             <span>/</span>
             <a href="@Url.Action("Index", "VehicleShift", new { area = "Admin" })">Ca làm việc</a>
             <span>/</span>
-            <span>Bảng chấm công</span>
+            <span>Lịch trực</span>
         </div>
     </div>
     <div class="page-header-actions">
@@ -26,9 +27,9 @@
             <i class="fas fa-file-excel"></i>
             Xuất Excel
         </button>
-        <button class="btn-primary-admin" onclick="printTimeSheet()">
-            <i class="fas fa-print"></i>
-            In bảng công
+        <button class="btn-primary-admin" onclick="openCreateShiftModal()">
+            <i class="fas fa-plus-circle"></i>
+            Lập ca
         </button>
     </div>
 </div>
@@ -76,29 +77,29 @@
 <!-- Summary Cards -->
 <div class="stat-cards">
     <div class="stat-card">
-        <div class="stat-card-icon teal">
-            <i class="fas fa-users"></i>
-        </div>
-        <div class="stat-card-info">
-            <h3>@Model.Count</h3>
-            <p>Tổng nhân viên</p>
-        </div>
-    </div>
-    <div class="stat-card">
         <div class="stat-card-icon green">
-            <i class="fas fa-business-time"></i>
+            <i class="fas fa-user-clock"></i>
         </div>
         <div class="stat-card-info">
-            <h3>@Model.Sum(e => e.SoCaLam)</h3>
-            <p>Tổng ca làm việc</p>
+            <h3>@Model.MonthStats.TotalActiveShifts</h3>
+            <p>Ca đang trực</p>
         </div>
     </div>
     <div class="stat-card">
         <div class="stat-card-icon orange">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.MonthStats.TotalCompletedShifts</h3>
+            <p>Ca đã chốt</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
             <i class="fas fa-clock"></i>
         </div>
         <div class="stat-card-info">
-            <h3>@Model.Sum(e => e.TongGioLam).ToString("F1")h</h3>
+            <h3>@Model.MonthStats.TotalWorkHours.ToString("F1")h</h3>
             <p>Tổng giờ làm việc</p>
         </div>
     </div>
@@ -107,7 +108,7 @@
             <i class="fas fa-money-bill-wave"></i>
         </div>
         <div class="stat-card-info">
-            <h3>@Model.Sum(e => e.TongDoanhThu).ToString("N0") đ</h3>
+            <h3>@Model.MonthStats.TotalRevenue.ToString("N0") đ</h3>
             <p>Tổng doanh thu</p>
         </div>
     </div>
@@ -116,325 +117,199 @@
 <!-- TimeSheet Table -->
 <div class="admin-card">
     <div class="admin-card-header">
-        <h3 class="admin-card-title">Bảng công tháng @selectedMonth/@selectedYear</h3>
+        <h3 class="admin-card-title">
+            <i class="fas fa-calendar-alt"></i>
+            Lịch ca làm việc tháng @selectedMonth/@selectedYear
+        </h3>
         <div class="admin-card-actions">
-            <div class="input-group" style="width: 250px;">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" id="searchEmployee" placeholder="Tìm nhân viên..." onkeyup="searchEmployee()">
-            </div>
+            <button class="btn-secondary-admin btn-sm" onclick="scrollToToday()">
+                <i class="fas fa-calendar-day"></i>
+                Hôm nay
+            </button>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table admin-table timesheet-table">
-            <thead>
-                <tr>
-                    <th>Mã NV</th>
-                    <th>Họ tên</th>
-                    <th>Chức vụ</th>
-                    <th>Số ca làm</th>
-                    <th>Tổng giờ</th>
-                    <th>Giờ chuẩn</th>
-                    <th>Tăng ca</th>
-                    <th>Doanh thu</th>
-                    <th>Hiệu suất</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody id="timesheetTableBody">
-                @if (Model.Any())
-                {
-                    @foreach (var emp in Model)
+    <div class="timesheet-calendar">
+        @if (dailyShifts != null && dailyShifts.Any())
+        {
+            @foreach (var day in dailyShifts)
+            {
+                var hasShifts = day.Shifts.Any();
+                var dayClass = day.IsToday ? "day-card today" : "day-card";
+                
+                <div class="@dayClass" id="day-@day.Date.Day" data-date="@day.Date.ToString("yyyy-MM-dd")">
+                    <div class="day-header">
+                        <div class="day-info">
+                            <h4 class="day-number">
+                                @day.Date.Day
+                                @if (day.IsToday)
+                                {
+                                    <span class="badge badge-success ms-2">Hôm nay</span>
+                                }
+                            </h4>
+                            <p class="day-name">@day.DayOfWeekText</p>
+                        </div>
+                        <div class="day-summary">
+                            @if (hasShifts)
+                            {
+                                <span class="badge badge-info me-2">@day.Shifts.Count ca</span>
+                                <button class="btn-icon-white btn-sm me-1" onclick="viewDayDetail('@day.Date.ToString("yyyy-MM-dd")')" title="Xem chi tiết ngày">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon-white btn-sm" onclick="openEditDayShifts('@day.Date.ToString("yyyy-MM-dd")')" title="Sửa ca ngày này">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted"><i class="fas fa-ban"></i> Không có ca</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (hasShifts)
                     {
-                        var standardHours = emp.SoCaLam * 8;
-                        var overtimeHours = Math.Max(0, emp.TongGioLam - standardHours);
-                        var efficiency = emp.SoCaLam > 0 ? (emp.TongDoanhThu / emp.SoCaLam) : 0;
-                        
-                        <tr class="employee-row" data-name="@emp.HoTen.ToLower()">
-                            <td><strong>NV@emp.MaNhanVien.ToString("D4")</strong></td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="employee-avatar">@emp.HoTen.Substring(0, 1)</div>
-                                    <span>@emp.HoTen</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge badge-info">@emp.ChucVuText</span>
-                            </td>
-                            <td class="text-center">
-                                <strong>@emp.SoCaLam</strong>
-                            </td>
-                            <td class="text-center">
-                                <strong class="text-primary">@emp.TongGioLam.ToString("F1")h</strong>
-                            </td>
-                            <td class="text-center">
-                                @standardHours.ToString("F1")h
-                            </td>
-                            <td class="text-center">
-                                @if (overtimeHours > 0)
+                        <div class="shifts-container">
+                            @foreach (var shift in day.Shifts)
+                            {
+                                var now = DateTime.Now;
+                                var shiftStartTime = shift.ThoiGianNhanCa ?? DateTime.MinValue;
+                                
+                                // Xác định trạng thái ca
+                                var isCurrent = day.CurrentShift != null && shift.MaCa == day.CurrentShift.MaCa;
+                                var isUpcoming = shiftStartTime > now; // Ca chưa bắt đầu = Sắp tới
+                                var isCompleted = shiftStartTime <= now && shift.TrangThaiCa == 1; // Ca đã diễn ra VÀ đã chốt
+                                
+                                var shiftClass = "shift-item";
+                                
+                                if (isCurrent)
                                 {
-                                    <strong class="text-warning">@overtimeHours.ToString("F1")h</strong>
+                                    shiftClass += " current-shift";
                                 }
-                                else
+                                else if (isUpcoming)
                                 {
-                                    <span class="text-muted">0h</span>
+                                    shiftClass += " next-shift";
                                 }
-                            </td>
-                            <td>
-                                <strong class="text-success">@emp.TongDoanhThu.ToString("N0") đ</strong>
-                            </td>
-                            <td>
-                                <div class="efficiency-bar">
-                                    <div class="progress" style="height: 20px;">
-                                        @{
-                                            var efficiencyPercent = Math.Min(100, (efficiency / 1000000) * 100);
-                                            var barColor = efficiencyPercent >= 80 ? "success" : efficiencyPercent >= 50 ? "warning" : "danger";
-                                        }
-                                        <div class="progress-bar bg-@barColor" style="width: @efficiencyPercent.ToString("F0")%">
-                                            @efficiency.ToString("N0") đ/ca
+                                else if (isCompleted)
+                                {
+                                    shiftClass += " completed-shift";
+                                }
+
+                                <div class="@shiftClass">
+                                    <div class="shift-header">
+                                        <div class="shift-id">
+                                            <strong>#@shift.MaCa</strong>
+                                            @if (isCurrent)
+                                            {
+                                                <span class="badge badge-success ms-2">
+                                                    <i class="fas fa-circle pulse"></i> Đang trực
+                                                </span>
+                                            }
+                                            else if (isUpcoming)
+                                            {
+                                                <span class="badge badge-warning ms-2">
+                                                    <i class="fas fa-clock"></i> Sắp tới
+                                                </span>
+                                            }
+                                            else if (isCompleted)
+                                            {
+                                                <span class="badge badge-secondary ms-2">
+                                                    <i class="fas fa-check-circle"></i> Đã chốt
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-info ms-2">
+                                                    @shift.TrangThaiCaText
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="shift-body">
+                                        <div class="shift-employee">
+                                            <i class="fas fa-user"></i>
+                                            <strong>@shift.TenNhanVien</strong>
+                                        </div>
+                                        
+                                        <div class="shift-time">
+                                            <div class="time-info">
+                                                <i class="fas fa-sign-in-alt text-success"></i>
+                                                <span>
+                                                    @if (shift.ThoiGianNhanCa.HasValue)
+                                                    {
+                                                        @shift.ThoiGianNhanCa.Value.ToString("HH:mm")
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">--:--</span>
+                                                    }
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-arrow-right mx-2"></i>
+                                            <div class="time-info">
+                                                <i class="fas fa-sign-out-alt text-danger"></i>
+                                                <span>
+                                                    @if (shift.ThoiGianGiaoCa.HasValue)
+                                                    {
+                                                        @shift.ThoiGianGiaoCa.Value.ToString("HH:mm")
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">--:--</span>
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="shift-stats">
+                                            <div class="stat-item">
+                                                <i class="fas fa-clock text-primary"></i>
+                                                <span>@shift.SoGioLam.ToString("F1")h</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <i class="fas fa-money-bill-wave text-success"></i>
+                                                <span>@shift.TongTienHeThong.ToString("N0") đ</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-icon btn-success" onclick="openWorkControl(@emp.MaNhanVien, '@emp.HoTen')" title="Kiểm soát giờ làm">
-                                        <i class="fas fa-user-clock"></i>
-                                    </button>
-                                    <button class="btn-icon" onclick="viewEmployeeDetail(@emp.MaNhanVien)" title="Xem chi tiết">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn-icon btn-primary" onclick="exportEmployeeTimeSheet(@emp.MaNhanVien)" title="Xuất bảng công">
-                                        <i class="fas fa-file-export"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                            }
+                        </div>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="10" class="text-center">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <p>Không có dữ liệu chấm công</p>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Performance Chart -->
-<div class="admin-card">
-    <div class="admin-card-header">
-        <h3 class="admin-card-title">Biểu đồ hiệu suất</h3>
-    </div>
-    <div class="chart-container" style="height: 300px;">
-        <canvas id="performanceChart"></canvas>
+                    else
+                    {
+                        <div class="no-shifts">
+                            <i class="fas fa-calendar-times"></i>
+                            <p>Chưa có ca làm việc</p>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Không có dữ liệu ca làm việc</p>
+            </div>
+        }
     </div>
 </div>
 
 <!-- Work Control Modal -->
-<div class="modal fade" id="workControlModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+<div class="modal fade" id="shiftDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-user-clock"></i>
-                    Kiểm soát giờ làm - <span id="employeeName"></span>
+                    <i class="fas fa-info-circle"></i>
+                    Chi tiết ca làm việc
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <input type="hidden" id="currentEmployeeId">
-                
-                <!-- Tabs -->
-                <ul class="nav nav-tabs mb-3" id="workControlTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="shifts-tab" data-bs-toggle="tab" data-bs-target="#shifts" type="button">
-                            <i class="fas fa-list"></i> Danh sách ca
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="adjustment-tab" data-bs-toggle="tab" data-bs-target="#adjustment" type="button">
-                            <i class="fas fa-edit"></i> Điều chỉnh giờ
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="overtime-tab" data-bs-toggle="tab" data-bs-target="#overtime" type="button">
-                            <i class="fas fa-clock"></i> Bù giờ
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="break-tab" data-bs-toggle="tab" data-bs-target="#break" type="button">
-                            <i class="fas fa-pause-circle"></i> Ngắt ca
-                        </button>
-                    </li>
-                </ul>
-
-                <!-- Tab Content -->
-                <div class="tab-content" id="workControlTabContent">
-                    <!-- Tab 1: Danh sách ca -->
-                    <div class="tab-pane fade show active" id="shifts" role="tabpanel">
-                        <div class="work-control-section">
-                            <h6><i class="fas fa-calendar-check"></i> Các ca làm việc trong tháng</h6>
-                            <div class="table-responsive" id="shiftsTableContainer">
-                                <p class="text-center text-muted">Đang tải...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab 2: Điều chỉnh giờ -->
-                    <div class="tab-pane fade" id="adjustment" role="tabpanel">
-                        <div class="work-control-section">
-                            <h6><i class="fas fa-edit"></i> Điều chỉnh giờ làm việc</h6>
-                            <form id="adjustmentForm">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Chọn ca cần điều chỉnh</label>
-                                        <select class="form-select" id="adjustShiftSelect" required>
-                                            <option value="">-- Chọn ca --</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Giờ vào mới</label>
-                                        <input type="time" class="form-control" id="adjustCheckIn">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Giờ ra mới</label>
-                                        <input type="time" class="form-control" id="adjustCheckOut">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Lý do điều chỉnh</label>
-                                    <textarea class="form-control" id="adjustReason" rows="2" required></textarea>
-                                </div>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i>
-                                    Việc điều chỉnh giờ sẽ được ghi nhận vào lịch sử và cần phê duyệt từ quản lý.
-                                </div>
-                                <button type="button" class="btn-primary-admin" onclick="submitAdjustment()">
-                                    <i class="fas fa-save"></i> Lưu điều chỉnh
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Tab 3: Bù giờ -->
-                    <div class="tab-pane fade" id="overtime" role="tabpanel">
-                        <div class="work-control-section">
-                            <h6><i class="fas fa-clock"></i> Quản lý giờ bù</h6>
-                            <form id="overtimeForm">
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Ngày bù giờ</label>
-                                        <input type="date" class="form-control" id="overtimeDate" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Giờ bắt đầu</label>
-                                        <input type="time" class="form-control" id="overtimeStart" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Giờ kết thúc</label>
-                                        <input type="time" class="form-control" id="overtimeEnd" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Loại giờ bù</label>
-                                    <select class="form-select" id="overtimeType" required>
-                                        <option value="1">Tăng ca thường (x1.5)</option>
-                                        <option value="2">Tăng ca cuối tuần (x2.0)</option>
-                                        <option value="3">Tăng ca lễ (x3.0)</option>
-                                        <option value="4">Giờ bù (không hưởng lương)</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Ghi chú</label>
-                                    <textarea class="form-control" id="overtimeNote" rows="2"></textarea>
-                                </div>
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle"></i>
-                                    Tổng giờ bù sẽ được tính vào bảng lương cuối tháng.
-                                </div>
-                                <button type="button" class="btn-primary-admin" onclick="submitOvertime()">
-                                    <i class="fas fa-plus"></i> Thêm giờ bù
-                                </button>
-                            </form>
-
-                            <hr class="my-4">
-
-                            <h6><i class="fas fa-history"></i> Lịch sử giờ bù</h6>
-                            <div id="overtimeHistoryContainer">
-                                <p class="text-center text-muted">Chưa có giờ bù nào</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab 4: Ngắt ca -->
-                    <div class="tab-pane fade" id="break" role="tabpanel">
-                        <div class="work-control-section">
-                            <h6><i class="fas fa-pause-circle"></i> Ngắt ca làm việc</h6>
-                            <form id="breakForm">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Chọn ca cần ngắt</label>
-                                        <select class="form-select" id="breakShiftSelect" required>
-                                            <option value="">-- Chọn ca --</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Loại ngắt ca</label>
-                                        <select class="form-select" id="breakType" required>
-                                            <option value="1">Nghỉ phép có lương</option>
-                                            <option value="2">Nghỉ không lương</option>
-                                            <option value="3">Nghỉ ốm</option>
-                                            <option value="4">Nghỉ việc riêng</option>
-                                            <option value="5">Khẩn cấp</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Lý do ngắt ca <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="breakReason" rows="3" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="breakNeedReplacement">
-                                        <label class="form-check-label" for="breakNeedReplacement">
-                                            Cần tìm người thay thế
-                                        </label>
-                                    </div>
-                                </div>
-                                <div id="replacementSection" style="display: none;">
-                                    <div class="mb-3">
-                                        <label class="form-label">Nhân viên thay thế</label>
-                                        <select class="form-select" id="replacementEmployee">
-                                            <option value="">-- Chọn nhân viên --</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Ca ngắt sẽ không được tính vào công và cần phê duyệt từ quản lý.
-                                </div>
-                                <button type="button" class="btn-danger-admin" onclick="submitBreak()">
-                                    <i class="fas fa-pause"></i> Xác nhận ngắt ca
-                                </button>
-                            </form>
-
-                            <hr class="my-4">
-
-                            <h6><i class="fas fa-list"></i> Lịch sử ngắt ca</h6>
-                            <div id="breakHistoryContainer">
-                                <p class="text-center text-muted">Chưa có ca ngắt nào</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body" id="shiftDetailContent">
+                <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
@@ -443,13 +318,543 @@
     </div>
 </div>
 
+<!-- Create Shift Modal -->
+<div class="modal fade" id="createShiftModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Lập ca làm việc
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createShiftForm">
+                    <!-- Chọn ngày -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-calendar-day"></i>
+                            Chọn ngày làm việc
+                        </label>
+                        <input type="date" class="form-control" id="shiftDate" required>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Chọn nhân viên cho 3 ca làm việc trong ngày. Để trống nếu không có nhân viên cho ca đó.
+                    </div>
+
+                    <!-- Ca sáng -->
+                    <div class="shift-section mb-4">
+                        <div class="shift-header-section">
+                            <h6 class="mb-3">
+                                <i class="fas fa-sun text-warning"></i>
+                                <strong>Ca Sáng (6:00 - 14:00)</strong>
+                            </h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nhân viên</label>
+                                <select class="form-select" id="morningEmployee">
+                                    <option value="">-- Chọn nhân viên --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tiền đầu ca</label>
+                                <input type="number" class="form-control" id="morningCash" placeholder="Nhập số tiền" min="0" step="1000">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="morningNote" rows="2" placeholder="Ghi chú cho ca sáng (tùy chọn)"></textarea>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Ca chiều -->
+                    <div class="shift-section mb-4">
+                        <div class="shift-header-section">
+                            <h6 class="mb-3">
+                                <i class="fas fa-cloud-sun text-primary"></i>
+                                <strong>Ca Chiều (14:00 - 22:00)</strong>
+                            </h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nhân viên</label>
+                                <select class="form-select" id="afternoonEmployee">
+                                    <option value="">-- Chọn nhân viên --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tiền đầu ca</label>
+                                <input type="number" class="form-control" id="afternoonCash" placeholder="Nhập số tiền" min="0" step="1000">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="afternoonNote" rows="2" placeholder="Ghi chú cho ca chiều (tùy chọn)"></textarea>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Ca đêm -->
+                    <div class="shift-section mb-4">
+                        <div class="shift-header-section">
+                            <h6 class="mb-3">
+                                <i class="fas fa-moon text-info"></i>
+                                <strong>Ca Đêm (22:00 - 6:00)</strong>
+                            </h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nhân viên</label>
+                                <select class="form-select" id="nightEmployee">
+                                    <option value="">-- Chọn nhân viên --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tiền đầu ca</label>
+                                <input type="number" class="form-control" id="nightCash" placeholder="Nhập số tiền" min="0" step="1000">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="nightNote" rows="2" placeholder="Ghi chú cho ca đêm (tùy chọn)"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn-primary-admin" id="btnSubmitShifts" onclick="submitCreateShifts()">
+                    <i class="fas fa-save"></i> Tạo ca làm việc
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Day Shifts Modal -->
+<div class="modal fade" id="editDayShiftsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Sửa ca làm việc - <span id="editDayTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editDayDate">
+                <div id="editShiftsContainer">
+                    <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn-danger-admin" onclick="confirmDeleteDayShifts()">
+                    <i class="fas fa-trash"></i> Xóa tất cả ca
+                </button>
+                <button type="button" class="btn-primary-admin" onclick="submitUpdateDayShifts()">
+                    <i class="fas fa-save"></i> Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Day Detail Modal -->
+<div class="modal fade" id="viewDayDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-day"></i>
+                    Chi tiết ngày - <span id="viewDayTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="viewDayContent">
+                    <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn-primary-admin" onclick="printDayDetail()">
+                    <i class="fas fa-print"></i> In báo cáo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timesheet-calendar {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        padding: 20px 0;
+    }
+
+    .day-card {
+        background: white;
+        border-radius: 12px;
+        border: 2px solid #e0e0e0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .day-card.today {
+        border-color: #21a691;
+        box-shadow: 0 4px 12px rgba(33, 166, 145, 0.2);
+    }
+
+    .day-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .day-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .day-card.today .day-header {
+        background: linear-gradient(135deg, #21a691 0%, #1a8577 100%);
+    }
+
+    .day-info .day-number {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .day-info .day-name {
+        margin: 0;
+        font-size: 14px;
+        opacity: 0.9;
+        text-transform: capitalize;
+    }
+
+    .shifts-container {
+        padding: 15px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .shift-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-left: 4px solid #6c757d;
+        transition: all 0.2s ease;
+    }
+
+    .shift-item:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transform: translateX(2px);
+    }
+
+    .shift-item.current-shift {
+        background: linear-gradient(135deg, #d4f4dd 0%, #bef0cb 100%);
+        border-left-color: #28a745;
+        animation: pulse-border 2s infinite;
+    }
+
+    .shift-item.next-shift {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffecb5 100%);
+        border-left-color: #ffc107;
+    }
+
+    .shift-item.completed-shift {
+        background: #e9ecef;
+        border-left-color: #6c757d;
+        opacity: 0.6;
+        filter: grayscale(20%);
+    }
+
+    .shift-item.completed-shift:hover {
+        opacity: 0.8;
+    }
+
+    @@keyframes pulse-border {
+        0%, 100% {
+            border-left-width: 4px;
+        }
+        50% {
+            border-left-width: 6px;
+        }
+    }
+
+    .pulse {
+        animation: pulse-dot 1.5s infinite;
+    }
+
+    @@keyframes pulse-dot {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .shift-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .shift-id {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .shift-body {
+        margin: 10px 0;
+    }
+
+    .shift-employee {
+        font-size: 15px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .shift-time {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        background: white;
+        border-radius: 6px;
+        margin: 8px 0;
+    }
+
+    .time-info {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 500;
+    }
+
+    .shift-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 13px;
+    }
+
+    .shift-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .shift-footer .btn {
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .shift-footer .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .btn-icon-detail,
+    .btn-icon-close {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+
+    .btn-icon-detail {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-icon-detail:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-icon-close {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .btn-icon-close:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(245, 87, 108, 0.4);
+    }
+
+    .no-shifts {
+        padding: 40px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .no-shifts i {
+        font-size: 48px;
+        margin-bottom: 10px;
+        opacity: 0.3;
+    }
+
+    .no-shifts p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    @@media (max-width: 768px) {
+        .timesheet-calendar {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .shift-section {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .shift-header-section h6 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+
+    .shift-section:nth-child(3) {
+        border-left-color: #ffc107;
+    }
+
+    .shift-section:nth-child(5) {
+        border-left-color: #17a2b8;
+    }
+
+    .btn-icon-white {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-icon-white:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.05);
+    }
+
+    .day-summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .shift-edit-section {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .stat-box {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+    }
+
+    .stat-box .stat-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 24px;
+        color: white;
+        margin-right: 15px;
+    }
+
+    .stat-box .stat-icon.bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-box .stat-icon.bg-success {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+    }
+
+    .stat-box .stat-icon.bg-info {
+        background: linear-gradient(135deg, #2af598 0%, #009efd 100%);
+    }
+
+    .stat-box .stat-icon.bg-warning {
+        background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+    }
+
+    .stat-box .stat-info h4 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .stat-box .stat-info p {
+        margin: 0;
+        font-size: 13px;
+        color: #7f8c8d;
+    }
+</style>
+
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let currentEmployeeShifts = [];
-
         function previousMonth() {
             let month = parseInt($('#selectMonth').val()) - 1;
             let year = parseInt($('#selectYear').val());
@@ -480,354 +885,129 @@
             window.location.href = '@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })?month=' + month + '&year=' + year;
         }
 
-        function searchEmployee() {
-            const searchText = $('#searchEmployee').val().toLowerCase();
-            $('.employee-row').each(function() {
-                const name = $(this).data('name');
-                if (name.includes(searchText)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
+        function scrollToToday() {
+            const todayCard = document.querySelector('.day-card.today');
+            if (todayCard) {
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                todayCard.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    todayCard.style.transform = 'scale(1)';
+                }, 300);
+            } else {
+                alert('Hôm nay không có trong tháng đã chọn');
+            }
         }
 
-        // Mở modal kiểm soát giờ làm
-        function openWorkControl(employeeId, employeeName) {
-            $('#currentEmployeeId').val(employeeId);
-            $('#employeeName').text(employeeName);
-            $('#workControlModal').modal('show');
+        function viewShiftDetail(shiftId) {
+            $('#shiftDetailModal').modal('show');
+            $('#shiftDetailContent').html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
             
-            // Load dữ liệu ca làm việc
-            loadEmployeeShifts(employeeId);
-            
-            // Load lịch sử giờ bù và ngắt ca
-            loadOvertimeHistory(employeeId);
-            loadBreakHistory(employeeId);
-        }
-
-        // Load danh sách ca làm việc của nhân viên
-        function loadEmployeeShifts(employeeId) {
-            const month = $('#selectMonth').val();
-            const year = $('#selectYear').val();
-            
-            $('#shiftsTableContainer').html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
-            
-            $.get('@Url.Action("GetEmployeeShifts", "VehicleShift", new { area = "Admin" })', 
-                { employeeId: employeeId, month: month, year: year },
+            $.get('@Url.Action("GetShiftDetail", "VehicleShift", new { area = "Admin" })', 
+                { id: shiftId },
                 function(data) {
-                    currentEmployeeShifts = data;
-                    displayShiftsTable(data);
-                    populateShiftSelects(data);
+                    if (data) {
+                        let html = `
+                            <div class="shift-detail">
+                                <div class="detail-section">
+                                    <h6><i class="fas fa-info-circle"></i> Thông tin chung</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="30%">Mã ca:</th>
+                                            <td><strong>#${data.maCa}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Nhân viên:</th>
+                                            <td>${data.tenNhanVien || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Trạng thái:</th>
+                                            <td><span class="badge badge-${data.trangThaiCa === 0 ? 'success' : 'info'}">${data.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt'}</span></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="detail-section">
+                                    <h6><i class="fas fa-clock"></i> Thời gian</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="30%">Nhận ca:</th>
+                                            <td>${data.thoiGianNhanCa ? new Date(data.thoiGianNhanCa).toLocaleString('vi-VN') : 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Giao ca:</th>
+                                            <td>${data.thoiGianGiaoCa ? new Date(data.thoiGianGiaoCa).toLocaleString('vi-VN') : 'Chưa giao ca'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Số giờ làm:</th>
+                                            <td><strong>${data.soGioLam ? data.soGioLam.toFixed(1) + 'h' : 'N/A'}</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="detail-section">
+                                    <h6><i class="fas fa-money-bill-wave"></i> Tài chính</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="30%">Tiền đầu ca:</th>
+                                            <td>${data.tienDauCa ? data.tienDauCa.toLocaleString('vi-VN') + ' đ' : '0 đ'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Doanh thu hệ thống:</th>
+                                            <td class="text-success"><strong>${data.tongTienHeThong ? data.tongTienHeThong.toLocaleString('vi-VN') + ' đ' : '0 đ'}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tiền cuối ca:</th>
+                                            <td>${data.tienCuoiCa ? data.tienCuoiCa.toLocaleString('vi-VN') + ' đ' : '0 đ'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tiền bàn giao:</th>
+                                            <td>${data.tienMatBanGiao ? data.tienMatBanGiao.toLocaleString('vi-VN') + ' đ' : '0 đ'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Chênh lệch:</th>
+                                            <td class="${data.chenhLech > 0 ? 'text-success' : data.chenhLech < 0 ? 'text-danger' : ''}">
+                                                <strong>${data.chenhLech ? data.chenhLech.toLocaleString('vi-VN') + ' đ' : '0 đ'}</strong>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                ${data.ghiChuBanGiao ? `
+                                <div class="detail-section">
+                                    <h6><i class="fas fa-sticky-note"></i> Ghi chú</h6>
+                                    <p class="mb-0">${data.ghiChuBanGiao}</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        $('#shiftDetailContent').html(html);
+                    } else {
+                        $('#shiftDetailContent').html('<p class="text-center text-danger">Không tìm thấy thông tin ca làm việc</p>');
+                    }
                 }
             ).fail(function() {
-                $('#shiftsTableContainer').html('<p class="text-center text-danger">Lỗi khi tải dữ liệu</p>');
+                $('#shiftDetailContent').html('<p class="text-center text-danger">Lỗi khi tải dữ liệu</p>');
             });
         }
 
-        // Hiển thị bảng ca làm việc
-        function displayShiftsTable(shifts) {
-            if (shifts.length === 0) {
-                $('#shiftsTableContainer').html('<p class="text-center text-muted">Chưa có ca làm việc nào</p>');
-                return;
-            }
-
-            let html = `
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="selectAllShifts" onchange="toggleAllShifts()"></th>
-                            <th>Mã ca</th>
-                            <th>Ngày</th>
-                            <th>Giờ vào</th>
-                            <th>Giờ ra</th>
-                            <th>Tổng giờ</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            shifts.forEach(shift => {
-                const checkIn = shift.thoiGianNhanCa ? new Date(shift.thoiGianNhanCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '-';
-                const checkOut = shift.thoiGianGiaoCa ? new Date(shift.thoiGianGiaoCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '-';
-                const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
-                const hours = shift.soGioLam ? shift.soGioLam.toFixed(1) : '0';
-                const statusClass = shift.trangThaiCa === 0 ? 'success' : 'info';
-                const statusText = shift.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt';
-
-                html += `
-                    <tr>
-                        <td><input type="checkbox" class="shift-checkbox" value="${shift.maCa}"></td>
-                        <td><strong>#${shift.maCa}</strong></td>
-                        <td>${date}</td>
-                        <td>${checkIn}</td>
-                        <td>${checkOut}</td>
-                        <td><strong>${hours}h</strong></td>
-                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" onclick="quickAdjust(${shift.maCa})" title="Điều chỉnh">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            html += `</tbody></table>`;
-            $('#shiftsTableContainer').html(html);
-        }
-
-        // Populate select boxes với danh sách ca
-        function populateShiftSelects(shifts) {
-            let options = '<option value="">-- Chọn ca --</option>';
-            shifts.forEach(shift => {
-                const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
-                options += `<option value="${shift.maCa}">Ca #${shift.maCa} - ${date}</option>`;
-            });
-            
-            $('#adjustShiftSelect, #breakShiftSelect').html(options);
-        }
-
-        // Toggle all checkboxes
-        function toggleAllShifts() {
-            const checked = $('#selectAllShifts').prop('checked');
-            $('.shift-checkbox').prop('checked', checked);
-        }
-
-        // Điều chỉnh nhanh
-        function quickAdjust(shiftId) {
-            $('#adjustment-tab').tab('show');
-            $('#adjustShiftSelect').val(shiftId);
-        }
-
-        // Submit điều chỉnh giờ
-        function submitAdjustment() {
-            const formData = {
-                ShiftId: $('#adjustShiftSelect').val(),
-                CheckIn: $('#adjustCheckIn').val(),
-                CheckOut: $('#adjustCheckOut').val(),
-                Reason: $('#adjustReason').val()
-            };
-
-            if (!formData.ShiftId) {
-                alert('Vui lòng chọn ca cần điều chỉnh');
-                return;
-            }
-
-            if (!formData.Reason) {
-                alert('Vui lòng nhập lý do điều chỉnh');
+        function closeShift(shiftId) {
+            if (!confirm('Bạn có chắc chắn muốn chốt ca này?')) {
                 return;
             }
 
             $.ajax({
-                url: '@Url.Action("AdjustShiftTime", "VehicleShift", new { area = "Admin" })',
+                url: '@Url.Action("CloseShift", "VehicleShift", new { area = "Admin" })',
                 type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
+                data: { shiftId: shiftId },
                 success: function(response) {
                     if (response.success) {
-                        alert(response.message);
-                        loadEmployeeShifts($('#currentEmployeeId').val());
-                        $('#adjustmentForm')[0].reset();
+                        alert('Chốt ca thành công!');
+                        location.reload();
                     } else {
                         alert('Lỗi: ' + response.message);
                     }
                 },
                 error: function() {
-                    alert('Có lỗi xảy ra khi điều chỉnh giờ');
+                    alert('Có lỗi xảy ra khi chốt ca');
                 }
             });
-        }
-
-        // Submit bù giờ
-        function submitOvertime() {
-            const formData = {
-                EmployeeId: parseInt($('#currentEmployeeId').val()),
-                Date: $('#overtimeDate').val(),
-                StartTime: $('#overtimeStart').val(),
-                EndTime: $('#overtimeEnd').val(),
-                Type: parseInt($('#overtimeType').val()),
-                Note: $('#overtimeNote').val()
-            };
-
-            if (!formData.Date || !formData.StartTime || !formData.EndTime) {
-                alert('Vui lòng điền đầy đủ thông tin');
-                return;
-            }
-
-            $.ajax({
-                url: '@Url.Action("AddOvertime", "VehicleShift", new { area = "Admin" })',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function(response) {
-                    if (response.success) {
-                        alert(response.message);
-                        $('#overtimeForm')[0].reset();
-                        loadOvertimeHistory($('#currentEmployeeId').val());
-                    } else {
-                        alert('Lỗi: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Có lỗi xảy ra khi thêm giờ bù');
-                }
-            });
-        }
-
-        // Submit ngắt ca
-        function submitBreak() {
-            const formData = {
-                ShiftId: parseInt($('#breakShiftSelect').val()),
-                Type: parseInt($('#breakType').val()),
-                Reason: $('#breakReason').val(),
-                NeedReplacement: $('#breakNeedReplacement').prop('checked'),
-                ReplacementEmployeeId: $('#replacementEmployee').val() ? parseInt($('#replacementEmployee').val()) : null
-            };
-
-            if (!formData.ShiftId) {
-                alert('Vui lòng chọn ca cần ngắt');
-                return;
-            }
-
-            if (!formData.Reason) {
-                alert('Vui lòng nhập lý do ngắt ca');
-                return;
-            }
-
-            if (!confirm('Bạn có chắc chắn muốn ngắt ca này?')) {
-                return;
-            }
-
-            $.ajax({
-                url: '@Url.Action("BreakShift", "VehicleShift", new { area = "Admin" })',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function(response) {
-                    if (response.success) {
-                        alert(response.message);
-                        loadEmployeeShifts($('#currentEmployeeId').val());
-                        $('#breakForm')[0].reset();
-                    } else {
-                        alert('Lỗi: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Có lỗi xảy ra khi ngắt ca');
-                }
-            });
-        }
-
-        // Toggle replacement section
-        $('#breakNeedReplacement').change(function() {
-            if ($(this).prop('checked')) {
-                $('#replacementSection').show();
-                loadAvailableEmployees();
-            } else {
-                $('#replacementSection').hide();
-            }
-        });
-
-        // Load nhân viên có thể thay thế
-        function loadAvailableEmployees() {
-            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', function(data) {
-                let options = '<option value="">-- Chọn nhân viên --</option>';
-                data.forEach(emp => {
-                    options += `<option value="${emp.maNhanVien}">${emp.hoTen} (${emp.chucVu})</option>`;
-                });
-                $('#replacementEmployee').html(options);
-            });
-        }
-
-        // Load lịch sử giờ bù
-        function loadOvertimeHistory(employeeId) {
-            const month = $('#selectMonth').val();
-            const year = $('#selectYear').val();
-
-            $.get('@Url.Action("GetEmployeeShifts", "VehicleShift", new { area = "Admin" })', 
-                { employeeId: employeeId, month: month, year: year },
-                function(data) {
-                    // Lọc các ca bù giờ (có ghi chú chứa "Bù giờ")
-                    const overtimeShifts = data.filter(shift => 
-                        shift.ghiChuBanGiao && shift.ghiChuBanGiao.includes('Bù giờ')
-                    );
-
-                    if (overtimeShifts.length === 0) {
-                        $('#overtimeHistoryContainer').html('<p class="text-center text-muted">Chưa có giờ bù nào</p>');
-                        return;
-                    }
-
-                    let html = '<div class="list-group">';
-                    overtimeShifts.forEach(shift => {
-                        const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
-                        const hours = shift.soGioLam ? shift.soGioLam.toFixed(1) : '0';
-                        html += `
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1"><i class="fas fa-clock text-primary"></i> ${date}</h6>
-                                        <p class="mb-0 text-muted small">${shift.ghiChuBanGiao || ''}</p>
-                                    </div>
-                                    <div class="text-end">
-                                        <strong class="text-success">${hours}h</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    $('#overtimeHistoryContainer').html(html);
-                }
-            );
-        }
-
-        // Load lịch sử ngắt ca
-        function loadBreakHistory(employeeId) {
-            const month = $('#selectMonth').val();
-            const year = $('#selectYear').val();
-
-            $.get('@Url.Action("GetEmployeeShifts", "VehicleShift", new { area = "Admin" })', 
-                { employeeId: employeeId, month: month, year: year },
-                function(data) {
-                    // Lọc các ca bị ngắt (có ghi chú chứa "Ngắt ca")
-                    const breakShifts = data.filter(shift => 
-                        shift.ghiChuBanGiao && shift.ghiChuBanGiao.includes('Ngắt ca')
-                    );
-
-                    if (breakShifts.length === 0) {
-                        $('#breakHistoryContainer').html('<p class="text-center text-muted">Chưa có ca ngắt nào</p>');
-                        return;
-                    }
-
-                    let html = '<div class="list-group">';
-                    breakShifts.forEach(shift => {
-                        const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
-                        html += `
-                            <div class="list-group-item">
-                                <div>
-                                    <h6 class="mb-1"><i class="fas fa-pause-circle text-danger"></i> Ca #${shift.maCa} - ${date}</h6>
-                                    <p class="mb-0 text-muted small">${shift.ghiChuBanGiao || ''}</p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    $('#breakHistoryContainer').html(html);
-                }
-            );
-        }
-
-        function viewEmployeeDetail(employeeId) {
-            openWorkControl(employeeId, 'Nhân viên #' + employeeId);
-        }
-
-        function exportEmployeeTimeSheet(employeeId) {
-            const month = $('#selectMonth').val();
-            const year = $('#selectYear').val();
-            window.location.href = '@Url.Action("ExportEmployeeTimeSheet", "VehicleShift", new { area = "Admin" })?employeeId=' + employeeId + '&month=' + month + '&year=' + year;
         }
 
         function exportTimeSheet() {
@@ -840,31 +1020,514 @@
             window.print();
         }
 
-        // Performance Chart
-        $(document).ready(function() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => $"'{e.HoTen}'")))],
-                    datasets: [{
-                        label: 'Doanh thu (triệu đồng)',
-                        data: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => (e.TongDoanhThu / 1000000).ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
-                        backgroundColor: 'rgba(33, 166, 145, 0.6)',
-                        borderColor: 'rgba(33, 166, 145, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+        // Mở modal lập ca
+        function openCreateShiftModal() {
+            $('#createShiftModal').modal('show');
+            
+            // Set ngày mặc định là hôm nay
+            const today = new Date().toISOString().split('T')[0];
+            $('#shiftDate').val(today);
+            
+            // Load danh sách nhân viên
+            loadEmployeesForShift();
+        }
+
+        // Mở modal sửa ca ngày
+        function openEditDayShifts(date) {
+            $('#editDayShiftsModal').modal('show');
+            $('#editDayDate').val(date);
+            
+            // Format ngày để hiển thị
+            const dateObj = new Date(date);
+            const dateStr = dateObj.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            $('#editDayTitle').text(dateStr);
+            
+            // Load ca của ngày đó
+            loadDayShifts(date);
+        }
+
+        // Mở modal xem chi tiết ngày
+        function viewDayDetail(date) {
+            $('#viewDayDetailModal').modal('show');
+            
+            // Format ngày để hiển thị
+            const dateObj = new Date(date);
+            const dateStr = dateObj.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            $('#viewDayTitle').text(dateStr);
+            
+            // Load chi tiết ngày
+            loadDayDetail(date);
+        }
+
+        // Load chi tiết tất cả ca trong ngày
+        function loadDayDetail(date) {
+            $('#viewDayContent').html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
+            
+            $.get('@Url.Action("GetDayShifts", "VehicleShift", new { area = "Admin" })', 
+                { date: date },
+                function(data) {
+                    if (data && data.length > 0) {
+                        displayDayDetail(data);
+                    } else {
+                        $('#viewDayContent').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Không có ca nào trong ngày này</div>');
                     }
                 }
+            ).fail(function() {
+                $('#viewDayContent').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Lỗi khi tải dữ liệu</div>');
             });
+        }
+
+        // Hiển thị chi tiết ngày
+        function displayDayDetail(shifts) {
+            let totalHours = 0;
+            let totalRevenue = 0;
+            let activeShifts = 0;
+            let completedShifts = 0;
+
+            shifts.forEach(shift => {
+                if (shift.trangThaiCa === 0) activeShifts++;
+                if (shift.trangThaiCa === 1) completedShifts++;
+                
+                if (shift.thoiGianNhanCa && shift.thoiGianGiaoCa) {
+                    const start = new Date(shift.thoiGianNhanCa);
+                    const end = new Date(shift.thoiGianGiaoCa);
+                    totalHours += (end - start) / (1000 * 60 * 60);
+                }
+                
+                totalRevenue += shift.tongTienHeThong || 0;
+            });
+
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-icon bg-primary">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>${shifts.length}</h4>
+                                <p>Tổng ca</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>${activeShifts}</h4>
+                                <p>Đang trực</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>${totalHours.toFixed(1)}h</h4>
+                                <p>Tổng giờ</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4>${totalRevenue.toLocaleString('vi-VN')} đ</h4>
+                                <p>Doanh thu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="mb-3"><i class="fas fa-list"></i> Danh sách ca làm việc</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ca</th>
+                                <th>Nhân viên</th>
+                                <th>Giờ vào</th>
+                                <th>Giờ ra</th>
+                                <th>Số giờ</th>
+                                <th>Tiền đầu ca</th>
+                                <th>Doanh thu</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            shifts.forEach(shift => {
+                const shiftTime = new Date(shift.thoiGianNhanCa);
+                const hour = shiftTime.getHours();
+                let shiftType = '';
+                
+                if (hour >= 6 && hour < 14) {
+                    shiftType = '<span class="badge bg-warning">Ca Sáng</span>';
+                } else if (hour >= 14 && hour < 22) {
+                    shiftType = '<span class="badge bg-primary">Ca Chiều</span>';
+                } else {
+                    shiftType = '<span class="badge bg-info">Ca Đêm</span>';
+                }
+
+                const status = shift.trangThaiCa === 0 
+                    ? '<span class="badge bg-success">Đang trực</span>' 
+                    : '<span class="badge bg-secondary">Đã chốt</span>';
+
+                let workHours = 0;
+                if (shift.thoiGianNhanCa && shift.thoiGianGiaoCa) {
+                    const start = new Date(shift.thoiGianNhanCa);
+                    const end = new Date(shift.thoiGianGiaoCa);
+                    workHours = (end - start) / (1000 * 60 * 60);
+                }
+
+                html += `
+                    <tr>
+                        <td>${shiftType}<br><small class="text-muted">#${shift.maCa}</small></td>
+                        <td><strong>${shift.tenNhanVien || 'N/A'}</strong></td>
+                        <td>${shift.thoiGianNhanCa ? new Date(shift.thoiGianNhanCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '--:--'}</td>
+                        <td>${shift.thoiGianGiaoCa ? new Date(shift.thoiGianGiaoCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '--:--'}</td>
+                        <td>${workHours.toFixed(1)}h</td>
+                        <td>${(shift.tienDauCa || 0).toLocaleString('vi-VN')} đ</td>
+                        <td class="text-success"><strong>${(shift.tongTienHeThong || 0).toLocaleString('vi-VN')} đ</strong></td>
+                        <td>${status}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewShiftDetail(${shift.maCa})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            $('#viewDayContent').html(html);
+        }
+
+        // In báo cáo ngày
+        function printDayDetail() {
+            window.print();
+        }
+
+        // Load các ca của ngày
+        function loadDayShifts(date) {
+            $('#editShiftsContainer').html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
+            
+            $.get('@Url.Action("GetDayShifts", "VehicleShift", new { area = "Admin" })', 
+                { date: date },
+                function(data) {
+                    if (data && data.length > 0) {
+                        displayEditShiftsForm(data);
+                    } else {
+                        $('#editShiftsContainer').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Không có ca nào trong ngày này</div>');
+                    }
+                }
+            ).fail(function() {
+                $('#editShiftsContainer').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Lỗi khi tải dữ liệu</div>');
+            });
+        }
+
+        // Hiển thị form sửa ca
+        function displayEditShiftsForm(shifts) {
+            let html = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Sửa thông tin các ca trong ngày. Ca đã chốt không thể thay đổi nhân viên.</div>';
+            
+            // Load danh sách nhân viên trước
+            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', 
+                function(employees) {
+                    shifts.forEach((shift, index) => {
+                        const shiftTime = new Date(shift.thoiGianNhanCa);
+                        const hour = shiftTime.getHours();
+                        let shiftName = '';
+                        let shiftIcon = '';
+                        let shiftColor = '';
+                        
+                        if (hour >= 6 && hour < 14) {
+                            shiftName = 'Ca Sáng (6:00 - 14:00)';
+                            shiftIcon = 'fa-sun';
+                            shiftColor = 'warning';
+                        } else if (hour >= 14 && hour < 22) {
+                            shiftName = 'Ca Chiều (14:00 - 22:00)';
+                            shiftIcon = 'fa-cloud-sun';
+                            shiftColor = 'primary';
+                        } else {
+                            shiftName = 'Ca Đêm (22:00 - 6:00)';
+                            shiftIcon = 'fa-moon';
+                            shiftColor = 'info';
+                        }
+                        
+                        const isCompleted = shift.trangThaiCa === 1;
+                        const disabledClass = isCompleted ? 'disabled' : '';
+                        
+                        html += `
+                            <div class="shift-edit-section mb-4">
+                                <input type="hidden" class="edit-shift-id" value="${shift.maCa}">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6>
+                                        <i class="fas ${shiftIcon} text-${shiftColor}"></i>
+                                        <strong>${shiftName}</strong>
+                                        ${isCompleted ? '<span class="badge badge-secondary ms-2">Đã chốt</span>' : '<span class="badge badge-warning ms-2">Đang trực</span>'}
+                                    </h6>
+                                    ${!isCompleted ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteShift(${shift.maCa})"><i class="fas fa-trash"></i> Xóa ca</button>` : ''}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Nhân viên</label>
+                                        <select class="form-select edit-shift-employee" data-shift-id="${shift.maCa}" ${isCompleted ? 'disabled' : ''}>
+                                            <option value="">-- Chọn nhân viên --</option>
+                                            ${employees.map(emp => `<option value="${emp.maNhanVien}" ${emp.maNhanVien === shift.maNhanVien ? 'selected' : ''}>${emp.hoTen} - ${emp.chucVu}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Tiền đầu ca</label>
+                                        <input type="number" class="form-control edit-shift-cash" data-shift-id="${shift.maCa}" value="${shift.tienDauCa || 0}" min="0" step="1000" ${isCompleted ? 'disabled' : ''}>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Trạng thái</label>
+                                        <input type="text" class="form-control" value="${isCompleted ? 'Đã chốt' : 'Đang trực'}" disabled>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Ghi chú</label>
+                                    <textarea class="form-control edit-shift-note" data-shift-id="${shift.maCa}" rows="2" ${isCompleted ? 'disabled' : ''}>${shift.ghiChuBanGiao || ''}</textarea>
+                                </div>
+                            </div>
+                            ${index < shifts.length - 1 ? '<hr>' : ''}
+                        `;
+                    });
+                    
+                    $('#editShiftsContainer').html(html);
+                }
+            );
+        }
+
+        // Xóa một ca
+        function deleteShift(shiftId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa ca này?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("DeleteShift", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { shiftId: shiftId },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Xóa ca thành công!');
+                        const date = $('#editDayDate').val();
+                        loadDayShifts(date);
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi xóa ca');
+                }
+            });
+        }
+
+        // Xóa tất cả ca trong ngày
+        function confirmDeleteDayShifts() {
+            if (!confirm('Bạn có chắc chắn muốn xóa TẤT CẢ ca trong ngày này?')) {
+                return;
+            }
+
+            const date = $('#editDayDate').val();
+            
+            $.ajax({
+                url: '@Url.Action("DeleteDayShifts", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { date: date },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Đã xóa tất cả ca trong ngày!');
+                        $('#editDayShiftsModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi xóa ca');
+                }
+            });
+        }
+
+        // Lưu thay đổi ca
+        function submitUpdateDayShifts() {
+            const updates = [];
+            
+            $('.edit-shift-id').each(function() {
+                const shiftId = $(this).val();
+                const employee = $(`.edit-shift-employee[data-shift-id="${shiftId}"]`).val();
+                const cash = $(`.edit-shift-cash[data-shift-id="${shiftId}"]`).val();
+                const note = $(`.edit-shift-note[data-shift-id="${shiftId}"]`).val();
+                
+                updates.push({
+                    MaCa: parseInt(shiftId),
+                    MaNhanVien: employee ? parseInt(employee) : null,
+                    TienDauCa: parseFloat(cash) || 0,
+                    GhiChuBanGiao: note || ''
+                });
+            });
+
+            if (updates.length === 0) {
+                alert('Không có ca nào để cập nhật');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("UpdateDayShifts", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Updates: updates }),
+                success: function(response) {
+                    if (response.success) {
+                        alert('Cập nhật ca thành công!');
+                        $('#editDayShiftsModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi cập nhật ca');
+                }
+            });
+        }
+
+        // Load danh sách nhân viên có thể làm ca
+        function loadEmployeesForShift() {
+            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', 
+                function(data) {
+                    let options = '<option value="">-- Chọn nhân viên --</option>';
+                    data.forEach(emp => {
+                        options += `<option value="${emp.maNhanVien}">${emp.hoTen} - ${emp.chucVu}</option>`;
+                    });
+                    
+                    $('#morningEmployee, #afternoonEmployee, #nightEmployee').html(options);
+                }
+            ).fail(function() {
+                alert('Lỗi khi tải danh sách nhân viên');
+            });
+        }
+
+        // Submit tạo ca làm việc
+        function submitCreateShifts() {
+            const date = $('#shiftDate').val();
+            if (!date) {
+                alert('Vui lòng chọn ngày làm việc');
+                return;
+            }
+
+            // Kiểm tra ít nhất một ca có nhân viên
+            const morningEmp = $('#morningEmployee').val();
+            const afternoonEmp = $('#afternoonEmployee').val();
+            const nightEmp = $('#nightEmployee').val();
+
+            if (!morningEmp && !afternoonEmp && !nightEmp) {
+                alert('Vui lòng chọn ít nhất một nhân viên cho một ca');
+                return;
+            }
+
+            // Chuẩn bị dữ liệu
+            const shifts = [];
+
+            // Ca sáng (6:00 - 14:00)
+            if (morningEmp) {
+                shifts.push({
+                    MaNhanVien: parseInt(morningEmp),
+                    ThoiGianNhanCa: `${date} 06:00:00`,
+                    TienDauCa: parseFloat($('#morningCash').val()) || 0,
+                    GhiChuBanGiao: $('#morningNote').val() || 'Ca sáng'
+                });
+            }
+
+            // Ca chiều (14:00 - 22:00)
+            if (afternoonEmp) {
+                shifts.push({
+                    MaNhanVien: parseInt(afternoonEmp),
+                    ThoiGianNhanCa: `${date} 14:00:00`,
+                    TienDauCa: parseFloat($('#afternoonCash').val()) || 0,
+                    GhiChuBanGiao: $('#afternoonNote').val() || 'Ca chiều'
+                });
+            }
+
+            // Ca đêm (22:00 - 6:00 ngày hôm sau)
+            if (nightEmp) {
+                shifts.push({
+                    MaNhanVien: parseInt(nightEmp),
+                    ThoiGianNhanCa: `${date} 22:00:00`,
+                    TienDauCa: parseFloat($('#nightCash').val()) || 0,
+                    GhiChuBanGiao: $('#nightNote').val() || 'Ca đêm'
+                });
+            }
+
+            // Hiển thị loading
+            const submitBtn = $('#btnSubmitShifts')[0];
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
+
+            // Gửi request
+            $.ajax({
+                url: '@Url.Action("CreateMultipleShifts", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Shifts: shifts }),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message || 'Tạo ca làm việc thành công!');
+                        $('#createShiftModal').modal('hide');
+                        
+                        // Reset form
+                        $('#createShiftForm')[0].reset();
+                        
+                        // Reload trang
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Có lỗi xảy ra khi tạo ca: ' + error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
+
+        // Auto scroll to today on page load
+        $(document).ready(function() {
+            setTimeout(function() {
+                const todayCard = document.querySelector('.day-card.today');
+                if (todayCard) {
+                    todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
         });
     </script>
 }

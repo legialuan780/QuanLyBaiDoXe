@@ -170,6 +170,16 @@
         public decimal TotalRevenue { get; set; }
     }
 
+    public class DailyShiftViewModel
+    {
+        public DateTime Date { get; set; }
+        public List<ShiftViewModel> Shifts { get; set; } = new List<ShiftViewModel>();
+        public ShiftViewModel? CurrentShift { get; set; }
+        public ShiftViewModel? NextShift { get; set; }
+        public bool IsToday => Date.Date == DateTime.Today;
+        public string DayOfWeekText => Date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"));
+    }
+
     // ViewModel chi tiết nhân viên
     public class EmployeeDetailViewModel
     {
@@ -189,4 +199,20 @@
         public int CurrentMonthShifts { get; set; }
         public decimal CurrentMonthHours { get; set; }
     }
+
+    // ViewModel cho lịch cá nhân của nhân viên
+    public class PersonalScheduleViewModel
+    {
+        public EmployeeViewModel Employee { get; set; } = new EmployeeViewModel();
+        public DateTime WeekStart { get; set; }
+        public DateTime WeekEnd { get; set; }
+        public List<ScheduleViewModel> ScheduledShifts { get; set; } = new List<ScheduleViewModel>();
+        public List<ShiftViewModel> ActualShifts { get; set; } = new List<ShiftViewModel>();
+
+        public int TotalScheduledShifts => ScheduledShifts.Count;
+        public int TotalActualShifts => ActualShifts.Count;
+        public decimal TotalWorkHours => ActualShifts.Sum(s => (decimal)s.SoGioLam);
+        public decimal TotalRevenue => ActualShifts.Sum(s => s.TongTienHeThong);
+    }
 }
+

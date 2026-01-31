@@ -100,36 +100,227 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             var selectedMonth = month ?? DateTime.Now.Month;
             var selectedYear = year ?? DateTime.Now.Year;
 
-            var employees = await _context.NhanViens
-                .Where(nv => nv.TrangThaiLamViec == true)
-                .Select(nv => new EmployeeTimeSheetViewModel
+            // Lấy tất cả ca làm việc trong tháng
+            var startDate = new DateTime(selectedYear, selectedMonth, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            var shifts = await _context.CaLamViecs
+                .Include(c => c.MaNhanVienNavigation)
+                .Where(c => c.ThoiGianNhanCa.HasValue
+                         && c.ThoiGianNhanCa.Value.Date >= startDate
+                         && c.ThoiGianNhanCa.Value.Date <= endDate)
+                .OrderBy(c => c.ThoiGianNhanCa)
+                .Select(c => new ShiftViewModel
                 {
-                    MaNhanVien = nv.MaNhanVien,
-                    HoTen = nv.HoTen,
-                    ChucVu = nv.ChucVu ?? 0
+                    MaCa = c.MaCa,
+                    MaNhanVien = c.MaNhanVien,
+                    TenNhanVien = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : "N/A",
+                    ThoiGianNhanCa = c.ThoiGianNhanCa,
+                    ThoiGianGiaoCa = c.ThoiGianGiaoCa,
+                    TienDauCa = c.TienDauCa ?? 0,
+                    TongTienHeThong = c.TongTienHeThong ?? 0,
+                    TienMatBanGiao = c.TienMatBanGiao ?? 0,
+                    GhiChuBanGiao = c.GhiChuBanGiao,
+                    TrangThaiCa = c.TrangThaiCa ?? 0
                 })
                 .ToListAsync();
 
-            foreach (var emp in employees)
-            {
-                var shifts = await _context.CaLamViecs
-                    .Where(c => c.MaNhanVien == emp.MaNhanVien
-                             && c.ThoiGianNhanCa.HasValue
-                             && c.ThoiGianNhanCa.Value.Month == selectedMonth
-                             && c.ThoiGianNhanCa.Value.Year == selectedYear)
-                    .ToListAsync();
+            // Nhóm ca theo ngày
+            var dailyShifts = new List<DailyShiftViewModel>();
+            var currentDate = startDate;
 
-                emp.SoCaLam = shifts.Count;
-                emp.TongGioLam = shifts
-                    .Where(s => s.ThoiGianGiaoCa.HasValue)
-                    .Sum(s => (decimal)(s.ThoiGianGiaoCa!.Value - s.ThoiGianNhanCa!.Value).TotalHours);
-                emp.TongDoanhThu = shifts.Sum(s => s.TongTienHeThong ?? 0);
+            while (currentDate <= endDate)
+            {
+                var dayShifts = shifts
+                    .Where(s => s.ThoiGianNhanCa.HasValue && s.ThoiGianNhanCa.Value.Date == currentDate.Date)
+                    .OrderBy(s => s.ThoiGianNhanCa)
+                    .ToList();
+
+                var dailyShift = new DailyShiftViewModel
+                {
+                    Date = currentDate,
+                    Shifts = dayShifts
+                };
+
+                // Xác định ca hiện tại và ca tiếp theo
+                var now = DateTime.Now;
+                if (currentDate.Date == now.Date)
+                {
+                    // Ca hiện tại: ca đang diễn ra (đã bắt đầu nhưng chưa kết thúc và đang trực)
+                    dailyShift.CurrentShift = dayShifts
+                        .FirstOrDefault(s => s.ThoiGianNhanCa.HasValue 
+                                          && s.ThoiGianNhanCa.Value <= now
+                                          && s.TrangThaiCa == 0); // Đang trực
+
+                    // Ca tiếp theo: ca chưa bắt đầu (thời gian nhận ca > hiện tại)
+                    dailyShift.NextShift = dayShifts
+                        .Where(s => s.ThoiGianNhanCa.HasValue && s.ThoiGianNhanCa.Value > now)
+                        .OrderBy(s => s.ThoiGianNhanCa)
+                        .FirstOrDefault();
+                }
+                else if (currentDate.Date > now.Date)
+                {
+                    // Ngày tương lai: ca đầu tiên là ca tiếp theo
+                    dailyShift.NextShift = dayShifts.FirstOrDefault();
+                }
+
+                dailyShifts.Add(dailyShift);
+                currentDate = currentDate.AddDays(1);
             }
+
+            // Tính thống kê tháng
+            var stats = new MonthStatsViewModel
+            {
+                TotalActiveShifts = shifts.Count(s => s.TrangThaiCa == 0),
+                TotalCompletedShifts = shifts.Count(s => s.TrangThaiCa == 1),
+                TotalWorkHours = shifts.Sum(s => (decimal)s.SoGioLam),
+                TotalRevenue = shifts.Sum(s => s.TongTienHeThong)
+            };
+
+            var viewModel = new ShiftCalendarViewModel
+            {
+                SelectedMonth = selectedMonth,
+                SelectedYear = selectedYear,
+                MonthStats = stats
+            };
 
             ViewBag.SelectedMonth = selectedMonth;
             ViewBag.SelectedYear = selectedYear;
+            ViewBag.DailyShifts = dailyShifts;
 
-            return View(employees);
+            return View(viewModel);
+        }
+
+        // API: Lấy các ca của một ngày cụ thể
+        [HttpGet]
+        public async Task<IActionResult> GetDayShifts(string date)
+        {
+            try
+            {
+                var selectedDate = DateTime.Parse(date);
+                
+                var shifts = await _context.CaLamViecs
+                    .Include(c => c.MaNhanVienNavigation)
+                    .Where(c => c.ThoiGianNhanCa.HasValue 
+                             && c.ThoiGianNhanCa.Value.Date == selectedDate.Date)
+                    .OrderBy(c => c.ThoiGianNhanCa)
+                    .Select(c => new
+                    {
+                        c.MaCa,
+                        c.MaNhanVien,
+                        TenNhanVien = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : "N/A",
+                        c.ThoiGianNhanCa,
+                        c.ThoiGianGiaoCa,
+                        c.TienDauCa,
+                        c.TongTienHeThong,
+                        c.GhiChuBanGiao,
+                        c.TrangThaiCa
+                    })
+                    .ToListAsync();
+
+                return Json(shifts);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Cập nhật nhiều ca trong ngày
+        [HttpPost]
+        public async Task<IActionResult> UpdateDayShifts([FromBody] UpdateDayShiftsRequest request)
+        {
+            try
+            {
+                if (request.Updates == null || !request.Updates.Any())
+                {
+                    return Json(new { success = false, message = "Không có ca nào để cập nhật" });
+                }
+
+                foreach (var update in request.Updates)
+                {
+                    var shift = await _context.CaLamViecs.FindAsync(update.MaCa);
+                    if (shift == null) continue;
+
+                    // Chỉ cập nhật ca chưa chốt
+                    if (shift.TrangThaiCa == 0)
+                    {
+                        if (update.MaNhanVien.HasValue)
+                        {
+                            shift.MaNhanVien = update.MaNhanVien.Value;
+                        }
+                        shift.TienDauCa = update.TienDauCa;
+                        shift.GhiChuBanGiao = update.GhiChuBanGiao;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Cập nhật ca thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Xóa một ca
+        [HttpPost]
+        public async Task<IActionResult> DeleteShift(int shiftId)
+        {
+            try
+            {
+                var shift = await _context.CaLamViecs.FindAsync(shiftId);
+                if (shift == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy ca làm việc" });
+                }
+
+                // Chỉ xóa ca chưa chốt
+                if (shift.TrangThaiCa != 0)
+                {
+                    return Json(new { success = false, message = "Không thể xóa ca đã chốt" });
+                }
+
+                _context.CaLamViecs.Remove(shift);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Xóa ca thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Xóa tất cả ca trong ngày
+        [HttpPost]
+        public async Task<IActionResult> DeleteDayShifts(string date)
+        {
+            try
+            {
+                var selectedDate = DateTime.Parse(date);
+                
+                var shifts = await _context.CaLamViecs
+                    .Where(c => c.ThoiGianNhanCa.HasValue 
+                             && c.ThoiGianNhanCa.Value.Date == selectedDate.Date
+                             && c.TrangThaiCa == 0) // Chỉ xóa ca chưa chốt
+                    .ToListAsync();
+
+                if (!shifts.Any())
+                {
+                    return Json(new { success = false, message = "Không có ca nào để xóa hoặc tất cả ca đã được chốt" });
+                }
+
+                _context.CaLamViecs.RemoveRange(shifts);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = $"Đã xóa {shifts.Count} ca" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
         }
 
         // Danh sách nhân viên
@@ -690,7 +881,12 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     c.GhiChuBanGiao,
                     c.TrangThaiCa,
                     SoXeVao = c.LuotGuiMaCaVaoNavigations.Count,
-                    SoXeRa = c.LuotGuiMaCaRaNavigations.Count
+                    SoXeRa = c.LuotGuiMaCaRaNavigations.Count,
+                    SoGioLam = c.ThoiGianNhanCa.HasValue && c.ThoiGianGiaoCa.HasValue 
+                        ? (c.ThoiGianGiaoCa.Value - c.ThoiGianNhanCa.Value).TotalHours 
+                        : 0,
+                    TienCuoiCa = (c.TienDauCa ?? 0) + (c.TongTienHeThong ?? 0),
+                    ChenhLech = (c.TienMatBanGiao ?? 0) - ((c.TienDauCa ?? 0) + (c.TongTienHeThong ?? 0))
                 })
                 .FirstOrDefaultAsync();
 
@@ -722,6 +918,51 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, message = "Mở ca thành công", shiftId = shift.MaCa });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Tạo nhiều ca làm việc cùng lúc (Lập ca cho ngày)
+        [HttpPost]
+        public async Task<IActionResult> CreateMultipleShifts([FromBody] CreateMultipleShiftsRequest request)
+        {
+            try
+            {
+                if (request.Shifts == null || !request.Shifts.Any())
+                {
+                    return Json(new { success = false, message = "Không có ca nào để tạo" });
+                }
+
+                var createdShifts = new List<CaLamViec>();
+
+                foreach (var shiftRequest in request.Shifts)
+                {
+                    var shift = new CaLamViec
+                    {
+                        MaNhanVien = shiftRequest.MaNhanVien,
+                        ThoiGianNhanCa = DateTime.Parse(shiftRequest.ThoiGianNhanCa),
+                        TienDauCa = shiftRequest.TienDauCa,
+                        TongTienHeThong = 0,
+                        TienMatBanGiao = 0,
+                        GhiChuBanGiao = shiftRequest.GhiChuBanGiao,
+                        TrangThaiCa = 0 // Đang trực
+                    };
+
+                    _context.CaLamViecs.Add(shift);
+                    createdShifts.Add(shift);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new 
+                { 
+                    success = true, 
+                    message = $"Đã tạo thành công {createdShifts.Count} ca làm việc",
+                    shiftIds = createdShifts.Select(s => s.MaCa).ToList()
+                });
             }
             catch (Exception ex)
             {
@@ -818,12 +1059,16 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         public async Task<IActionResult> GetAvailableEmployees()
         {
             var employees = await _context.NhanViens
-                .Where(nv => nv.TrangThaiLamViec == true && (nv.ChucVu == 1 || nv.ChucVu == 2)) // Quản lý hoặc Bảo vệ
+                .Where(nv => nv.TrangThaiLamViec == true) // Lấy tất cả nhân viên đang làm việc
+                .OrderBy(nv => nv.HoTen)
                 .Select(nv => new
                 {
-                    nv.MaNhanVien,
-                    nv.HoTen,
-                    ChucVu = nv.ChucVu == 1 ? "Quản lý" : "Bảo vệ"
+                    maNhanVien = nv.MaNhanVien,
+                    hoTen = nv.HoTen,
+                    chucVu = nv.ChucVu == 0 ? "Admin" :
+                             nv.ChucVu == 1 ? "Quản lý" :
+                             nv.ChucVu == 2 ? "Bảo vệ" :
+                             nv.ChucVu == 3 ? "Kỹ thuật" : "Nhân viên"
                 })
                 .ToListAsync();
 
@@ -955,6 +1200,48 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             }
         }
 
+        // API: Chốt ca đơn giản (dùng cho TimeSheet)
+        [HttpPost]
+        public async Task<IActionResult> CloseShift(int shiftId)
+        {
+            try
+            {
+                var shift = await _context.CaLamViecs.FindAsync(shiftId);
+                if (shift == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy ca làm việc" });
+                }
+
+                // Chỉ chốt ca nếu đang trực
+                if (shift.TrangThaiCa != 0)
+                {
+                    return Json(new { success = false, message = "Ca đã được chốt rồi" });
+                }
+
+                // Set thời gian giao ca là hiện tại nếu chưa có
+                if (!shift.ThoiGianGiaoCa.HasValue)
+                {
+                    shift.ThoiGianGiaoCa = DateTime.Now;
+                }
+
+                // Tính tổng tiền hệ thống từ các lượt gửi
+                var tongTienHeThong = await _context.LuotGuis
+                    .Where(l => (l.MaCaVao == shiftId || l.MaCaRa == shiftId))
+                    .SumAsync(l => l.TongTien ?? 0);
+
+                shift.TongTienHeThong = tongTienHeThong;
+                shift.TrangThaiCa = 1; // Đã chốt
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Chốt ca thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
         // API: Lấy chi tiết nhân viên
         [HttpGet]
         public async Task<IActionResult> GetEmployeeDetail(int id)
@@ -1044,6 +1331,47 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 };
 
                 return Json(new { success = true, data = detail });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy lịch cá nhân của nhân viên (tuần hiện tại)
+        [HttpGet]
+        public async Task<IActionResult> GetPersonalSchedule(int employeeId)
+        {
+            try
+            {
+                // Lấy tuần hiện tại (từ thứ 2 đến chủ nhật)
+                var today = DateTime.Today;
+                var dayOfWeek = (int)today.DayOfWeek;
+                var mondayOffset = dayOfWeek == 0 ? -6 : 1 - dayOfWeek; // Nếu là CN thì lùi 6 ngày
+                var monday = today.AddDays(mondayOffset);
+                var sunday = monday.AddDays(6);
+
+                // Lấy các ca làm việc của nhân viên trong tuần
+                var schedule = await _context.CaLamViecs
+                    .Where(c => c.MaNhanVien == employeeId 
+                             && c.ThoiGianNhanCa.HasValue
+                             && c.ThoiGianNhanCa.Value.Date >= monday 
+                             && c.ThoiGianNhanCa.Value.Date <= sunday)
+                    .OrderBy(c => c.ThoiGianNhanCa)
+                    .Select(c => new
+                    {
+                        maCa = c.MaCa,
+                        ngay = c.ThoiGianNhanCa.Value,
+                        thoiGianNhanCa = c.ThoiGianNhanCa,
+                        thoiGianGiaoCa = c.ThoiGianGiaoCa,
+                        soGioLam = c.ThoiGianGiaoCa.HasValue && c.ThoiGianNhanCa.HasValue 
+                                   ? (decimal)(c.ThoiGianGiaoCa.Value - c.ThoiGianNhanCa.Value).TotalHours 
+                                   : 0,
+                        trangThaiCa = c.TrangThaiCa ?? 0
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, data = schedule });
             }
             catch (Exception ex)
             {
@@ -1184,9 +1512,499 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
+
+        // API: Lấy danh sách nhân viên đang làm việc cho phân công quầy
+        [HttpGet]
+        public async Task<IActionResult> GetActiveEmployees()
+        {
+            try
+            {
+                var employees = await _context.NhanViens
+                    .Where(nv => nv.TrangThaiLamViec == true)
+                    .OrderBy(nv => nv.HoTen)
+                    .Select(nv => new
+                    {
+                        maNhanVien = nv.MaNhanVien,
+                        hoTen = nv.HoTen,
+                        chucVu = nv.ChucVu ?? 0,
+                        chucVuText = nv.ChucVu == 0 ? "Admin" :
+                                    nv.ChucVu == 1 ? "Quản lý" :
+                                    nv.ChucVu == 2 ? "Bảo vệ" :
+                                    nv.ChucVu == 3 ? "Kỹ thuật" : "Nhân viên",
+                        soDienThoai = nv.SoDienThoai,
+                        trangThaiLamViec = nv.TrangThaiLamViec ?? false
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, data = employees });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy thông tin phân công quầy hiện tại
+        [HttpGet]
+        public async Task<IActionResult> GetCounterAssignments()
+        {
+            try
+            {
+                // Lấy các ca đang trực (TrangThaiCa = 0)
+                var activeShifts = await _context.CaLamViecs
+                    .Include(c => c.MaNhanVienNavigation)
+                    .Where(c => c.TrangThaiCa == 0 && c.ThoiGianNhanCa.HasValue)
+                    .OrderBy(c => c.MaCa)
+                    .Take(3) // Chỉ lấy 3 ca đầu tiên (tương ứng 3 quầy)
+                    .Select(c => new
+                    {
+                        counter = GetCounterNumber(c.MaCa), // Sẽ map ca ID sang số quầy 1, 2, 3
+                        employee = new
+                        {
+                            maNhanVien = c.MaNhanVien,
+                            hoTen = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : "N/A",
+                            chucVu = c.MaNhanVienNavigation != null ? (c.MaNhanVienNavigation.ChucVu ?? 0) : 0,
+                            chucVuText = c.MaNhanVienNavigation != null
+                                ? (c.MaNhanVienNavigation.ChucVu == 0 ? "Admin" :
+                                   c.MaNhanVienNavigation.ChucVu == 1 ? "Quản lý" :
+                                   c.MaNhanVienNavigation.ChucVu == 2 ? "Bảo vệ" :
+                                   c.MaNhanVienNavigation.ChucVu == 3 ? "Kỹ thuật" : "Nhân viên")
+                                : "N/A"
+                        },
+                        maCa = c.MaCa
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, data = activeShifts });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Helper method để map ca ID sang số quầy
+        private int GetCounterNumber(int shiftId)
+        {
+            // Logic đơn giản: chia dư cho 3 để có số quầy từ 1-3
+            var counter = (shiftId % 3) + 1;
+            return counter > 3 ? 1 : counter;
+        }
+
+        // API: Lưu phân công quầy và khởi động ca
+        [HttpPost]
+        public async Task<IActionResult> SaveCounterAssignments([FromBody] CounterAssignmentRequest request)
+        {
+            try
+            {
+                if (request.Assignments == null || !request.Assignments.Any())
+                {
+                    return Json(new { success = false, message = "Không có phân công nào được chọn" });
+                }
+
+                var createdShifts = new List<int>();
+
+                foreach (var assignment in request.Assignments)
+                {
+                    // Kiểm tra nhân viên có đang trực ca nào không
+                    var existingShift = await _context.CaLamViecs
+                        .FirstOrDefaultAsync(c => c.MaNhanVien == assignment.MaNhanVien && c.TrangThaiCa == 0);
+
+                    if (existingShift != null)
+                    {
+                        return Json(new 
+                        { 
+                            success = false, 
+                            message = $"Nhân viên đã đang trực ca. Vui lòng chốt ca trước khi phân công mới." 
+                        });
+                    }
+
+                    // Tạo ca làm việc mới
+                    var newShift = new CaLamViec
+                    {
+                        MaNhanVien = assignment.MaNhanVien,
+                        ThoiGianNhanCa = DateTime.Now,
+                        TienDauCa = 0, // Có thể cho phép nhập tiền đầu ca
+                        TongTienHeThong = 0,
+                        TienMatBanGiao = 0,
+                        TrangThaiCa = 0, // Đang trực
+                        GhiChuBanGiao = $"Phân công quầy {assignment.Counter}"
+                    };
+
+                    _context.CaLamViecs.Add(newShift);
+                    await _context.SaveChangesAsync();
+
+                    createdShifts.Add(newShift.MaCa);
+                }
+
+                // Lưu thông tin phân công vào session hoặc cache để VehicleVision sử dụng
+                // Có thể lưu vào database hoặc cache tạm thời
+                SaveCounterAssignmentToCache(request.Assignments);
+
+                return Json(new 
+                { 
+                    success = true, 
+                    message = $"Đã phân công {request.Assignments.Count} quầy thành công và khởi động ca làm việc!",
+                    shiftIds = createdShifts
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Helper method để lưu thông tin phân công vào cache/session
+        private void SaveCounterAssignmentToCache(List<CounterAssignment> assignments)
+        {
+            // Lưu vào HttpContext.Session hoặc distributed cache
+            // Ở đây đơn giản hóa bằng cách lưu vào static dictionary (chỉ để demo)
+            // Trong production, nên dùng IMemoryCache hoặc Redis
+            foreach (var assignment in assignments)
+            {
+                HttpContext.Session.SetInt32($"Counter_{assignment.Counter}_Employee", assignment.MaNhanVien);
+            }
+        }
+
+        // API: Lấy danh sách nhân viên có thể phân vào quầy (không đang trực ca)
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableEmployeesForCounter()
+        {
+            try
+            {
+                // Lấy các nhân viên đang trực ca
+                var activeShiftEmployeeIds = await _context.CaLamViecs
+                    .Where(c => c.TrangThaiCa == 0) // Đang trực
+                    .Select(c => c.MaNhanVien)
+                    .ToListAsync();
+
+                // Lấy TẤT CẢ nhân viên đang làm việc và không trong danh sách đang trực ca
+                var availableEmployees = await _context.NhanViens
+                    .Where(nv => nv.TrangThaiLamViec == true 
+                              && !activeShiftEmployeeIds.Contains(nv.MaNhanVien))
+                    .OrderBy(nv => nv.HoTen)
+                    .Select(nv => new
+                    {
+                        maNhanVien = nv.MaNhanVien,
+                        hoTen = nv.HoTen,
+                        chucVu = nv.ChucVu == 1 ? "Quản lý" : 
+                                 nv.ChucVu == 2 ? "Bảo vệ" :
+                                 nv.ChucVu == 3 ? "Kỹ thuật" : 
+                                 nv.ChucVu == 4 ? "Nhân viên" : "Khác",
+                        chucVuCode = nv.ChucVu ?? 0,
+                        maNhanVienFormatted = $"NV{nv.MaNhanVien:D4}",
+                        soDienThoai = nv.SoDienThoai,
+                        avatar = nv.HoTen != null ? nv.HoTen.Substring(0, 1).ToUpper() : "NV"
+                    })
+                    .ToListAsync();
+
+                return Json(new 
+                { 
+                    success = true, 
+                    data = availableEmployees,
+                    count = availableEmployees.Count,
+                    message = availableEmployees.Count > 0 
+                        ? $"Có {availableEmployees.Count} nhân viên sẵn sàng" 
+                        : "Không có nhân viên rảnh. Tất cả đang trực ca."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy trạng thái tất cả các quầy
+        [HttpGet]
+        public async Task<IActionResult> GetAllCountersStatus()
+        {
+            try
+            {
+                var counters = new List<object>();
+
+                for (int i = 1; i <= 3; i++)
+                {
+                    // Lấy thông tin ca làm việc hiện tại cho quầy này
+                    // Dùng GhiChuBanGiao để xác định quầy (chứa text "Phân công quầy X")
+                    var activeShift = await _context.CaLamViecs
+                        .Include(c => c.MaNhanVienNavigation)
+                        .Where(c => c.TrangThaiCa == 0 && 
+                                    c.GhiChuBanGiao != null && 
+                                    c.GhiChuBanGiao.Contains($"Phân công quầy {i}"))
+                        .OrderByDescending(c => c.ThoiGianNhanCa)
+                        .FirstOrDefaultAsync();
+
+                    // Tính doanh thu REAL-TIME từ LuotGuis
+                    decimal revenue = 0;
+                    if (activeShift != null)
+                    {
+                        revenue = await _context.LuotGuis
+                            .Where(l => l.MaCaVao == activeShift.MaCa || l.MaCaRa == activeShift.MaCa)
+                            .SumAsync(l => l.TongTien ?? 0);
+                    }
+
+                    var counterStatus = new
+                    {
+                        counter = i,
+                        isActive = activeShift != null,
+                        employee = activeShift != null ? new
+                        {
+                            maNhanVien = activeShift.MaNhanVien,
+                            hoTen = activeShift.MaNhanVienNavigation?.HoTen,
+                            maNhanVienFormatted = $"NV{activeShift.MaNhanVien:D4}",
+                            chucVu = activeShift.MaNhanVienNavigation?.ChucVu == 1 ? "Quản lý" : "Nhân viên"
+                        } : null,
+                        shift = activeShift != null ? new
+                        {
+                            maCa = activeShift.MaCa,
+                            thoiGianNhanCa = activeShift.ThoiGianNhanCa,
+                            soGioLam = activeShift.ThoiGianNhanCa.HasValue 
+                                ? (DateTime.Now - activeShift.ThoiGianNhanCa.Value).TotalHours 
+                                : 0
+                        } : null,
+                        revenue = revenue,
+                        revenueFormatted = revenue >= 1000000 
+                            ? $"{(revenue / 1000000):F1}M VNĐ" 
+                            : $"{revenue:N0} VNĐ"
+                    };
+
+                    counters.Add(counterStatus);
+                }
+
+                return Json(new { success = true, data = counters });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Phân công nhân viên vào quầy cụ thể
+        [HttpPost]
+        public async Task<IActionResult> AssignEmployeeToCounter([FromBody] SingleCounterAssignmentRequest request)
+        {
+            try
+            {
+                // Kiểm tra nhân viên có đang trực ca nào không
+                var existingShift = await _context.CaLamViecs
+                    .FirstOrDefaultAsync(c => c.MaNhanVien == request.MaNhanVien && c.TrangThaiCa == 0);
+
+                if (existingShift != null)
+                {
+                    return Json(new 
+                    { 
+                        success = false, 
+                        message = "Nhân viên đã đang trực ca. Vui lòng chốt ca trước khi phân công mới." 
+                    });
+                }
+
+                // Kiểm tra quầy có nhân viên đang trực không
+                var existingCounterShift = await _context.CaLamViecs
+                    .Where(c => c.TrangThaiCa == 0 && c.GhiChuBanGiao != null 
+                             && c.GhiChuBanGiao.Contains($"Phân công quầy {request.Counter}"))
+                    .FirstOrDefaultAsync();
+
+                if (existingCounterShift != null)
+                {
+                    return Json(new 
+                    { 
+                        success = false, 
+                        message = $"Quầy {request.Counter} đã có nhân viên đang trực. Vui lòng đóng quầy trước." 
+                    });
+                }
+
+                // Tạo ca làm việc mới
+                var newShift = new CaLamViec
+                {
+                    MaNhanVien = request.MaNhanVien,
+                    ThoiGianNhanCa = DateTime.Now,
+                    TienDauCa = 0,
+                    TongTienHeThong = 0,
+                    TienMatBanGiao = 0,
+                    TrangThaiCa = 0, // Đang trực
+                    GhiChuBanGiao = $"Phân công quầy {request.Counter}"
+                };
+
+                _context.CaLamViecs.Add(newShift);
+                await _context.SaveChangesAsync();
+
+                // Lấy thông tin nhân viên để trả về
+                var employee = await _context.NhanViens.FindAsync(request.MaNhanVien);
+
+                return Json(new 
+                { 
+                    success = true, 
+                    message = $"Đã phân công quầy {request.Counter} thành công!",
+                    shift = new
+                    {
+                        maCa = newShift.MaCa,
+                        counter = request.Counter,
+                        employee = new
+                        {
+                            maNhanVien = employee?.MaNhanVien,
+                            hoTen = employee?.HoTen,
+                            maNhanVienFormatted = $"NV{employee?.MaNhanVien:D4}"
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Đóng quầy (kết thúc ca của quầy cụ thể)
+        [HttpPost]
+        public async Task<IActionResult> CloseCounter([FromBody] CloseCounterRequest request)
+        {
+            try
+            {
+                // Tìm ca đang trực ở quầy này
+                var activeShift = await _context.CaLamViecs
+                    .Where(c => c.TrangThaiCa == 0 && c.GhiChuBanGiao != null 
+                             && c.GhiChuBanGiao.Contains($"Phân công quầy {request.Counter}"))
+                    .OrderByDescending(c => c.ThoiGianNhanCa)
+                    .FirstOrDefaultAsync();
+
+                if (activeShift == null)
+                {
+                    return Json(new { success = false, message = $"Không tìm thấy ca đang trực ở quầy {request.Counter}" });
+                }
+
+                // Cập nhật thông tin kết thúc ca
+                activeShift.ThoiGianGiaoCa = DateTime.Now;
+                activeShift.TienMatBanGiao = request.TienMatBanGiao;
+                activeShift.GhiChuBanGiao = $"Phân công quầy {request.Counter} - {request.GhiChu}";
+                activeShift.TrangThaiCa = 1; // Đã chốt
+
+                await _context.SaveChangesAsync();
+
+                return Json(new 
+                { 
+                    success = true, 
+                    message = $"Đã đóng quầy {request.Counter} thành công!",
+                    revenue = activeShift.TongTienHeThong
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Lịch cá nhân - Xem lịch làm việc của nhân viên trong tuần
+        public async Task<IActionResult> PersonalSchedule(int employeeId, int? year, int? month, int? day)
+        {
+            // Lấy thông tin nhân viên
+            var employee = await _context.NhanViens
+                .Where(nv => nv.MaNhanVien == employeeId)
+                .Select(nv => new EmployeeViewModel
+                {
+                    MaNhanVien = nv.MaNhanVien,
+                    HoTen = nv.HoTen,
+                    GioiTinh = nv.GioiTinh,
+                    NgaySinh = nv.NgaySinh,
+                    SoDienThoai = nv.SoDienThoai,
+                    DiaChi = nv.DiaChi,
+                    ChucVu = nv.ChucVu ?? 0,
+                    NgayVaoLam = nv.NgayVaoLam,
+                    TrangThaiLamViec = nv.TrangThaiLamViec ?? true
+                })
+                .FirstOrDefaultAsync();
+
+            if (employee == null)
+            {
+                return NotFound("Không tìm thấy nhân viên");
+            }
+
+            // Xác định tuần bắt đầu (Thứ 2)
+            DateTime selectedDate = year.HasValue && month.HasValue && day.HasValue
+                ? new DateTime(year.Value, month.Value, day.Value)
+                : DateTime.Today;
+
+            // Tìm thứ 2 của tuần
+            int daysToMonday = ((int)selectedDate.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+            DateTime weekStart = selectedDate.AddDays(-daysToMonday).Date;
+            DateTime weekEnd = weekStart.AddDays(6);
+
+            // Lấy lịch làm việc đã xếp trong tuần
+            var scheduledShifts = await _context.LichLamViecs
+                .Where(l => l.MaNhanVien == employeeId
+                         && l.NgayLamViec >= DateOnly.FromDateTime(weekStart)
+                         && l.NgayLamViec <= DateOnly.FromDateTime(weekEnd))
+                .Select(l => new ScheduleViewModel
+                {
+                    MaLich = l.MaLich,
+                    MaNhanVien = l.MaNhanVien,
+                    TenNhanVien = employee.HoTen,
+                    NgayLamViec = l.NgayLamViec,
+                    CaLamViec = l.CaLamViec,
+                    GhiChu = l.GhiChu
+                })
+                .ToListAsync();
+
+            // Lấy các ca đã làm thực tế trong tuần (từ bảng CaLamViec)
+            var actualShifts = await _context.CaLamViecs
+                .Where(c => c.MaNhanVien == employeeId
+                         && c.ThoiGianNhanCa.HasValue
+                         && c.ThoiGianNhanCa.Value.Date >= weekStart
+                         && c.ThoiGianNhanCa.Value.Date <= weekEnd)
+                .Select(c => new ShiftViewModel
+                {
+                    MaCa = c.MaCa,
+                    MaNhanVien = c.MaNhanVien,
+                    TenNhanVien = employee.HoTen,
+                    ThoiGianNhanCa = c.ThoiGianNhanCa,
+                    ThoiGianGiaoCa = c.ThoiGianGiaoCa,
+                    TienDauCa = c.TienDauCa ?? 0,
+                    TongTienHeThong = c.TongTienHeThong ?? 0,
+                    TienMatBanGiao = c.TienMatBanGiao ?? 0,
+                    GhiChuBanGiao = c.GhiChuBanGiao,
+                    TrangThaiCa = c.TrangThaiCa ?? 0
+                })
+                .OrderBy(c => c.ThoiGianNhanCa)
+                .ToListAsync();
+
+            var viewModel = new PersonalScheduleViewModel
+            {
+                Employee = employee,
+                WeekStart = weekStart,
+                WeekEnd = weekEnd,
+                ScheduledShifts = scheduledShifts,
+                ActualShifts = actualShifts
+            };
+
+            return View(viewModel);
+        }
     }
 
     // Request models
+    public class SingleCounterAssignmentRequest
+    {
+        public int Counter { get; set; }
+        public int MaNhanVien { get; set; }
+    }
+
+    public class CloseCounterRequest
+    {
+        public int Counter { get; set; }
+        public decimal TienMatBanGiao { get; set; }
+        public string GhiChu { get; set; } = string.Empty;
+    }
+
+    // Request models
+    public class CounterAssignmentRequest
+    {
+        public List<CounterAssignment> Assignments { get; set; } = new List<CounterAssignment>();
+    }
+
+    public class CounterAssignment
+    {
+        public int Counter { get; set; }
+        public int MaNhanVien { get; set; }
+    }
+
     public class CreateShiftRequest
     {
         public int MaNhanVien { get; set; }
@@ -1267,6 +2085,32 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         public string NgayLamViec { get; set; } = string.Empty;
         public int CaLamViec { get; set; }
         public string? GhiChu { get; set; }
+    }
+
+    public class CreateMultipleShiftsRequest
+    {
+        public List<ShiftCreationData> Shifts { get; set; } = new List<ShiftCreationData>();
+    }
+
+    public class ShiftCreationData
+    {
+        public int MaNhanVien { get; set; }
+        public string ThoiGianNhanCa { get; set; } = string.Empty;
+        public decimal TienDauCa { get; set; }
+        public string? GhiChuBanGiao { get; set; }
+    }
+
+    public class UpdateDayShiftsRequest
+    {
+        public List<ShiftUpdateData> Updates { get; set; } = new List<ShiftUpdateData>();
+    }
+
+    public class ShiftUpdateData
+    {
+        public int MaCa { get; set; }
+        public int? MaNhanVien { get; set; }
+        public decimal TienDauCa { get; set; }
+        public string? GhiChuBanGiao { get; set; }
     }
 }
 

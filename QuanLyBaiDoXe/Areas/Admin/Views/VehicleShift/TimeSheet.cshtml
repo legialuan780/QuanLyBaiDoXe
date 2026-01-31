@@ -198,6 +198,9 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
+                                    <button class="btn-icon btn-success" onclick="openWorkControl(@emp.MaNhanVien, '@emp.HoTen')" title="Kiểm soát giờ làm">
+                                        <i class="fas fa-user-clock"></i>
+                                    </button>
                                     <button class="btn-icon" onclick="viewEmployeeDetail(@emp.MaNhanVien)" title="Xem chi tiết">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -235,11 +238,218 @@
     </div>
 </div>
 
+<!-- Work Control Modal -->
+<div class="modal fade" id="workControlModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-clock"></i>
+                    Kiểm soát giờ làm - <span id="employeeName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="currentEmployeeId">
+                
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-3" id="workControlTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="shifts-tab" data-bs-toggle="tab" data-bs-target="#shifts" type="button">
+                            <i class="fas fa-list"></i> Danh sách ca
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="adjustment-tab" data-bs-toggle="tab" data-bs-target="#adjustment" type="button">
+                            <i class="fas fa-edit"></i> Điều chỉnh giờ
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="overtime-tab" data-bs-toggle="tab" data-bs-target="#overtime" type="button">
+                            <i class="fas fa-clock"></i> Bù giờ
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="break-tab" data-bs-toggle="tab" data-bs-target="#break" type="button">
+                            <i class="fas fa-pause-circle"></i> Ngắt ca
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="workControlTabContent">
+                    <!-- Tab 1: Danh sách ca -->
+                    <div class="tab-pane fade show active" id="shifts" role="tabpanel">
+                        <div class="work-control-section">
+                            <h6><i class="fas fa-calendar-check"></i> Các ca làm việc trong tháng</h6>
+                            <div class="table-responsive" id="shiftsTableContainer">
+                                <p class="text-center text-muted">Đang tải...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Điều chỉnh giờ -->
+                    <div class="tab-pane fade" id="adjustment" role="tabpanel">
+                        <div class="work-control-section">
+                            <h6><i class="fas fa-edit"></i> Điều chỉnh giờ làm việc</h6>
+                            <form id="adjustmentForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Chọn ca cần điều chỉnh</label>
+                                        <select class="form-select" id="adjustShiftSelect" required>
+                                            <option value="">-- Chọn ca --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Giờ vào mới</label>
+                                        <input type="time" class="form-control" id="adjustCheckIn">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Giờ ra mới</label>
+                                        <input type="time" class="form-control" id="adjustCheckOut">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Lý do điều chỉnh</label>
+                                    <textarea class="form-control" id="adjustReason" rows="2" required></textarea>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    Việc điều chỉnh giờ sẽ được ghi nhận vào lịch sử và cần phê duyệt từ quản lý.
+                                </div>
+                                <button type="button" class="btn-primary-admin" onclick="submitAdjustment()">
+                                    <i class="fas fa-save"></i> Lưu điều chỉnh
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Bù giờ -->
+                    <div class="tab-pane fade" id="overtime" role="tabpanel">
+                        <div class="work-control-section">
+                            <h6><i class="fas fa-clock"></i> Quản lý giờ bù</h6>
+                            <form id="overtimeForm">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Ngày bù giờ</label>
+                                        <input type="date" class="form-control" id="overtimeDate" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Giờ bắt đầu</label>
+                                        <input type="time" class="form-control" id="overtimeStart" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Giờ kết thúc</label>
+                                        <input type="time" class="form-control" id="overtimeEnd" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Loại giờ bù</label>
+                                    <select class="form-select" id="overtimeType" required>
+                                        <option value="1">Tăng ca thường (x1.5)</option>
+                                        <option value="2">Tăng ca cuối tuần (x2.0)</option>
+                                        <option value="3">Tăng ca lễ (x3.0)</option>
+                                        <option value="4">Giờ bù (không hưởng lương)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Ghi chú</label>
+                                    <textarea class="form-control" id="overtimeNote" rows="2"></textarea>
+                                </div>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    Tổng giờ bù sẽ được tính vào bảng lương cuối tháng.
+                                </div>
+                                <button type="button" class="btn-primary-admin" onclick="submitOvertime()">
+                                    <i class="fas fa-plus"></i> Thêm giờ bù
+                                </button>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <h6><i class="fas fa-history"></i> Lịch sử giờ bù</h6>
+                            <div id="overtimeHistoryContainer">
+                                <p class="text-center text-muted">Chưa có giờ bù nào</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Ngắt ca -->
+                    <div class="tab-pane fade" id="break" role="tabpanel">
+                        <div class="work-control-section">
+                            <h6><i class="fas fa-pause-circle"></i> Ngắt ca làm việc</h6>
+                            <form id="breakForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Chọn ca cần ngắt</label>
+                                        <select class="form-select" id="breakShiftSelect" required>
+                                            <option value="">-- Chọn ca --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Loại ngắt ca</label>
+                                        <select class="form-select" id="breakType" required>
+                                            <option value="1">Nghỉ phép có lương</option>
+                                            <option value="2">Nghỉ không lương</option>
+                                            <option value="3">Nghỉ ốm</option>
+                                            <option value="4">Nghỉ việc riêng</option>
+                                            <option value="5">Khẩn cấp</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Lý do ngắt ca <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="breakReason" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="breakNeedReplacement">
+                                        <label class="form-check-label" for="breakNeedReplacement">
+                                            Cần tìm người thay thế
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="replacementSection" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nhân viên thay thế</label>
+                                        <select class="form-select" id="replacementEmployee">
+                                            <option value="">-- Chọn nhân viên --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Ca ngắt sẽ không được tính vào công và cần phê duyệt từ quản lý.
+                                </div>
+                                <button type="button" class="btn-danger-admin" onclick="submitBreak()">
+                                    <i class="fas fa-pause"></i> Xác nhận ngắt ca
+                                </button>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <h6><i class="fas fa-list"></i> Lịch sử ngắt ca</h6>
+                            <div id="breakHistoryContainer">
+                                <p class="text-center text-muted">Chưa có ca ngắt nào</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        let currentEmployeeShifts = [];
+
         function previousMonth() {
             let month = parseInt($('#selectMonth').val()) - 1;
             let year = parseInt($('#selectYear').val());
@@ -282,8 +492,336 @@
             });
         }
 
+        // Mở modal kiểm soát giờ làm
+        function openWorkControl(employeeId, employeeName) {
+            $('#currentEmployeeId').val(employeeId);
+            $('#employeeName').text(employeeName);
+            $('#workControlModal').modal('show');
+            
+            // Load dữ liệu ca làm việc
+            loadEmployeeShifts(employeeId);
+            
+            // Load lịch sử giờ bù và ngắt ca
+            loadOvertimeHistory(employeeId);
+            loadBreakHistory(employeeId);
+        }
+
+        // Load danh sách ca làm việc của nhân viên
+        function loadEmployeeShifts(employeeId) {
+            const month = $('#selectMonth').val();
+            const year = $('#selectYear').val();
+            
+            $('#shiftsTableContainer').html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
+            
+            $.get('@Url.Action("GetEmployeeShifts", "VehicleShift", new { area = "Admin" })', 
+                { employeeId: employeeId, month: month, year: year },
+                function(data) {
+                    currentEmployeeShifts = data;
+                    displayShiftsTable(data);
+                    populateShiftSelects(data);
+                }
+            ).fail(function() {
+                $('#shiftsTableContainer').html('<p class="text-center text-danger">Lỗi khi tải dữ liệu</p>');
+            });
+        }
+
+        // Hiển thị bảng ca làm việc
+        function displayShiftsTable(shifts) {
+            if (shifts.length === 0) {
+                $('#shiftsTableContainer').html('<p class="text-center text-muted">Chưa có ca làm việc nào</p>');
+                return;
+            }
+
+            let html = `
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllShifts" onchange="toggleAllShifts()"></th>
+                            <th>Mã ca</th>
+                            <th>Ngày</th>
+                            <th>Giờ vào</th>
+                            <th>Giờ ra</th>
+                            <th>Tổng giờ</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            shifts.forEach(shift => {
+                const checkIn = shift.thoiGianNhanCa ? new Date(shift.thoiGianNhanCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '-';
+                const checkOut = shift.thoiGianGiaoCa ? new Date(shift.thoiGianGiaoCa).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : '-';
+                const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
+                const hours = shift.soGioLam ? shift.soGioLam.toFixed(1) : '0';
+                const statusClass = shift.trangThaiCa === 0 ? 'success' : 'info';
+                const statusText = shift.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt';
+
+                html += `
+                    <tr>
+                        <td><input type="checkbox" class="shift-checkbox" value="${shift.maCa}"></td>
+                        <td><strong>#${shift.maCa}</strong></td>
+                        <td>${date}</td>
+                        <td>${checkIn}</td>
+                        <td>${checkOut}</td>
+                        <td><strong>${hours}h</strong></td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="quickAdjust(${shift.maCa})" title="Điều chỉnh">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            $('#shiftsTableContainer').html(html);
+        }
+
+        // Populate select boxes với danh sách ca
+        function populateShiftSelects(shifts) {
+            let options = '<option value="">-- Chọn ca --</option>';
+            shifts.forEach(shift => {
+                const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
+                options += `<option value="${shift.maCa}">Ca #${shift.maCa} - ${date}</option>`;
+            });
+            
+            $('#adjustShiftSelect, #breakShiftSelect').html(options);
+        }
+
+        // Toggle all checkboxes
+        function toggleAllShifts() {
+            const checked = $('#selectAllShifts').prop('checked');
+            $('.shift-checkbox').prop('checked', checked);
+        }
+
+        // Điều chỉnh nhanh
+        function quickAdjust(shiftId) {
+            $('#adjustment-tab').tab('show');
+            $('#adjustShiftSelect').val(shiftId);
+        }
+
+        // Submit điều chỉnh giờ
+        function submitAdjustment() {
+            const formData = {
+                ShiftId: $('#adjustShiftSelect').val(),
+                CheckIn: $('#adjustCheckIn').val(),
+                CheckOut: $('#adjustCheckOut').val(),
+                Reason: $('#adjustReason').val()
+            };
+
+            if (!formData.ShiftId) {
+                alert('Vui lòng chọn ca cần điều chỉnh');
+                return;
+            }
+
+            if (!formData.Reason) {
+                alert('Vui lòng nhập lý do điều chỉnh');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("AdjustShiftTime", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        loadEmployeeShifts($('#currentEmployeeId').val());
+                        $('#adjustmentForm')[0].reset();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi điều chỉnh giờ');
+                }
+            });
+        }
+
+        // Submit bù giờ
+        function submitOvertime() {
+            const formData = {
+                EmployeeId: parseInt($('#currentEmployeeId').val()),
+                Date: $('#overtimeDate').val(),
+                StartTime: $('#overtimeStart').val(),
+                EndTime: $('#overtimeEnd').val(),
+                Type: parseInt($('#overtimeType').val()),
+                Note: $('#overtimeNote').val()
+            };
+
+            if (!formData.Date || !formData.StartTime || !formData.EndTime) {
+                alert('Vui lòng điền đầy đủ thông tin');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("AddOvertime", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        $('#overtimeForm')[0].reset();
+                        loadOvertimeHistory($('#currentEmployeeId').val());
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi thêm giờ bù');
+                }
+            });
+        }
+
+        // Submit ngắt ca
+        function submitBreak() {
+            const formData = {
+                ShiftId: parseInt($('#breakShiftSelect').val()),
+                Type: parseInt($('#breakType').val()),
+                Reason: $('#breakReason').val(),
+                NeedReplacement: $('#breakNeedReplacement').prop('checked'),
+                ReplacementEmployeeId: $('#replacementEmployee').val() ? parseInt($('#replacementEmployee').val()) : null
+            };
+
+            if (!formData.ShiftId) {
+                alert('Vui lòng chọn ca cần ngắt');
+                return;
+            }
+
+            if (!formData.Reason) {
+                alert('Vui lòng nhập lý do ngắt ca');
+                return;
+            }
+
+            if (!confirm('Bạn có chắc chắn muốn ngắt ca này?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("BreakShift", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        loadEmployeeShifts($('#currentEmployeeId').val());
+                        $('#breakForm')[0].reset();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi ngắt ca');
+                }
+            });
+        }
+
+        // Toggle replacement section
+        $('#breakNeedReplacement').change(function() {
+            if ($(this).prop('checked')) {
+                $('#replacementSection').show();
+                loadAvailableEmployees();
+            } else {
+                $('#replacementSection').hide();
+            }
+        });
+
+        // Load nhân viên có thể thay thế
+        function loadAvailableEmployees() {
+            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', function(data) {
+                let options = '<option value="">-- Chọn nhân viên --</option>';
+                data.forEach(emp => {
+                    options += `<option value="${emp.maNhanVien}">${emp.hoTen} (${emp.chucVu})</option>`;
+                });
+                $('#replacementEmployee').html(options);
+            });
+        }
+
+        // Load lịch sử giờ bù
+        function loadOvertimeHistory(employeeId) {
+            const month = $('#selectMonth').val();
+            const year = $('#selectYear').val();
+
+            $.get('@Url.Action("GetEmployeeShifts", "VehicleShift", new { area = "Admin" })', 
+                { employeeId: employeeId, month: month, year: year },
+                function(data) {
+                    // Lọc các ca bù giờ (có ghi chú chứa "Bù giờ")
+                    const overtimeShifts = data.filter(shift => 
+                        shift.ghiChuBanGiao && shift.ghiChuBanGiao.includes('Bù giờ')
+                    );
+
+                    if (overtimeShifts.length === 0) {
+                        $('#overtimeHistoryContainer').html('<p class="text-center text-muted">Chưa có giờ bù nào</p>');
+                        return;
+                    }
+
+                    let html = '<div class="list-group">';
+                    overtimeShifts.forEach(shift => {
+                        const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
+                        const hours = shift.soGioLam ? shift.soGioLam.toFixed(1) : '0';
+                        html += `
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1"><i class="fas fa-clock text-primary"></i> ${date}</h6>
+                                        <p class="mb-0 text-muted small">${shift.ghiChuBanGiao || ''}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong class="text-success">${hours}h</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    $('#overtimeHistoryContainer').html(html);
+                }
+            );
+        }
+
+        // Load lịch sử ngắt ca
+        function loadBreakHistory(employeeId) {
+            const month = $('#selectMonth').val();
+            const year = $('#selectYear').val();
+
+            $.get('@Url.Action("GetEmployeeShifts", "VehicleShift", new { area = "Admin" })', 
+                { employeeId: employeeId, month: month, year: year },
+                function(data) {
+                    // Lọc các ca bị ngắt (có ghi chú chứa "Ngắt ca")
+                    const breakShifts = data.filter(shift => 
+                        shift.ghiChuBanGiao && shift.ghiChuBanGiao.includes('Ngắt ca')
+                    );
+
+                    if (breakShifts.length === 0) {
+                        $('#breakHistoryContainer').html('<p class="text-center text-muted">Chưa có ca ngắt nào</p>');
+                        return;
+                    }
+
+                    let html = '<div class="list-group">';
+                    breakShifts.forEach(shift => {
+                        const date = new Date(shift.thoiGianNhanCa).toLocaleDateString('vi-VN');
+                        html += `
+                            <div class="list-group-item">
+                                <div>
+                                    <h6 class="mb-1"><i class="fas fa-pause-circle text-danger"></i> Ca #${shift.maCa} - ${date}</h6>
+                                    <p class="mb-0 text-muted small">${shift.ghiChuBanGiao || ''}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    $('#breakHistoryContainer').html(html);
+                }
+            );
+        }
+
         function viewEmployeeDetail(employeeId) {
-            console.log('View employee detail:', employeeId);
+            openWorkControl(employeeId, 'Nhân viên #' + employeeId);
         }
 
         function exportEmployeeTimeSheet(employeeId) {
@@ -302,29 +840,31 @@
             window.print();
         }
 
-        // Chart
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => $"'{e.HoTen}'")))],
-                datasets: [{
-                    label: 'Doanh thu (triệu đồng)',
-                    data: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => (e.TongDoanhThu / 1000000).ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
-                    backgroundColor: 'rgba(33, 166, 145, 0.6)',
-                    borderColor: 'rgba(33, 166, 145, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
+        // Performance Chart
+        $(document).ready(function() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => $"'{e.HoTen}'")))],
+                    datasets: [{
+                        label: 'Doanh thu (triệu đồng)',
+                        data: [@Html.Raw(string.Join(",", Model.Take(10).Select(e => (e.TongDoanhThu / 1000000).ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                        backgroundColor: 'rgba(33, 166, 145, 0.6)',
+                        borderColor: 'rgba(33, 166, 145, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
+            });
         });
     </script>
 }

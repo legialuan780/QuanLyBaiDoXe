@@ -15,7 +15,11 @@ public partial class CaLamViec
 
     public decimal? TienDauCa { get; set; }
 
-    public decimal? TongTienThu { get; set; }
+    public decimal? TongTienHeThong { get; set; }
+
+    public decimal? TienMatBanGiao { get; set; }
+
+    public string? GhiChuBanGiao { get; set; }
 
     public int? TrangThaiCa { get; set; }
 

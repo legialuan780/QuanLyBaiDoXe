@@ -2,8 +2,6 @@
 
 @{
     ViewData["Title"] = "Lịch làm việc";
-    var startDate = (DateTime)ViewBag.StartDate;
-    var endDate = (DateTime)ViewBag.EndDate;
     var selectedDate = (DateTime)ViewBag.SelectedDate;
 }
 
@@ -37,25 +35,31 @@
 <!-- Calendar Navigation -->
 <div class="admin-card">
     <div class="calendar-navigation">
-        <button class="btn-secondary-admin" onclick="previousWeek()">
+        <button class="btn-secondary-admin" onclick="previousDay()">
             <i class="fas fa-chevron-left"></i>
-            Tuần trước
+            Hôm qua
         </button>
         <div class="calendar-title">
-            <h4>Tuần @startDate.ToString("dd/MM") - @endDate.ToString("dd/MM/yyyy")</h4>
+            <h4>
+                <i class="fas fa-calendar-day"></i>
+                @selectedDate.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+            </h4>
             <input type="date" class="form-control" id="selectDate" value="@selectedDate.ToString("yyyy-MM-dd")" onchange="goToDate()">
         </div>
-        <button class="btn-secondary-admin" onclick="nextWeek()">
-            Tuần sau
+        <button class="btn-secondary-admin" onclick="nextDay()">
+            Ngày mai
             <i class="fas fa-chevron-right"></i>
         </button>
     </div>
 </div>
 
-<!-- Schedule Table -->
+<!-- Timeline Schedule -->
 <div class="admin-card">
     <div class="admin-card-header">
-        <h3 class="admin-card-title">Thời khóa biểu tuần</h3>
+        <h3 class="admin-card-title">
+            <i class="fas fa-clock"></i>
+            Lịch làm việc theo giờ
+        </h3>
         <div class="admin-card-actions">
             <button class="btn-secondary-admin" onclick="exportSchedule()">
                 <i class="fas fa-file-excel"></i>
@@ -68,86 +72,184 @@
         </div>
     </div>
 
-    <div class="schedule-grid">
-        <table class="table schedule-table">
-            <thead>
-                <tr>
-                    <th class="employee-col">Nhân viên</th>
-                    @for (int i = 0; i < 7; i++)
-                    {
-                        var day = startDate.AddDays(i);
-                        var isToday = day.Date == DateTime.Today;
-                        <th class="day-col @(isToday ? "today" : "")">
-                            <div class="day-header">
-                                <span class="day-name">@day.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</span>
-                                <span class="day-date">@day.ToString("dd/MM")</span>
-                            </div>
-                        </th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    var employees = Model.GroupBy(s => new { s.MaNhanVien, s.TenNhanVien }).ToList();
+    <div class="timeline-container">
+        <!-- Timeline Header (Hours) -->
+        <div class="timeline-header">
+            <div class="timeline-employee-header">Nhân viên</div>
+            <div class="timeline-hours-header">
+                @for (int hour = 0; hour < 24; hour++)
+                {
+                    <div class="timeline-hour-cell" style="left: calc(@(hour * 100.0 / 24)%)">
+                        <span>@hour:00</span>
+                    </div>
                 }
+            </div>
+        </div>
+
+        <!-- Timeline Body -->
+        <div class="timeline-body">
+            @{
+                var employees = Model.GroupBy(s => new { s.MaNhanVien, s.TenNhanVien })
+                    .OrderBy(g => g.Key.TenNhanVien)
+                    .ToList();
+                
+                var currentDateSchedule = DateOnly.FromDateTime(selectedDate);
+            }
+
+            @if (employees.Any())
+            {
                 @foreach (var emp in employees)
                 {
-                    <tr>
-                        <td class="employee-name">
-                            <div class="d-flex align-items-center">
+                    var empSchedules = emp.Where(s => s.NgayLamViec == currentDateSchedule).ToList();
+                    
+                    <div class="timeline-row">
+                        <div class="timeline-employee-cell">
+                            <div class="employee-info">
                                 <div class="employee-avatar">@emp.Key.TenNhanVien.Substring(0, 1)</div>
-                                <span>@emp.Key.TenNhanVien</span>
+                                <div class="employee-details">
+                                    <strong>@emp.Key.TenNhanVien</strong>
+                                    <small>NV@emp.Key.MaNhanVien.ToString("D4")</small>
+                                </div>
                             </div>
-                        </td>
-                        @for (int i = 0; i < 7; i++)
-                        {
-                            var day = DateOnly.FromDateTime(startDate.AddDays(i));
-                            var schedules = emp.Where(s => s.NgayLamViec == day).ToList();
-                            var isToday = startDate.AddDays(i).Date == DateTime.Today;
+                        </div>
+                        
+                        <div class="timeline-schedule-cell">
+                            <!-- Grid lines for hours -->
+                            @for (int hour = 0; hour < 24; hour++)
+                            {
+                                <div class="timeline-hour-line" style="left: calc(@(hour * 100.0 / 24)%)"></div>
+                            }
                             
-                            <td class="shift-cell @(isToday ? "today" : "")">
-                                @if (schedules.Any())
+                            
+                            <!-- Shift bars -->
+                            @foreach (var schedule in empSchedules)
+                            {
+                                var startHour = 0.0;
+                                var duration = 0.0;
+                                var shiftClass = "";
+                                var shiftIcon = "";
+                                
+                                switch (schedule.CaLamViec)
                                 {
-                                    @foreach (var schedule in schedules)
-                                    {
-                                        <div class="shift-badge shift-@schedule.CaLamViec" 
-                                             onclick="viewScheduleDetail(@schedule.MaLich)"
-                                             title="@schedule.TenCa">
-                                            <i class="fas fa-clock"></i>
-                                            <span>Ca @schedule.CaLamViec</span>
-                                        </div>
-                                    }
+                                    case 1: // Ca sáng 6h-14h
+                                        startHour = 6;
+                                        duration = 8;
+                                        shiftClass = "shift-morning";
+                                        shiftIcon = "fa-sun";
+                                        break;
+                                    case 2: // Ca chiều 14h-22h
+                                        startHour = 14;
+                                        duration = 8;
+                                        shiftClass = "shift-afternoon";
+                                        shiftIcon = "fa-cloud-sun";
+                                        break;
+                                    case 3: // Ca đêm 22h-6h (next day)
+                                        startHour = 22;
+                                        duration = 8;
+                                        shiftClass = "shift-night";
+                                        shiftIcon = "fa-moon";
+                                        break;
                                 }
-                                else
-                                {
-                                    <button class="btn-add-shift" onclick="addShiftToCell(@emp.Key.MaNhanVien, '@day.ToString("yyyy-MM-dd")')">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                }
-                            </td>
-                        }
-                    </tr>
+                                
+                                var leftPosition = (startHour / 24.0) * 100;
+                                var width = (duration / 24.0) * 100;
+                                
+                                <div class="shift-bar @shiftClass" 
+                                     style="left: @leftPosition%; width: @width%"
+                                     onclick="viewScheduleDetail(@schedule.MaLich)"
+                                     title="@schedule.TenCa">
+                                    <div class="shift-bar-content">
+                                        <i class="fas @shiftIcon"></i>
+                                        <span class="shift-bar-text">@emp.Key.TenNhanVien - Ca @schedule.CaLamViec</span>
+                                        @if (!string.IsNullOrEmpty(schedule.GhiChu))
+                                        {
+                                            <i class="fas fa-sticky-note shift-note-icon" title="@schedule.GhiChu"></i>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            
+                            
+                            @if (!empSchedules.Any())
+                            {
+                                <button class="btn-add-shift-timeline" onclick="addShiftQuick(@emp.Key.MaNhanVien, '@currentDateSchedule.ToString("yyyy-MM-dd")')">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Thêm ca</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
                 }
-                @if (!employees.Any())
-                {
-                    <tr>
-                        <td colspan="8" class="text-center">
-                            <div class="empty-state">
-                                <i class="fas fa-calendar-times"></i>
-                                <p>Chưa có lịch làm việc nào trong tuần này</p>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            }
+            else
+            {
+                <div class="empty-state-timeline">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>Chưa có lịch làm việc nào trong ngày này</p>
+                    <button class="btn-primary-admin" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                        <i class="fas fa-plus"></i>
+                        Thêm lịch làm việc
+                    </button>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
-<!-- Legend -->
+<!-- Statistics Summary -->
 <div class="admin-card">
-    <div class="schedule-legend">
-        <h5>Chú thích:</h5>
+    <div class="schedule-stats">
+        <h5>
+            <i class="fas fa-chart-bar"></i>
+            Thống kê ngày @selectedDate.ToString("dd/MM/yyyy")
+        </h5>
+        <div class="stats-grid">
+            @{
+                var currentDateOnly = DateOnly.FromDateTime(selectedDate);
+                var todaySchedules = Model.Where(s => s.NgayLamViec == currentDateOnly).ToList();
+                var shift1Count = todaySchedules.Count(s => s.CaLamViec == 1);
+                var shift2Count = todaySchedules.Count(s => s.CaLamViec == 2);
+                var shift3Count = todaySchedules.Count(s => s.CaLamViec == 3);
+            }
+            <div class="stat-item">
+                <div class="stat-icon shift-morning">
+                    <i class="fas fa-sun"></i>
+                </div>
+                <div class="stat-info">
+                    <strong>@shift1Count</strong>
+                    <span>Ca sáng (6h-14h)</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon shift-afternoon">
+                    <i class="fas fa-cloud-sun"></i>
+                </div>
+                <div class="stat-info">
+                    <strong>@shift2Count</strong>
+                    <span>Ca chiều (14h-22h)</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon shift-night">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="stat-info">
+                    <strong>@shift3Count</strong>
+                    <span>Ca đêm (22h-6h)</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon stat-total">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <strong>@todaySchedules.Count</strong>
+                    <span>Tổng ca làm việc</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         <div class="legend-items">
             <div class="legend-item">
                 <span class="shift-badge shift-1"><i class="fas fa-sun"></i> Ca 1</span>
@@ -165,19 +267,110 @@
     </div>
 </div>
 
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-plus"></i>
+                    Thêm lịch làm việc
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addScheduleForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nhân viên <span class="text-danger">*</span></label>
+                        <select class="form-select" id="scheduleEmployeeSelect" name="MaNhanVien" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày làm việc <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="scheduleDate" name="NgayLamViec" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ca làm việc <span class="text-danger">*</span></label>
+                        <select class="form-select" name="CaLamViec" required>
+                            <option value="">-- Chọn ca --</option>
+                            <option value="1">Ca 1 - Ca sáng (6h-14h)</option>
+                            <option value="2">Ca 2 - Ca chiều (14h-22h)</option>
+                            <option value="3">Ca 3 - Ca đêm (22h-6h)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" name="GhiChu" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn-primary-admin" onclick="saveSchedule()">
+                    <i class="fas fa-check"></i>
+                    Thêm lịch
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Detail Modal -->
+<div class="modal fade" id="scheduleDetailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    Chi tiết lịch làm việc
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="scheduleDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-danger-admin" onclick="deleteCurrentSchedule()">
+                    <i class="fas fa-trash"></i>
+                    Xóa
+                </button>
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
     <script>
-        function previousWeek() {
+        let currentScheduleId = null;
+
+        // Load danh sách nhân viên khi mở modal
+        $('#addScheduleModal').on('show.bs.modal', function() {
+            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', function(data) {
+                const select = $('#scheduleEmployeeSelect');
+                select.empty();
+                select.append('<option value="">-- Chọn nhân viên --</option>');
+                data.forEach(emp => {
+                    select.append(`<option value="${emp.maNhanVien}">${emp.hoTen} (${emp.chucVu})</option>`);
+                });
+            });
+            
+            // Set ngày mặc định là ngày hiện tại
+            $('#scheduleDate').val('@selectedDate.ToString("yyyy-MM-dd")');
+        });
+
+        function previousDay() {
             const currentDate = new Date('@selectedDate.ToString("yyyy-MM-dd")');
-            currentDate.setDate(currentDate.getDate() - 7);
+            currentDate.setDate(currentDate.getDate() - 1);
             window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?date=' + currentDate.toISOString().split('T')[0];
         }
 
-        function nextWeek() {
+        function nextDay() {
             const currentDate = new Date('@selectedDate.ToString("yyyy-MM-dd")');
-            currentDate.setDate(currentDate.getDate() + 7);
+            currentDate.setDate(currentDate.getDate() + 1);
             window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?date=' + currentDate.toISOString().split('T')[0];
         }
 
@@ -186,14 +379,81 @@
             window.location.href = '@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })?date=' + date;
         }
 
-        function viewScheduleDetail(scheduleId) {
-            console.log('View schedule:', scheduleId);
-            // Implement modal to view/edit schedule detail
+        function addShiftQuick(employeeId, date) {
+            $('#scheduleEmployeeSelect').val(employeeId);
+            $('#scheduleDate').val(date);
+            $('#addScheduleModal').modal('show');
         }
 
-        function addShiftToCell(employeeId, date) {
-            console.log('Add shift for employee:', employeeId, 'on date:', date);
-            // Implement modal to add shift
+        function saveSchedule() {
+            const form = $('#addScheduleForm');
+            
+            // Validate form
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+
+            const formData = {
+                MaNhanVien: parseInt($('select[name="MaNhanVien"]').val()),
+                NgayLamViec: $('input[name="NgayLamViec"]').val(),
+                CaLamViec: parseInt($('select[name="CaLamViec"]').val()),
+                GhiChu: $('textarea[name="GhiChu"]').val()
+            };
+
+            $.ajax({
+                url: '@Url.Action("AddSchedule", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi thêm lịch');
+                }
+            });
+        }
+
+        function viewScheduleDetail(scheduleId) {
+            currentScheduleId = scheduleId;
+            $('#scheduleDetailModal').modal('show');
+            
+            // Load schedule details
+            $('#scheduleDetailContent').html('<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
+            
+            // You can implement API to get schedule detail here
+            setTimeout(() => {
+                $('#scheduleDetailContent').html(`
+                    <div class="alert alert-info">
+                        <strong>Mã lịch:</strong> #${scheduleId}<br>
+                        <p class="mt-2">Chi tiết lịch làm việc sẽ được hiển thị ở đây</p>
+                    </div>
+                `);
+            }, 500);
+        }
+
+        function deleteCurrentSchedule() {
+            if (!currentScheduleId) return;
+            
+            if (!confirm('Bạn có chắc chắn muốn xóa lịch này?')) return;
+            
+            $.post('@Url.Action("DeleteSchedule", "VehicleShift", new { area = "Admin" })', 
+                { id: currentScheduleId }, 
+                function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                }
+            );
         }
 
         function exportSchedule() {

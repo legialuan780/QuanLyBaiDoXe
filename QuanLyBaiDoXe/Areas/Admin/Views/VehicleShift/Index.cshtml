@@ -24,7 +24,7 @@
         </button>
         <button class="btn-secondary-admin" onclick="location.href='@Url.Action("TimeSheet", "VehicleShift", new { area = "Admin" })'">
             <i class="fas fa-clock"></i>
-            Bảng chấm công
+            Lịch trực
         </button>
         <button class="btn-primary-admin" data-bs-toggle="modal" data-bs-target="#addShiftModal">
             <i class="fas fa-plus"></i>
@@ -69,6 +69,139 @@
         <div class="stat-card-info">
             <h3 id="totalRevenue">@Model.Sum(s => s.TongTienHeThong).ToString("N0") đ</h3>
             <p>Tổng doanh thu hệ thống</p>
+        </div>
+    </div>
+</div>
+
+<!-- Counter Status Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-cash-register"></i>
+                    Trạng thái quầy thu phí
+                </h3>
+                <div class="admin-card-actions">
+                    <button class="btn-primary-admin btn-sm" onclick="location.href='@Url.Action("EmployeeList", "VehicleShift", new { area = "Admin" })'">
+                        <i class="fas fa-user-plus"></i>
+                        Phân công nhân viên
+                    </button>
+                    <button class="btn-secondary-admin btn-sm" onclick="location.href='@Url.Action("Index", "VehicleVision", new { area = "Admin" })'">
+                        <i class="fas fa-eye"></i>
+                        Xem giám sát
+                    </button>
+                </div>
+            </div>
+            <div class="counter-status-grid">
+                <!-- Quầy 1 -->
+                <div class="counter-status-card" id="counter-1-card">
+                    <div class="counter-status-header">
+                        <div class="counter-icon-large active" id="counter-1-icon">
+                            <i class="fas fa-cash-register"></i>
+                        </div>
+                        <div class="counter-badge">
+                            <span class="status-indicator online" id="counter-1-indicator"></span>
+                            <span class="status-text" id="counter-1-status-text">Đang hoạt động</span>
+                        </div>
+                    </div>
+                    <div class="counter-status-body">
+                        <h4 class="counter-name">Quầy 1</h4>
+                        <div class="counter-details">
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span id="counter-1-staff">NV: Chưa phân công</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span id="counter-1-revenue" class="revenue-amount">0 VNĐ</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-clock"></i>
+                                <span id="counter-1-time">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="counter-status-footer">
+                        <button class="btn btn-sm btn-outline-success w-100" id="btn-counter-1" onclick="assignToCounter(1)" title="Phân công nhân viên">
+                            <i class="fas fa-user-plus"></i>
+                            Phân công
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quầy 2 -->
+                <div class="counter-status-card" id="counter-2-card">
+                    <div class="counter-status-header">
+                        <div class="counter-icon-large active" id="counter-2-icon">
+                            <i class="fas fa-cash-register"></i>
+                        </div>
+                        <div class="counter-badge">
+                            <span class="status-indicator online" id="counter-2-indicator"></span>
+                            <span class="status-text" id="counter-2-status-text">Đang hoạt động</span>
+                        </div>
+                    </div>
+                    <div class="counter-status-body">
+                        <h4 class="counter-name">Quầy 2</h4>
+                        <div class="counter-details">
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span id="counter-2-staff">NV: Chưa phân công</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span id="counter-2-revenue" class="revenue-amount">0 VNĐ</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-clock"></i>
+                                <span id="counter-2-time">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="counter-status-footer">
+                        <button class="btn btn-sm btn-outline-success w-100" id="btn-counter-2" onclick="assignToCounter(2)" title="Phân công nhân viên">
+                            <i class="fas fa-user-plus"></i>
+                            Phân công
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quầy 3 -->
+                <div class="counter-status-card" id="counter-3-card">
+                    <div class="counter-status-header">
+                        <div class="counter-icon-large inactive" id="counter-3-icon">
+                            <i class="fas fa-cash-register"></i>
+                        </div>
+                        <div class="counter-badge">
+                            <span class="status-indicator offline" id="counter-3-indicator"></span>
+                            <span class="status-text" id="counter-3-status-text">Không hoạt động</span>
+                        </div>
+                    </div>
+                    <div class="counter-status-body">
+                        <h4 class="counter-name">Quầy 3</h4>
+                        <div class="counter-details">
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span id="counter-3-staff">NV: Chưa phân công</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span id="counter-3-revenue" class="revenue-amount">0 VNĐ</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-clock"></i>
+                                <span id="counter-3-time">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="counter-status-footer">
+                        <button class="btn btn-sm btn-outline-success w-100" id="btn-counter-3" onclick="assignToCounter(3)" title="Phân công nhân viên">
+                            <i class="fas fa-user-plus"></i>
+                            Phân công
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -308,9 +441,174 @@
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
-    <script>
-        // Load danh sách nhân viên khi mở modal
-        $('#addShiftModal').on('show.bs.modal', function() {
+<script>
+    // ===== COUNTER STATUS MANAGEMENT =====
+        
+    // Load trạng thái quầy khi trang load
+    $(document).ready(function() {
+        loadCountersStatus();
+        // Auto-refresh mỗi 10 giây
+        setInterval(loadCountersStatus, 10000);
+    });
+
+    // Load trạng thái tất cả các quầy
+    function loadCountersStatus() {
+        $.get('@Url.Action("GetAllCountersStatus", "VehicleShift", new { area = "Admin" })', function(response) {
+            if (response.success && response.data) {
+                response.data.forEach(counter => {
+                    updateCounterCard(counter);
+                });
+            }
+        }).fail(function(error) {
+            console.error('Error loading counters status:', error);
+        });
+    }
+
+    // Cập nhật card quầy
+    function updateCounterCard(counterData) {
+        const counterId = counterData.counter;
+        const card = $(`#counter-${counterId}-card`);
+        const icon = $(`#counter-${counterId}-icon`);
+        const indicator = $(`#counter-${counterId}-indicator`);
+        const statusText = $(`#counter-${counterId}-status-text`);
+        const staff = $(`#counter-${counterId}-staff`);
+        const revenue = $(`#counter-${counterId}-revenue`);
+        const time = $(`#counter-${counterId}-time`);
+        const button = $(`#btn-counter-${counterId}`);
+
+        if (counterData.isActive && counterData.employee) {
+            // Quầy đang hoạt động
+            card.removeClass('inactive').addClass('active');
+            icon.removeClass('inactive').addClass('active');
+            indicator.removeClass('offline').addClass('online');
+            statusText.text('Đang hoạt động');
+            staff.html(`<strong>${counterData.employee.hoTen}</strong> (${counterData.employee.maNhanVienFormatted})`);
+            revenue.text(counterData.revenueFormatted);
+                
+            // Tính giờ làm việc
+            if (counterData.shift && counterData.shift.thoiGianNhanCa) {
+                const hours = counterData.shift.soGioLam.toFixed(1);
+                time.text(`${hours} giờ`);
+            }
+                
+            // Cập nhật button
+            button.removeClass('btn-outline-success').addClass('btn-outline-danger');
+            button.html('<i class="fas fa-times-circle"></i> Đóng quầy');
+            button.attr('onclick', `closeCounterConfirm(${counterId})`);
+            button.attr('title', 'Đóng quầy và chốt ca');
+        } else {
+            // Quầy không hoạt động
+            card.removeClass('active').addClass('inactive');
+            icon.removeClass('active').addClass('inactive');
+            indicator.removeClass('online').addClass('offline');
+            statusText.text('Không hoạt động');
+            staff.text('NV: Chưa phân công');
+            revenue.text('0 VNĐ');
+            time.text('--:--');
+                
+            // Cập nhật button
+            button.removeClass('btn-outline-danger').addClass('btn-outline-success');
+            button.html('<i class="fas fa-user-plus"></i> Phân công');
+            button.attr('onclick', `assignToCounter(${counterId})`);
+            button.attr('title', 'Phân công nhân viên');
+        }
+    }
+
+    // Phân công nhân viên vào quầy
+    function assignToCounter(counterNumber) {
+        if (confirm(`Bạn muốn phân công nhân viên vào Quầy ${counterNumber}?`)) {
+            window.location.href = '@Url.Action("EmployeeList", "VehicleShift", new { area = "Admin" })';
+        }
+    }
+
+    // Đóng quầy với confirm
+    function closeCounterConfirm(counterNumber) {
+        if (confirm(`Bạn có chắc chắn muốn đóng Quầy ${counterNumber} và chốt ca?`)) {
+            closeCounterShift(counterNumber);
+        }
+    }
+
+    // Đóng quầy và chốt ca
+    function closeCounterShift(counterNumber) {
+        const tienMatBanGiao = prompt('Nhập số tiền mặt bàn giao (VNĐ):', '0');
+        if (tienMatBanGiao === null) return; // Cancelled
+
+        const ghiChu = prompt('Ghi chú (nếu có):', '');
+
+        // Show loading
+        showNotification('info', 'Đang đóng quầy...', 'Vui lòng đợi');
+
+        $.ajax({
+            url: '@Url.Action("CloseCounter", "VehicleShift", new { area = "Admin" })',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                Counter: counterNumber,
+                TienMatBanGiao: parseFloat(tienMatBanGiao) || 0,
+                GhiChu: ghiChu
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showNotification('success', `Đã đóng Quầy ${counterNumber}`, 
+                        `Doanh thu: ${(response.revenue / 1000000).toFixed(1)}M VNĐ`);
+                        
+                    // Reload counters và shifts
+                    loadCountersStatus();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('error', 'Lỗi', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                showNotification('error', 'Lỗi', 'Không thể đóng quầy: ' + error);
+            }
+        });
+    }
+
+    // Notification helper
+    function showNotification(type, title, message) {
+        const bgColors = {
+            'success': '#87DF2C',
+            'error': '#e74c3c',
+            'info': '#21A691',
+            'warning': '#ff9800'
+        };
+
+        const notification = $('<div>')
+            .css({
+                'position': 'fixed',
+                'top': '80px',
+                'right': '20px',
+                'background': 'white',
+                'padding': '15px 20px',
+                'border-radius': '8px',
+                'box-shadow': '0 4px 12px rgba(0,0,0,0.2)',
+                'z-index': '9999',
+                'min-width': '300px',
+                'border-left': `4px solid ${bgColors[type] || '#21A691'}`
+            })
+            .html(`
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}" 
+                       style="color: ${bgColors[type] || '#21A691'}; font-size: 20px; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                        <div style="font-size: 13px; color: #6c757d;">${message}</div>
+                    </div>
+                </div>
+            `);
+            
+        $('body').append(notification);
+            
+        setTimeout(() => {
+            notification.fadeOut(300, () => notification.remove());
+        }, 3000);
+    }
+
+    // ===== ORIGINAL SHIFT MANAGEMENT CODE =====
+
+    // Load danh sách nhân viên khi mở modal
+    $('#addShiftModal').on('show.bs.modal', function() {
             $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', function(data) {
                 const select = $('#employeeSelect');
                 select.empty();

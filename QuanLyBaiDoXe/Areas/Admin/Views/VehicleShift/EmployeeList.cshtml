@@ -20,9 +20,9 @@
         </div>
     </div>
     <div class="page-header-actions">
-        <button class="btn-secondary-admin" onclick="location.href='@Url.Action("Schedule", "VehicleShift", new { area = "Admin" })'">
-            <i class="fas fa-calendar-alt"></i>
-            Xem lịch làm việc
+        <button class="btn-secondary-admin" data-bs-toggle="modal" data-bs-target="#assignCounterModal">
+            <i class="fas fa-cash-register"></i>
+            Phân công quầy
         </button>
         <button class="btn-primary-admin" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
             <i class="fas fa-plus"></i>
@@ -161,9 +161,9 @@
                             <i class="fas fa-eye"></i>
                             Xem chi tiết
                         </button>
-                        <button class="btn-sm btn-primary-admin" onclick="viewEmployeeSchedule(@emp.MaNhanVien)">
-                            <i class="fas fa-calendar-alt"></i>
-                            Lịch làm việc
+                        <button class="btn-sm btn-primary-admin" onclick="viewPersonalSchedule(@emp.MaNhanVien, '@emp.HoTen')">
+                            <i class="fas fa-calendar-week"></i>
+                            Lịch cá nhân
                         </button>
                     </div>
                 </div>
@@ -197,6 +197,32 @@
                 <button type="button" class="btn-primary-admin" onclick="editEmployee()">
                     <i class="fas fa-edit"></i>
                     Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Personal Schedule Modal -->
+<div class="modal fade" id="personalScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-week"></i>
+                    Lịch cá nhân tuần này - <span id="personalScheduleEmployeeName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="personalScheduleContent">
+                    <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn-primary-admin" onclick="printPersonalSchedule()">
+                    <i class="fas fa-print"></i> In lịch
                 </button>
             </div>
         </div>
@@ -412,15 +438,1319 @@
     </div>
 </div>
 
+<!-- Assign Counter Modal -->
+<div class="modal fade" id="assignCounterModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cash-register"></i>
+                    Phân công nhân viên vào quầy tính tiền
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Hướng dẫn:</strong> Chọn nhân viên từ danh sách bên dưới và kéo thả hoặc nhấn vào quầy để phân công. Quầy sẽ tự động khởi động sau khi phân công.
+                </div>
+
+                <!-- Counters Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="mb-3"><i class="fas fa-desktop"></i> Quầy tính tiền</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="counter-box" id="counter-1" data-counter="1" onclick="selectCounter(1)">
+                            <div class="counter-header">
+                                <h5><i class="fas fa-cash-register"></i> Quầy 1</h5>
+                                <span class="counter-status badge badge-secondary" id="status-1">Chưa có nhân viên</span>
+                            </div>
+                            <div class="counter-body">
+                                <div class="employee-assigned" id="employee-1" style="display: none;">
+                                    <div class="employee-avatar-medium" id="avatar-1"></div>
+                                    <div class="employee-info-assigned">
+                                        <strong id="name-1"></strong>
+                                        <p id="code-1" class="text-muted mb-0"></p>
+                                    </div>
+                                    <button class="btn-remove" onclick="removeEmployeeFromCounter(1)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="empty-counter" id="empty-1">
+                                    <i class="fas fa-user-plus"></i>
+                                    <p>Chọn nhân viên để phân công</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="counter-box" id="counter-2" data-counter="2" onclick="selectCounter(2)">
+                            <div class="counter-header">
+                                <h5><i class="fas fa-cash-register"></i> Quầy 2</h5>
+                                <span class="counter-status badge badge-secondary" id="status-2">Chưa có nhân viên</span>
+                            </div>
+                            <div class="counter-body">
+                                <div class="employee-assigned" id="employee-2" style="display: none;">
+                                    <div class="employee-avatar-medium" id="avatar-2"></div>
+                                    <div class="employee-info-assigned">
+                                        <strong id="name-2"></strong>
+                                        <p id="code-2" class="text-muted mb-0"></p>
+                                    </div>
+                                    <button class="btn-remove" onclick="removeEmployeeFromCounter(2)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="empty-counter" id="empty-2">
+                                    <i class="fas fa-user-plus"></i>
+                                    <p>Chọn nhân viên để phân công</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="counter-box" id="counter-3" data-counter="3" onclick="selectCounter(3)">
+                            <div class="counter-header">
+                                <h5><i class="fas fa-cash-register"></i> Quầy 3</h5>
+                                <span class="counter-status badge badge-secondary" id="status-3">Chưa có nhân viên</span>
+                            </div>
+                            <div class="counter-body">
+                                <div class="employee-assigned" id="employee-3" style="display: none;">
+                                    <div class="employee-avatar-medium" id="avatar-3"></div>
+                                    <div class="employee-info-assigned">
+                                        <strong id="name-3"></strong>
+                                        <p id="code-3" class="text-muted mb-0"></p>
+                                    </div>
+                                    <button class="btn-remove" onclick="removeEmployeeFromCounter(3)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="empty-counter" id="empty-3">
+                                    <i class="fas fa-user-plus"></i>
+                                    <p>Chọn nhân viên để phân công</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Employees List -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="mb-3"><i class="fas fa-users"></i> Nhân viên đang làm việc</h6>
+                        <div class="input-group search-box mb-3">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="searchAvailableEmployee" placeholder="Tìm nhân viên..." onkeyup="searchAvailableEmployees()">
+                        </div>
+                        <div class="available-employees-list" id="availableEmployeesList">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                                <p class="mt-3">Đang tải danh sách nhân viên...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Đóng
+                </button>
+                <button type="button" class="btn-primary-admin" onclick="saveCounterAssignments()">
+                    <i class="fas fa-check"></i>
+                    Lưu và khởi động quầy
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .counter-box {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+        background: #f8f9fa;
+        transition: all 0.3s;
+        cursor: pointer;
+        min-height: 200px;
+    }
+
+    .counter-box:hover {
+        border-color: #3498db;
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    }
+
+    .counter-box.selected {
+        border-color: #3498db;
+        background: #e3f2fd;
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    }
+
+    .counter-box.has-employee {
+        border-color: #27ae60;
+        background: #e8f8f5;
+    }
+    
+    .counter-box.locked {
+        border-color: #e74c3c;
+        background: #f8d7da;
+        opacity: 0.85;
+        cursor: not-allowed;
+        position: relative;
+    }
+    
+    .counter-box.locked::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(231, 76, 60, 0.1),
+            rgba(231, 76, 60, 0.1) 10px,
+            transparent 10px,
+            transparent 20px
+        );
+        border-radius: 12px;
+        pointer-events: none;
+    }
+    
+    .counter-box.locked:hover {
+        border-color: #e74c3c;
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        transform: none;
+    }
+
+    .counter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .counter-header h5 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .counter-status {
+        font-size: 0.85rem;
+    }
+
+    .counter-body {
+        min-height: 100px;
+    }
+
+    .employee-assigned {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .employee-avatar-medium {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .employee-info-assigned {
+        flex: 1;
+    }
+
+    .employee-info-assigned strong {
+        display: block;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+
+    .employee-info-assigned p {
+        font-size: 0.85rem;
+    }
+
+    .btn-remove {
+        background: #e74c3c;
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .btn-remove:hover {
+        background: #c0392b;
+        transform: scale(1.1);
+    }
+
+    .empty-counter {
+        text-align: center;
+        padding: 30px;
+        color: #95a5a6;
+    }
+
+    .empty-counter i {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .empty-counter p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .available-employees-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        background: white;
+    }
+
+    .available-employee-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+
+    .available-employee-item:hover {
+        border-color: #3498db;
+        background: #f0f8ff;
+        transform: translateX(5px);
+    }
+
+    .available-employee-item.assigned {
+        opacity: 0.5;
+        pointer-events: none;
+        background: #f8f9fa;
+    }
+
+    .available-employee-item .employee-avatar-medium {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+
+    .available-employee-info {
+        flex: 1;
+    }
+
+    .available-employee-info strong {
+        display: block;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .available-employee-info .text-muted {
+        font-size: 0.85rem;
+    }
+
+    .available-employee-badge {
+        font-size: 0.8rem;
+    }
+</style>
+
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
 <script>
+    // Global variables
+    let selectedCounter = null;
+    let counterAssignments = {
+        1: null,
+        2: null,
+        3: null
+    };
+    let lockedCounters = {}; // Track which counters are locked (already assigned)
+    let availableEmployees = [];
+
     // Reset form khi mở modal thêm nhân viên
     $('#addEmployeeModal').on('show.bs.modal', function() {
         $('#addEmployeeForm')[0].reset();
         $('#addTrangThaiLamViec').prop('checked', true);
     });
+
+    // Load employees when counter modal is opened
+    $('#assignCounterModal').on('show.bs.modal', function() {
+        // Reset locked counters first
+        lockedCounters = {};
+        $('.counter-box').removeClass('locked').css('pointer-events', 'auto');
+        $('.counter-box .lock-icon').remove();
+        $('.counter-box .btn-remove').show();
+        
+        loadAvailableEmployees();
+        loadCurrentCounterAssignments();
+        
+        // Hiển thị thông báo nếu có quầy đang hoạt động
+        setTimeout(() => {
+            const lockedCount = Object.keys(lockedCounters).length;
+            if (lockedCount > 0) {
+                const lockedNumbers = Object.keys(lockedCounters).join(', ');
+                $('.alert-info').after(`
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-lock"></i>
+                        <strong>Lưu ý:</strong> Quầy ${lockedNumbers} đang hoạt động và đã bị khóa. 
+                        Bạn chỉ có thể phân công cho các quầy chưa hoạt động.
+                        <br><small>Để thay đổi phân công, vui lòng đóng quầy trước.</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `);
+            }
+        }, 500);
+    });
+
+    // Clean up when modal is closed
+    $('#assignCounterModal').on('hidden.bs.modal', function() {
+        // Xóa các alert động đã tạo
+        $('#assignCounterModal .alert-warning[role="alert"]').remove();
+        selectedCounter = null;
+        $('.counter-box').removeClass('selected');
+    });
+
+    function loadAvailableEmployees() {
+        // Load nhân viên KHÔNG đang trực ca
+        $.get('@Url.Action("GetAvailableEmployeesForCounter", "VehicleShift", new { area = "Admin" })', function(response) {
+            if (response.success) {
+                availableEmployees = response.data;
+                renderAvailableEmployees();
+            } else {
+                $('#availableEmployeesList').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        ${response.message}
+                    </div>
+                `);
+            }
+        }).fail(function() {
+            $('#availableEmployeesList').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Có lỗi xảy ra khi tải danh sách nhân viên
+                </div>
+            `);
+        });
+    }
+
+    function loadCurrentCounterAssignments() {
+        // Load trạng thái quầy hiện tại
+        $.get('@Url.Action("GetAllCountersStatus", "VehicleShift", new { area = "Admin" })', function(response) {
+            if (response.success && response.data) {
+                response.data.forEach(counterInfo => {
+                    if (counterInfo.isActive && counterInfo.employee) {
+                        // Map employee data để phù hợp với format hiện tại
+                        const employee = {
+                            maNhanVien: counterInfo.employee.maNhanVien,
+                            hoTen: counterInfo.employee.hoTen,
+                            chucVu: counterInfo.employee.chucVu
+                        };
+                        assignEmployeeToCounter(employee, counterInfo.counter, false);
+                        
+                        // Khóa quầy này - không cho phép phân công lại
+                        lockedCounters[counterInfo.counter] = true;
+                        lockCounterBox(counterInfo.counter);
+                    }
+                });
+            }
+        });
+    }
+
+    function renderAvailableEmployees() {
+        let html = '';
+        
+        if (availableEmployees.length === 0) {
+            html = `
+                <div class="text-center py-4">
+                    <i class="fas fa-users-slash" style="font-size: 3rem; color: #95a5a6;"></i>
+                    <p class="mt-3 text-muted">Không có nhân viên sẵn sàng</p>
+                    <p class="text-muted" style="font-size: 13px;">Tất cả nhân viên đều đang trực ca hoặc không có nhân viên đang làm việc</p>
+                </div>
+            `;
+        } else {
+            availableEmployees.forEach(emp => {
+                const isAssigned = Object.values(counterAssignments).some(a => a && a.maNhanVien === emp.maNhanVien);
+                const assignedClass = isAssigned ? 'assigned' : '';
+                
+                html += `
+                    <div class="available-employee-item ${assignedClass}" data-employee-id="${emp.maNhanVien}" onclick="selectEmployeeForCounter(${emp.maNhanVien})">
+                        <div class="employee-avatar-medium">
+                            ${emp.avatar || emp.hoTen.substring(0, 1)}
+                        </div>
+                        <div class="available-employee-info">
+                            <strong>${emp.hoTen}</strong>
+                            <p class="text-muted mb-0">${emp.maNhanVienFormatted} | ${emp.chucVu}</p>
+                        </div>
+                        ${isAssigned ? '<span class="badge badge-success available-employee-badge">Đã phân công</span>' : '<span class="badge badge-info available-employee-badge">Sẵn sàng</span>'}
+                    </div>
+                `;
+            });
+        }
+        
+        $('#availableEmployeesList').html(html);
+    }
+
+    function selectCounter(counterNumber) {
+        // Kiểm tra nếu quầy đã bị khóa
+        if (lockedCounters[counterNumber]) {
+            alert(`Quầy ${counterNumber} đã được phân công và đang hoạt động!\nKhông thể thay đổi phân công cho quầy đang hoạt động.\n\nVui lòng đóng quầy trước khi phân công lại.`);
+            return;
+        }
+        
+        selectedCounter = counterNumber;
+        
+        // Remove selected class from all counters
+        $('.counter-box').removeClass('selected');
+        
+        // Add selected class to clicked counter
+        $(`#counter-${counterNumber}`).addClass('selected');
+    }
+
+    function selectEmployeeForCounter(employeeId) {
+        if (!selectedCounter) {
+            alert('Vui lòng chọn quầy trước khi chọn nhân viên!');
+            return;
+        }
+
+        const employee = availableEmployees.find(e => e.maNhanVien === employeeId);
+        if (!employee) return;
+
+        // Check if employee is already assigned
+        const alreadyAssigned = Object.entries(counterAssignments).find(([counter, emp]) => emp && emp.maNhanVien === employeeId);
+        if (alreadyAssigned) {
+            alert(`Nhân viên này đã được phân công vào Quầy ${alreadyAssigned[0]}!`);
+            return;
+        }
+
+        assignEmployeeToCounter(employee, selectedCounter, true);
+    }
+
+    function assignEmployeeToCounter(employee, counterNumber, updateUI = true) {
+        counterAssignments[counterNumber] = employee;
+
+        // Update counter display
+        $(`#employee-${counterNumber}`).show();
+        $(`#empty-${counterNumber}`).hide();
+        $(`#avatar-${counterNumber}`).text(employee.hoTen.substring(0, 1));
+        $(`#name-${counterNumber}`).text(employee.hoTen);
+        $(`#code-${counterNumber}`).text(`Mã NV: NV${employee.maNhanVien.toString().padStart(4, '0')}`);
+        $(`#status-${counterNumber}`).removeClass('badge-secondary').addClass('badge-success').text('Đã phân công');
+        $(`#counter-${counterNumber}`).addClass('has-employee');
+
+        if (updateUI) {
+            renderAvailableEmployees();
+            selectedCounter = null;
+            $('.counter-box').removeClass('selected');
+        }
+    }
+    
+    function lockCounterBox(counterNumber) {
+        const counterBox = $(`#counter-${counterNumber}`);
+        counterBox.addClass('locked');
+        counterBox.css('pointer-events', 'none');
+        counterBox.attr('title', 'Quầy này đang hoạt động và không thể phân công lại');
+        counterBox.attr('data-bs-toggle', 'tooltip');
+        counterBox.attr('data-bs-placement', 'top');
+        
+        // Thêm icon khóa vào header
+        const header = counterBox.find('.counter-header h5');
+        if (!header.find('.lock-icon').length) {
+            header.append(' <i class="fas fa-lock lock-icon" style="color: #e74c3c; font-size: 14px;"></i>');
+        }
+        
+        // Ẩn nút remove
+        counterBox.find('.btn-remove').hide();
+        
+        // Thêm badge "Đang hoạt động"
+        $(`#status-${counterNumber}`).removeClass('badge-success').addClass('badge-danger').html('<i class="fas fa-lock"></i> Đang hoạt động');
+        
+        // Khởi tạo tooltip
+        try {
+            const tooltipTriggerEl = counterBox[0];
+            if (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            }
+        } catch (e) {
+            console.warn('Tooltip initialization failed:', e);
+        }
+    }
+
+    function removeEmployeeFromCounter(counterNumber) {
+        // Kiểm tra nếu quầy đã bị khóa
+        if (lockedCounters[counterNumber]) {
+            alert(`Quầy ${counterNumber} đang hoạt động!\nKhông thể xóa nhân viên khỏi quầy đang hoạt động.\n\nVui lòng đóng quầy trước khi thay đổi phân công.`);
+            return;
+        }
+        
+        counterAssignments[counterNumber] = null;
+
+        // Update counter display
+        $(`#employee-${counterNumber}`).hide();
+        $(`#empty-${counterNumber}`).show();
+        $(`#status-${counterNumber}`).removeClass('badge-success').addClass('badge-secondary').text('Chưa có nhân viên');
+        $(`#counter-${counterNumber}`).removeClass('has-employee');
+
+        renderAvailableEmployees();
+    }
+
+    function searchAvailableEmployees() {
+        const searchText = $('#searchAvailableEmployee').val().toLowerCase();
+        
+        $('.available-employee-item').each(function() {
+            const text = $(this).text().toLowerCase();
+            if (text.includes(searchText)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+
+    function saveCounterAssignments() {
+        // Prepare data - chỉ lấy quầy chưa bị khóa (quầy mới phân công)
+        const assignments = [];
+        for (let counter = 1; counter <= 3; counter++) {
+            // Bỏ qua quầy đã khóa (đang hoạt động)
+            if (lockedCounters[counter]) {
+                continue;
+            }
+            
+            if (counterAssignments[counter]) {
+                assignments.push({
+                    counter: counter,
+                    maNhanVien: counterAssignments[counter].maNhanVien
+                });
+            }
+        }
+
+        if (assignments.length === 0) {
+            alert('Vui lòng phân công ít nhất một nhân viên vào quầy!');
+            return;
+        }
+
+        if (!confirm(`Bạn có chắc chắn muốn lưu phân công và khởi động ${assignments.length} quầy?`)) {
+            return;
+        }
+
+        // Show loading
+        const saveBtn = $('button[onclick="saveCounterAssignments()"]');
+        const originalText = saveBtn.html();
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang lưu...');
+
+        // Send AJAX request
+        $.ajax({
+            url: '@Url.Action("SaveCounterAssignments", "VehicleShift", new { area = "Admin" })',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ assignments: assignments }),
+            success: function(response) {
+                saveBtn.prop('disabled', false).html(originalText);
+                
+                if (response.success) {
+                    alert(response.message);
+                    $('#assignCounterModal').modal('hide');
+                    
+                    // Redirect to VehicleVision
+                    if (confirm('Phân công thành công! Bạn có muốn chuyển đến màn hình giám sát quầy không?')) {
+                        window.location.href = '@Url.Action("Index", "VehicleVision", new { area = "Admin" })';
+                    }
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                saveBtn.prop('disabled', false).html(originalText);
+                alert('Có lỗi xảy ra khi lưu phân công: ' + error);
+            }
+        });
+    }
+
+    // Function to view personal schedule in modal
+    function viewPersonalSchedule(employeeId, employeeName) {
+        $('#personalScheduleEmployeeName').text(employeeName);
+        $('#personalScheduleModal').modal('show');
+        $('#personalScheduleContent').html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-3">Đang tải lịch cá nhân...</p>
+            </div>
+        `);
+
+        // Load personal schedule via AJAX
+        $.get('@Url.Action("GetPersonalSchedule", "VehicleShift", new { area = "Admin" })', { employeeId: employeeId }, function(response) {
+            if (response.success && response.data) {
+                const schedule = response.data;
+                let html = '<div class="table-responsive"><table class="table admin-table">';
+                html += '<thead><tr><th>Ngày</th><th>Ca</th><th>Giờ bắt đầu</th><th>Giờ kết thúc</th><th>Số giờ</th><th>Trạng thái</th></tr></thead><tbody>';
+                
+                if (schedule.length > 0) {
+                    schedule.forEach(item => {
+                        const date = new Date(item.ngay).toLocaleDateString('vi-VN');
+                        const timeStart = item.thoiGianNhanCa ? new Date(item.thoiGianNhanCa).toLocaleTimeString('vi-VN') : '-';
+                        const timeEnd = item.thoiGianGiaoCa ? new Date(item.thoiGianGiaoCa).toLocaleTimeString('vi-VN') : '-';
+                        const statusClass = item.trangThaiCa === 0 ? 'success' : 'info';
+                        const statusText = item.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt';
+                        html += `<tr>
+                            <td>${date}</td>
+                            <td><strong>#${item.maCa}</strong></td>
+                            <td>${timeStart}</td>
+                            <td>${timeEnd}</td>
+                            <td>${item.soGioLam.toFixed(1)}h</td>
+                            <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        </tr>`;
+                    });
+                } else {
+                    html += '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-calendar-times" style="font-size: 2rem; color: #95a5a6;"></i><p class="mt-2 text-muted">Chưa có lịch làm việc trong tuần này</p></td></tr>';
+                }
+                
+                html += '</tbody></table></div>';
+                $('#personalScheduleContent').html(html);
+            } else {
+                $('#personalScheduleContent').html(`
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        ${response.message || 'Không có dữ liệu lịch làm việc'}
+                    </div>
+                `);
+            }
+        }).fail(function() {
+            $('#personalScheduleContent').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Có lỗi xảy ra khi tải lịch làm việc
+                </div>
+            `);
+        });
+    }
+
+    // Function to print personal schedule
+    function printPersonalSchedule() {
+        window.print();
+    }
+
+    function filterEmployees() {
+            const position = $('#filterPosition').val();
+            const status = $('#filterStatus').val();
+            
+            $('.employee-card').each(function() {
+                const cardPosition = $(this).data('position').toString();
+                const cardStatus = $(this).data('status');
+                
+                let showCard = true;
+                
+                if (position && cardPosition !== position) {
+                    showCard = false;
+                }
+                
+                if (status && cardStatus !== status) {
+                    showCard = false;
+                }
+                
+                if (showCard) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function searchEmployees() {
+            const searchText = $('#searchEmployee').val().toLowerCase();
+            
+            $('.employee-card').each(function() {
+                const searchData = $(this).data('search');
+                
+                if (searchData.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        // Thêm nhân viên mới
+        function createEmployee() {
+            // Validate form
+            if (!$('#addEmployeeForm')[0].checkValidity()) {
+                $('#addEmployeeForm')[0].reportValidity();
+                return;
+            }
+
+            // Prepare data
+            const formData = {
+                HoTen: $('#addHoTen').val().trim(),
+                ChucVu: parseInt($('#addChucVu').val()),
+                GioiTinh: $('#addGioiTinh').val() || null,
+                SoDienThoai: $('#addSoDienThoai').val() || null,
+                DiaChi: $('#addDiaChi').val() || null,
+                NgaySinh: $('#addNgaySinh').val() || null,
+                NgayVaoLam: $('#addNgayVaoLam').val() || null,
+                TrangThaiLamViec: $('#addTrangThaiLamViec').is(':checked')
+            };
+
+            // Validate required fields
+            if (!formData.HoTen) {
+                alert('Vui lòng nhập họ tên nhân viên!');
+                return;
+            }
+
+            if (!formData.ChucVu && formData.ChucVu !== 0) {
+                alert('Vui lòng chọn chức vụ!');
+                return;
+            }
+
+            // Confirm before save
+            if (!confirm('Bạn có chắc chắn muốn thêm nhân viên này?')) {
+                return;
+            }
+
+            // Show loading
+            const saveBtn = $('button[onclick="createEmployee()"]');
+            const originalText = saveBtn.html();
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang thêm...');
+
+            // Send AJAX request
+            $.ajax({
+                url: '@Url.Action("CreateEmployee", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
+                    if (response.success) {
+                        alert(response.message);
+                        $('#addEmployeeModal').modal('hide');
+                        location.reload(); // Reload để cập nhật danh sách
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    alert('Có lỗi xảy ra khi thêm nhân viên: ' + error);
+                }
+            });
+        }
+
+        let currentEmployeeId = 0;
+
+        function viewEmployeeDetail(employeeId) {
+            currentEmployeeId = employeeId;
+            $('#employeeDetailModal').modal('show');
+            $('#employeeDetailContent').html(`
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="mt-3">Đang tải thông tin nhân viên...</p>
+                </div>
+            `);
+            
+            // Load employee detail via AJAX
+            $.get('@Url.Action("GetEmployeeDetail", "VehicleShift", new { area = "Admin" })', { id: employeeId }, function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    const emp = data.employee;
+                    const stats = data.stats;
+                    const shifts = data.recentShifts;
+
+                    const gioiTinhText = emp.gioiTinh === 'Nam' ? 'Nam' : emp.gioiTinh === 'Nữ' ? 'Nữ' : 'Khác';
+                    const ngaySinhText = emp.ngaySinh ? new Date(emp.ngaySinh).toLocaleDateString('vi-VN') : 'Chưa có';
+                    const ngayVaoLamText = emp.ngayVaoLam ? new Date(emp.ngayVaoLam).toLocaleDateString('vi-VN') : 'Chưa có';
+
+                    let shiftsHtml = '';
+                    if (shifts && shifts.length > 0) {
+                        shifts.forEach(shift => {
+                            const statusClass = shift.trangThaiCa === 0 ? 'success' : 'info';
+                            const statusText = shift.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt';
+                            const thoiGianNhanCa = shift.thoiGianNhanCa ? new Date(shift.thoiGianNhanCa).toLocaleString('vi-VN') : '-';
+                            const thoiGianGiaoCa = shift.thoiGianGiaoCa ? new Date(shift.thoiGianGiaoCa).toLocaleString('vi-VN') : '-';
+                            
+                            shiftsHtml += `
+                                <tr>
+                                    <td><strong>#${shift.maCa}</strong></td>
+                                    <td>${thoiGianNhanCa}</td>
+                                    <td>${thoiGianGiaoCa}</td>
+                                    <td>${shift.soGioLam.toFixed(1)}h</td>
+                                    <td>${shift.tongTienHeThong.toLocaleString('vi-VN')} đ</td>
+                                    <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        shiftsHtml = '<tr><td colspan="6" class="text-center">Chưa có ca làm việc nào</td></tr>';
+                    }
+
+                    const html = `
+                        <div class="employee-detail-container">
+                            <!-- Employee Info Section -->
+                            <div class="row mb-4">
+                                <div class="col-md-4 text-center">
+                                    <div class="employee-avatar-xlarge mb-3">
+                                        ${emp.hoTen.substring(0, 1)}
+                                    </div>
+                                    <h4 class="mb-1">${emp.hoTen}</h4>
+                                    <p class="text-muted">Mã NV: <strong>NV${emp.maNhanVien.toString().padStart(4, '0')}</strong></p>
+                                    <span class="badge badge-${emp.trangThaiLamViec ? 'success' : 'secondary'} mb-3">
+                                        ${emp.trangThaiLamViec ? 'Đang làm việc' : 'Đã nghỉ việc'}
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <h5 class="mb-3"><i class="fas fa-user-circle"></i> Thông tin cá nhân</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-briefcase"></i> Chức vụ:</label>
+                                                <strong>${emp.chucVuText}</strong>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-venus-mars"></i> Giới tính:</label>
+                                                <span>${gioiTinhText}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-birthday-cake"></i> Ngày sinh:</label>
+                                                <span>${ngaySinhText} (${emp.tuoi} tuổi)</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-phone"></i> Số điện thoại:</label>
+                                                <span>${emp.soDienThoai || 'Chưa có'}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-calendar-plus"></i> Ngày vào làm:</label>
+                                                <span>${ngayVaoLamText}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-map-marker-alt"></i> Địa chỉ:</label>
+                                                <span>${emp.diaChi || 'Chưa có'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats Section -->
+                            <h5 class="mb-3"><i class="fas fa-chart-line"></i> Thống kê làm việc</h5>
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-teal">
+                                        <div class="stat-number">${stats.totalShifts}</div>
+                                        <div class="stat-label">Tổng ca</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-success">
+                                        <div class="stat-number">${stats.activeShifts}</div>
+                                        <div class="stat-label">Ca đang trực</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-info">
+                                        <div class="stat-number">${stats.totalWorkHours.toFixed(1)}h</div>
+                                        <div class="stat-label">Tổng giờ làm</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-orange">
+                                        <div class="stat-number">${stats.averageShiftHours.toFixed(1)}h</div>
+                                        <div class="stat-label">TB giờ/ca</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="stat-box bg-purple">
+                                        <div class="stat-number">${stats.currentMonthShifts}</div>
+                                        <div class="stat-label">Ca tháng này</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-box bg-blue">
+                                        <div class="stat-number">${stats.currentMonthHours.toFixed(1)}h</div>
+                                        <div class="stat-label">Giờ tháng này</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-box bg-green">
+                                        <div class="stat-number">${stats.totalRevenue.toLocaleString('vi-VN')} đ</div>
+                                        <div class="stat-label">Doanh thu</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Shifts Section -->
+                            <h5 class="mb-3"><i class="fas fa-history"></i> Lịch sử ca làm việc gần đây (10 ca)</h5>
+                            <div class="table-responsive">
+                                <table class="table admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã ca</th>
+                                            <th>Giờ nhận ca</th>
+                                            <th>Giờ giao ca</th>
+                                            <th>Số giờ</th>
+                                            <th>Doanh thu</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${shiftsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $('#employeeDetailContent').html(html);
+                } else {
+                    $('#employeeDetailContent').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            ${response.message}
+                        </div>
+                    `);
+                }
+            }).fail(function() {
+                $('#employeeDetailContent').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Có lỗi xảy ra khi tải thông tin nhân viên
+                    </div>
+                `);
+            });
+        }
+
+        function viewEmployeeSchedule(employeeId) {
+            window.location.href = '@Url.Action("WeeklySchedule", "VehicleShift", new { area = "Admin" })?employeeId=' + employeeId;
+        }
+
+        let currentEmployeeData = {};
+
+        function editEmployee() {
+            // Lấy dữ liệu từ currentEmployeeData (đã load từ detail)
+            if (!currentEmployeeData.employee) {
+                alert('Vui lòng xem chi tiết nhân viên trước khi chỉnh sửa!');
+                return;
+            }
+
+            const emp = currentEmployeeData.employee;
+
+            // Đóng detail modal và mở edit modal
+            $('#employeeDetailModal').modal('hide');
+
+            // Populate form với dữ liệu hiện tại
+            $('#editMaNhanVien').val(emp.maNhanVien);
+            $('#editHoTen').val(emp.hoTen);
+            $('#editChucVu').val(emp.chucVu);
+            $('#editGioiTinh').val(emp.gioiTinh || '');
+            $('#editSoDienThoai').val(emp.soDienThoai || '');
+            $('#editDiaChi').val(emp.diaChi || '');
+            $('#editTrangThaiLamViec').prop('checked', emp.trangThaiLamViec);
+
+            // Format dates for input[type="date"]
+            if (emp.ngaySinh) {
+                const ngaySinh = new Date(emp.ngaySinh);
+                $('#editNgaySinh').val(ngaySinh.toISOString().split('T')[0]);
+            } else {
+                $('#editNgaySinh').val('');
+            }
+
+            if (emp.ngayVaoLam) {
+                const ngayVaoLam = new Date(emp.ngayVaoLam);
+                $('#editNgayVaoLam').val(ngayVaoLam.toISOString().split('T')[0]);
+            } else {
+                $('#editNgayVaoLam').val('');
+            }
+
+            // Show edit modal
+            $('#editEmployeeModal').modal('show');
+        }
+
+        function saveEmployeeChanges() {
+            // Validate form
+            if (!$('#editEmployeeForm')[0].checkValidity()) {
+                $('#editEmployeeForm')[0].reportValidity();
+                return;
+            }
+
+            // Prepare data
+            const formData = {
+                MaNhanVien: parseInt($('#editMaNhanVien').val()),
+                HoTen: $('#editHoTen').val().trim(),
+                ChucVu: parseInt($('#editChucVu').val()),
+                GioiTinh: $('#editGioiTinh').val() || null,
+                SoDienThoai: $('#editSoDienThoai').val() || null,
+                DiaChi: $('#editDiaChi').val() || null,
+                NgaySinh: $('#editNgaySinh').val() || null,
+                NgayVaoLam: $('#editNgayVaoLam').val() || null,
+                TrangThaiLamViec: $('#editTrangThaiLamViec').is(':checked')
+            };
+
+            // Validate required fields
+            if (!formData.HoTen) {
+                alert('Vui lòng nhập họ tên nhân viên!');
+                return;
+            }
+
+            // Confirm before save
+            if (!confirm('Bạn có chắc chắn muốn lưu thay đổi thông tin nhân viên này?')) {
+                return;
+            }
+
+            // Show loading
+            const saveBtn = $('button[onclick="saveEmployeeChanges()"]');
+            const originalText = saveBtn.html();
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang lưu...');
+
+            // Send AJAX request
+            $.ajax({
+                url: '@Url.Action("UpdateEmployee", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
+                    if (response.success) {
+                        alert(response.message);
+                        $('#editEmployeeModal').modal('hide');
+                        location.reload(); // Reload để cập nhật danh sách
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    alert('Có lỗi xảy ra khi cập nhật: ' + error);
+                }
+            });
+        }
+
+        // Store employee data when viewing details
+        function viewEmployeeDetail(employeeId) {
+            currentEmployeeId = employeeId;
+            $('#employeeDetailModal').modal('show');
+            $('#employeeDetailContent').html(`
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="mt-3">Đang tải thông tin nhân viên...</p>
+                </div>
+            `);
+            
+            // Load employee detail via AJAX
+            $.get('@Url.Action("GetEmployeeDetail", "VehicleShift", new { area = "Admin" })', { id: employeeId }, function(response) {
+                if (response.success) {
+                    // Store data for edit function
+                    currentEmployeeData = response.data;
+                    
+                    const data = response.data;
+                    const emp = data.employee;
+                    const stats = data.stats;
+                    const shifts = data.recentShifts;
+
+                    const gioiTinhText = emp.gioiTinh === 'Nam' ? 'Nam' : emp.gioiTinh === 'Nữ' ? 'Nữ' : 'Khác';
+                    const ngaySinhText = emp.ngaySinh ? new Date(emp.ngaySinh).toLocaleDateString('vi-VN') : 'Chưa có';
+                    const ngayVaoLamText = emp.ngayVaoLam ? new Date(emp.ngayVaoLam).toLocaleDateString('vi-VN') : 'Chưa có';
+
+                    let shiftsHtml = '';
+                    if (shifts && shifts.length > 0) {
+                        shifts.forEach(shift => {
+                            const statusClass = shift.trangThaiCa === 0 ? 'success' : 'info';
+                            const statusText = shift.trangThaiCa === 0 ? 'Đang trực' : 'Đã chốt';
+                            const thoiGianNhanCa = shift.thoiGianNhanCa ? new Date(shift.thoiGianNhanCa).toLocaleString('vi-VN') : '-';
+                            const thoiGianGiaoCa = shift.thoiGianGiaoCa ? new Date(shift.thoiGianGiaoCa).toLocaleString('vi-VN') : '-';
+                            
+                            shiftsHtml += `
+                                <tr>
+                                    <td><strong>#${shift.maCa}</strong></td>
+                                    <td>${thoiGianNhanCa}</td>
+                                    <td>${thoiGianGiaoCa}</td>
+                                    <td>${shift.soGioLam.toFixed(1)}h</td>
+                                    <td>${shift.tongTienHeThong.toLocaleString('vi-VN')} đ</td>
+                                    <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        shiftsHtml = '<tr><td colspan="6" class="text-center">Chưa có ca làm việc nào</td></tr>';
+                    }
+
+                    const html = `
+                        <div class="employee-detail-container">
+                            <!-- Employee Info Section -->
+                            <div class="row mb-4">
+                                <div class="col-md-4 text-center">
+                                    <div class="employee-avatar-xlarge mb-3">
+                                        ${emp.hoTen.substring(0, 1)}
+                                    </div>
+                                    <h4 class="mb-1">${emp.hoTen}</h4>
+                                    <p class="text-muted">Mã NV: <strong>NV${emp.maNhanVien.toString().padStart(4, '0')}</strong></p>
+                                    <span class="badge badge-${emp.trangThaiLamViec ? 'success' : 'secondary'} mb-3">
+                                        ${emp.trangThaiLamViec ? 'Đang làm việc' : 'Đã nghỉ việc'}
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <h5 class="mb-3"><i class="fas fa-user-circle"></i> Thông tin cá nhân</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-briefcase"></i> Chức vụ:</label>
+                                                <strong>${emp.chucVuText}</strong>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-venus-mars"></i> Giới tính:</label>
+                                                <span>${gioiTinhText}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-birthday-cake"></i> Ngày sinh:</label>
+                                                <span>${ngaySinhText} (${emp.tuoi} tuổi)</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-phone"></i> Số điện thoại:</label>
+                                                <span>${emp.soDienThoai || 'Chưa có'}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-calendar-plus"></i> Ngày vào làm:</label>
+                                                <span>${ngayVaoLamText}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label><i class="fas fa-map-marker-alt"></i> Địa chỉ:</label>
+                                                <span>${emp.diaChi || 'Chưa có'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats Section -->
+                            <h5 class="mb-3"><i class="fas fa-chart-line"></i> Thống kê làm việc</h5>
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-teal">
+                                        <div class="stat-number">${stats.totalShifts}</div>
+                                        <div class="stat-label">Tổng ca</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-success">
+                                        <div class="stat-number">${stats.activeShifts}</div>
+                                        <div class="stat-label">Ca đang trực</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-info">
+                                        <div class="stat-number">${stats.totalWorkHours.toFixed(1)}h</div>
+                                        <div class="stat-label">Tổng giờ làm</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-box bg-orange">
+                                        <div class="stat-number">${stats.averageShiftHours.toFixed(1)}h</div>
+                                        <div class="stat-label">TB giờ/ca</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="stat-box bg-purple">
+                                        <div class="stat-number">${stats.currentMonthShifts}</div>
+                                        <div class="stat-label">Ca tháng này</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-box bg-blue">
+                                        <div class="stat-number">${stats.currentMonthHours.toFixed(1)}h</div>
+                                        <div class="stat-label">Giờ tháng này</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-box bg-green">
+                                        <div class="stat-number">${stats.totalRevenue.toLocaleString('vi-VN')} đ</div>
+                                        <div class="stat-label">Doanh thu</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Shifts Section -->
+                            <h5 class="mb-3"><i class="fas fa-history"></i> Lịch sử ca làm việc gần đây (10 ca)</h5>
+                            <div class="table-responsive">
+                                <table class="table admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã ca</th>
+                                            <th>Giờ nhận ca</th>
+                                            <th>Giờ giao ca</th>
+                                            <th>Số giờ</th>
+                                            <th>Doanh thu</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${shiftsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $('#employeeDetailContent').html(html);
+                } else {
+                    $('#employeeDetailContent').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            ${response.message}
+                        </div>
+                    `);
+                }
+            }).fail(function() {
+                $('#employeeDetailContent').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Có lỗi xảy ra khi tải thông tin nhân viên
+                    </div>
+                `);
+            });
+        }
+    </script>
+}
 
     function filterEmployees() {
             const position = $('#filterPosition').val();

@@ -340,6 +340,21 @@
                         <input type="date" class="form-control" id="shiftDate" required>
                     </div>
 
+                    <!-- Chọn quản lý ngày -->
+                    <div class="mb-4 p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-user-tie"></i>
+                            Nhân viên quản lý trong ngày
+                        </label>
+                        <select class="form-select" id="managerEmployee">
+                            <option value="">-- Chọn nhân viên quản lý --</option>
+                        </select>
+                        <small class="text-white d-block mt-2">
+                            <i class="fas fa-info-circle"></i> 
+                            Nhân viên này sẽ chịu trách nhiệm giám sát và quản lý các ca trong ngày
+                        </small>
+                    </div>
+
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i>
                         Chọn nhân viên cho 3 ca làm việc trong ngày. Để trống nếu không có nhân viên cho ca đó.
@@ -1422,11 +1437,15 @@
             $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', 
                 function(data) {
                     let options = '<option value="">-- Chọn nhân viên --</option>';
+                    let managerOptions = '<option value="">-- Chọn nhân viên quản lý --</option>';
+                    
                     data.forEach(emp => {
                         options += `<option value="${emp.maNhanVien}">${emp.hoTen} - ${emp.chucVu}</option>`;
+                        managerOptions += `<option value="${emp.maNhanVien}">${emp.hoTen} - ${emp.chucVu}</option>`;
                     });
                     
                     $('#morningEmployee, #afternoonEmployee, #nightEmployee').html(options);
+                    $('#managerEmployee').html(managerOptions);
                 }
             ).fail(function() {
                 alert('Lỗi khi tải danh sách nhân viên');

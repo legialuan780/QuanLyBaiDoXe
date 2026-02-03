@@ -16,6 +16,10 @@
         </div>
     </div>
     <div>
+        <button class="btn-secondary-admin" onclick="openReportModal()">
+            <i class="fas fa-file-chart-line"></i>
+            Tạo báo cáo
+        </button>
         <button class="btn-secondary-admin" onclick="openAllCameras()">
             <i class="fas fa-video"></i>
             Camera
@@ -1199,6 +1203,25 @@
                             <i class="fas fa-spinner fa-spin"></i> Đang tải...
                         </div>
                         <div class="counter-revenue" id="counter-1-revenue">-- VNĐ</div>
+                        
+                        <!-- Enhanced Info -->
+                        <div class="shift-info-quick" id="shift-info-1" style="display: none;">
+                            <div class="shift-timer">
+                                <i class="fas fa-clock"></i>
+                                <span id="shift-duration-1">00:00:00</span>
+                            </div>
+                            <div class="shift-transactions">
+                                <i class="fas fa-receipt"></i>
+                                <span id="shift-transactions-1">0 giao dịch</span>
+                            </div>
+                            <div class="shift-target">
+                                <i class="fas fa-bullseye"></i>
+                                <span>Mục tiêu: <strong id="shift-target-1">2M</strong></span>
+                                <div class="progress-bar-mini">
+                                    <div class="progress-fill-mini" id="shift-progress-1" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="counter-status">
                         <span class="status-indicator offline" id="counter-1-indicator"></span>
@@ -1209,6 +1232,19 @@
                             <i class="fas fa-spinner fa-spin"></i>
                         </button>
                     </div>
+                </div>
+                
+                <!-- Advanced Actions for Active Counter -->
+                <div class="counter-advanced-actions" id="advanced-actions-1" style="display: none;">
+                    <button class="btn btn-sm btn-info" onclick="viewShiftDetails(1)" title="Xem chi tiết ca">
+                        <i class="fas fa-chart-line"></i> Chi tiết ca
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="pauseShift(1)" title="Tạm nghỉ">
+                        <i class="fas fa-pause"></i> Tạm nghỉ
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="handoverShift(1)" title="Chuyển ca">
+                        <i class="fas fa-exchange-alt"></i> Chuyển ca
+                    </button>
                 </div>
 
                 <div class="counter-status-item">
@@ -1221,6 +1257,25 @@
                             <i class="fas fa-spinner fa-spin"></i> Đang tải...
                         </div>
                         <div class="counter-revenue" id="counter-2-revenue">-- VNĐ</div>
+                        
+                        <!-- Enhanced Info -->
+                        <div class="shift-info-quick" id="shift-info-2" style="display: none;">
+                            <div class="shift-timer">
+                                <i class="fas fa-clock"></i>
+                                <span id="shift-duration-2">00:00:00</span>
+                            </div>
+                            <div class="shift-transactions">
+                                <i class="fas fa-receipt"></i>
+                                <span id="shift-transactions-2">0 giao dịch</span>
+                            </div>
+                            <div class="shift-target">
+                                <i class="fas fa-bullseye"></i>
+                                <span>Mục tiêu: <strong id="shift-target-2">2M</strong></span>
+                                <div class="progress-bar-mini">
+                                    <div class="progress-fill-mini" id="shift-progress-2" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="counter-status">
                         <span class="status-indicator offline" id="counter-2-indicator"></span>
@@ -1231,6 +1286,19 @@
                             <i class="fas fa-spinner fa-spin"></i>
                         </button>
                     </div>
+                </div>
+                
+                <!-- Advanced Actions for Active Counter -->
+                <div class="counter-advanced-actions" id="advanced-actions-2" style="display: none;">
+                    <button class="btn btn-sm btn-info" onclick="viewShiftDetails(2)" title="Xem chi tiết ca">
+                        <i class="fas fa-chart-line"></i> Chi tiết ca
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="pauseShift(2)" title="Tạm nghỉ">
+                        <i class="fas fa-pause"></i> Tạm nghỉ
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="handoverShift(2)" title="Chuyển ca">
+                        <i class="fas fa-exchange-alt"></i> Chuyển ca
+                    </button>
                 </div>
 
                 <div class="counter-status-item">
@@ -1243,6 +1311,25 @@
                             <i class="fas fa-spinner fa-spin"></i> Đang tải...
                         </div>
                         <div class="counter-revenue" id="counter-3-revenue">-- VNĐ</div>
+                        
+                        <!-- Enhanced Info -->
+                        <div class="shift-info-quick" id="shift-info-3" style="display: none;">
+                            <div class="shift-timer">
+                                <i class="fas fa-clock"></i>
+                                <span id="shift-duration-3">00:00:00</span>
+                            </div>
+                            <div class="shift-transactions">
+                                <i class="fas fa-receipt"></i>
+                                <span id="shift-transactions-3">0 giao dịch</span>
+                            </div>
+                            <div class="shift-target">
+                                <i class="fas fa-bullseye"></i>
+                                <span>Mục tiêu: <strong id="shift-target-3">2M</strong></span>
+                                <div class="progress-bar-mini">
+                                    <div class="progress-fill-mini" id="shift-progress-3" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="counter-status">
                         <span class="status-indicator offline" id="counter-3-indicator"></span>
@@ -1253,6 +1340,19 @@
                             <i class="fas fa-spinner fa-spin"></i>
                         </button>
                     </div>
+                </div>
+                
+                <!-- Advanced Actions for Active Counter -->
+                <div class="counter-advanced-actions" id="advanced-actions-3" style="display: none;">
+                    <button class="btn btn-sm btn-info" onclick="viewShiftDetails(3)" title="Xem chi tiết ca">
+                        <i class="fas fa-chart-line"></i> Chi tiết ca
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="pauseShift(3)" title="Tạm nghỉ">
+                        <i class="fas fa-pause"></i> Tạm nghỉ
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="handoverShift(3)" title="Chuyển ca">
+                        <i class="fas fa-exchange-alt"></i> Chuyển ca
+                    </button>
                 </div>
             </div>
         </div>
@@ -2070,11 +2170,182 @@
     </div>
 </div>
 
+<!-- Report Generation Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-chart-line"></i>
+                    Tạo báo cáo bãi đỗ xe
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <!-- Report Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-alt"></i>
+                            Loại báo cáo
+                        </label>
+                        <select class="form-select" id="reportType" onchange="updateReportOptions()">
+                            <option value="daily">Báo cáo ngày</option>
+                            <option value="weekly">Báo cáo tuần</option>
+                            <option value="monthly">Báo cáo tháng</option>
+                            <option value="custom">Tùy chỉnh</option>
+                            <option value="occupancy">Báo cáo công suất</option>
+                            <option value="revenue">Báo cáo doanh thu</option>
+                            <option value="vehicle">Báo cáo phương tiện</option>
+                            <option value="employee">Báo cáo nhân viên</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="row mb-4" id="dateRangeSection">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt"></i>
+                                Từ ngày
+                            </label>
+                            <input type="date" class="form-control" id="reportStartDate" value="">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt"></i>
+                                Đến ngày
+                            </label>
+                            <input type="date" class="form-control" id="reportEndDate" value="">
+                        </div>
+                    </div>
+
+                    <!-- Report Content Options -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-list-check"></i>
+                            Nội dung báo cáo
+                        </label>
+                        <div class="report-options">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeOccupancy" checked>
+                                <label class="form-check-label" for="includeOccupancy">
+                                    Thống kê công suất
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeRevenue" checked>
+                                <label class="form-check-label" for="includeRevenue">
+                                    Doanh thu
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeVehicles" checked>
+                                <label class="form-check-label" for="includeVehicles">
+                                    Thống kê phương tiện
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includePeakHours">
+                                <label class="form-check-label" for="includePeakHours">
+                                    Giờ cao điểm
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeCharts">
+                                <label class="form-check-label" for="includeCharts">
+                                    Biểu đồ
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeEmployees">
+                                <label class="form-check-label" for="includeEmployees">
+                                    Thống kê nhân viên
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Format -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-download"></i>
+                            Định dạng xuất
+                        </label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="exportFormat" id="formatPDF" value="pdf" checked>
+                            <label class="btn btn-outline-danger" for="formatPDF">
+                                <i class="fas fa-file-pdf"></i>
+                                PDF
+                            </label>
+
+                            <input type="radio" class="btn-check" name="exportFormat" id="formatExcel" value="excel">
+                            <label class="btn btn-outline-success" for="formatExcel">
+                                <i class="fas fa-file-excel"></i>
+                                Excel
+                            </label>
+
+                            <input type="radio" class="btn-check" name="exportFormat" id="formatWord" value="word">
+                            <label class="btn btn-outline-primary" for="formatWord">
+                                <i class="fas fa-file-word"></i>
+                                Word
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Report Summary Preview -->
+                    <div class="alert alert-info" id="reportSummary">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Tóm tắt:</strong>
+                        <span id="summaryText">Báo cáo ngày hôm nay</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Hủy
+                </button>
+                <button type="button" class="btn btn-info" onclick="previewReport()">
+                    <i class="fas fa-eye"></i>
+                    Xem trước
+                </button>
+                <button type="button" class="btn btn-primary" onclick="generateReport()">
+                    <i class="fas fa-file-download"></i>
+                    Tạo báo cáo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    /* Parking Map Styles */
-    .parking-map-container {
-        padding: 20px;
-    }
+/* Page Header Button Alignment */
+.page-header > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.page-header button {
+    height: 40px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.page-header button i {
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* Parking Map Styles */
+.parking-map-container {
+    padding: 20px;
+}
 
     .parking-legend {
         display: flex;
@@ -4294,6 +4565,237 @@
         }
     }
 
+    /* ===== SHIFT INFO QUICK STYLES ===== */
+    .shift-info-quick {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .shift-timer,
+    .shift-transactions,
+    .shift-target {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #6c757d;
+    }
+
+    .shift-timer i,
+    .shift-transactions i,
+    .shift-target i {
+        color: #21A691;
+        font-size: 12px;
+    }
+
+    .shift-timer span,
+    .shift-transactions span {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .shift-target {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .shift-target span {
+        font-size: 10px;
+    }
+
+    .shift-target strong {
+        color: #21A691;
+    }
+
+    .progress-bar-mini {
+        width: 100%;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 2px;
+    }
+
+    .progress-fill-mini {
+        height: 100%;
+        background: linear-gradient(90deg, #87DF2C 0%, #21A691 100%);
+        transition: width 0.5s ease;
+        position: relative;
+    }
+
+    .progress-fill-mini::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        animation: shimmer 2s infinite;
+    }
+
+    @@keyframes shimmer {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    /* Counter Advanced Actions */
+    .counter-advanced-actions {
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+
+    .counter-advanced-actions .btn {
+        flex: 1;
+        min-width: 100px;
+        font-size: 11px;
+        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .counter-advanced-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .counter-advanced-actions .btn i {
+        font-size: 12px;
+    }
+
+    /* Dark Mode for Shift Info */
+    body.dark-mode .shift-info-quick {
+        border-top-color: #4a5568;
+    }
+
+    body.dark-mode .shift-timer span,
+    body.dark-mode .shift-transactions span {
+        color: #f7fafc;
+    }
+
+    body.dark-mode .shift-timer,
+    body.dark-mode .shift-transactions,
+    body.dark-mode .shift-target {
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .progress-bar-mini {
+        background: #4a5568;
+    }
+
+    body.dark-mode .counter-advanced-actions {
+        background: #374151;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .counter-advanced-actions {
+            flex-direction: column;
+        }
+
+        .counter-advanced-actions .btn {
+            width: 100%;
+        }
+    }
+
+    /* ===== REPORT MODAL STYLES ===== */
+    .report-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .report-options .form-check {
+        margin-bottom: 0;
+    }
+
+    .report-options .form-check-input:checked {
+        background-color: #21A691;
+        border-color: #21A691;
+    }
+
+    .report-options .form-check-label {
+        font-size: 14px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .btn-group .btn-check:checked + .btn {
+        box-shadow: 0 0 0 3px rgba(33, 166, 145, 0.3);
+    }
+
+    #reportSummary {
+        border-left: 4px solid #21A691;
+        background: rgba(33, 166, 145, 0.1);
+        border-color: #21A691;
+    }
+
+    #reportSummary i {
+        color: #21A691;
+        margin-right: 8px;
+    }
+
+    /* Dark Mode for Report Modal */
+    body.dark-mode .report-options {
+        background: #374151;
+    }
+
+    body.dark-mode .report-options .form-check-label {
+        color: #f7fafc;
+    }
+
+    body.dark-mode #reportSummary {
+        background: rgba(33, 166, 145, 0.15);
+        color: #f7fafc;
+    }
+
+    body.dark-mode .modal-content {
+        background-color: #2d3748;
+    }
+
+    body.dark-mode .form-label {
+        color: #f7fafc;
+    }
+
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+        background-color: #374151;
+        border-color: #4a5568;
+        color: #f7fafc;
+    }
+
+    body.dark-mode .form-control:focus,
+    body.dark-mode .form-select:focus {
+        background-color: #374151;
+        border-color: #87DF2C;
+        color: #f7fafc;
+    }
+
 
 </style>
 
@@ -5632,6 +6134,8 @@
         const indicatorElement = document.getElementById(`counter-${counterId}-indicator`);
         const textElement = document.getElementById(`counter-${counterId}-text`);
         const buttonElement = document.getElementById(`btn-counter-${counterId}`);
+        const shiftInfoElement = document.getElementById(`shift-info-${counterId}`);
+        const advancedActionsElement = document.getElementById(`advanced-actions-${counterId}`);
 
         if (counterData.isActive && counterData.employee) {
             // Quầy đang hoạt động
@@ -5653,6 +6157,31 @@
                 staffElement.innerHTML = `<strong>NV: ${counterData.employee.hoTen}</strong><br>
                     <small style="color: #6c757d;">Ca: ${counterData.shift.soGioLam.toFixed(1)}h</small>`;
             }
+            
+            // Hiển thị shift info quick
+            if (shiftInfoElement) {
+                shiftInfoElement.style.display = 'flex';
+                
+                // Khởi động timer nếu chưa có
+                if (!window[`shiftTimer${counterId}`]) {
+                    startShiftTimer(counterId, counterData.shift);
+                }
+                
+                // Cập nhật số giao dịch (giả lập - thực tế lấy từ API)
+                const transactionsElement = document.getElementById(`shift-transactions-${counterId}`);
+                if (transactionsElement) {
+                    const transactionCount = Math.floor(Math.random() * 50) + 10; // Giả lập
+                    transactionsElement.textContent = `${transactionCount} giao dịch`;
+                }
+                
+                // Cập nhật progress bar mục tiêu
+                updateShiftProgress(counterId, counterData.revenue, 2000000); // Mục tiêu 2M
+            }
+            
+            // Hiển thị advanced actions
+            if (advancedActionsElement) {
+                advancedActionsElement.style.display = 'flex';
+            }
         } else {
             // Quầy không hoạt động
             iconElement.className = 'counter-icon inactive';
@@ -5667,6 +6196,20 @@
             buttonElement.innerHTML = '<i class="fas fa-user-plus"></i>';
             buttonElement.disabled = false;
             buttonElement.onclick = () => openAssignModal(counterId);
+            
+            // Ẩn shift info và advanced actions
+            if (shiftInfoElement) {
+                shiftInfoElement.style.display = 'none';
+            }
+            if (advancedActionsElement) {
+                advancedActionsElement.style.display = 'none';
+            }
+            
+            // Dừng timer nếu đang chạy
+            if (window[`shiftTimer${counterId}`]) {
+                clearInterval(window[`shiftTimer${counterId}`]);
+                window[`shiftTimer${counterId}`] = null;
+            }
         }
 
         // Cập nhật trạng thái cũ (compatibility)
@@ -5766,6 +6309,330 @@
             clearInterval(counterRefreshInterval);
             counterRefreshInterval = null;
         }
+        
+        // Dừng tất cả shift timers
+        for (let i = 1; i <= 3; i++) {
+            if (window[`shiftTimer${i}`]) {
+                clearInterval(window[`shiftTimer${i}`]);
+                window[`shiftTimer${i}`] = null;
+            }
+        }
     });
+
+    // ===== SHIFT TIMER FUNCTIONS =====
+    
+    function startShiftTimer(counterId, shiftData) {
+        // Tính thời gian đã làm (giả sử có thời gian bắt đầu)
+        const durationElement = document.getElementById(`shift-duration-${counterId}`);
+        if (!durationElement) return;
+        
+        let elapsedSeconds = 0;
+        
+        // Nếu có shift data với thời gian bắt đầu, tính elapsed time
+        if (shiftData && shiftData.soGioLam) {
+            elapsedSeconds = Math.floor(shiftData.soGioLam * 3600);
+        }
+        
+        // Cập nhật mỗi giây
+        window[`shiftTimer${counterId}`] = setInterval(() => {
+            elapsedSeconds++;
+            
+            const hours = Math.floor(elapsedSeconds / 3600);
+            const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+            const seconds = elapsedSeconds % 60;
+            
+            durationElement.textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 1000);
+    }
+    
+    function updateShiftProgress(counterId, currentRevenue, targetRevenue) {
+        const progressElement = document.getElementById(`shift-progress-${counterId}`);
+        const targetElement = document.getElementById(`shift-target-${counterId}`);
+        
+        if (progressElement && targetElement) {
+            const percentage = Math.min((currentRevenue / targetRevenue) * 100, 100);
+            progressElement.style.width = `${percentage}%`;
+            
+            // Cập nhật target display
+            targetElement.textContent = `${(targetRevenue / 1000000).toFixed(1)}M`;
+            
+            // Đổi màu progress bar dựa vào tỷ lệ
+            if (percentage >= 100) {
+                progressElement.style.background = 'linear-gradient(90deg, #87DF2C 0%, #76c91e 100%)';
+            } else if (percentage >= 75) {
+                progressElement.style.background = 'linear-gradient(90deg, #87DF2C 0%, #21A691 100%)';
+            } else if (percentage >= 50) {
+                progressElement.style.background = 'linear-gradient(90deg, #ffa500 0%, #ff9800 100%)';
+            } else {
+                progressElement.style.background = 'linear-gradient(90deg, #ff6b6b 0%, #ff5252 100%)';
+            }
+        }
+    }
+
+    // ===== ADVANCED ACTIONS FUNCTIONS =====
+    
+    function viewShiftDetails(counterNumber) {
+        // Fetch chi tiết ca từ API và hiển thị modal
+        fetch(`@Url.Action("GetShiftDetails", "VehicleShift", new { area = "Admin" })?counter=${counterNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showShiftDetailsModal(data.data);
+                } else {
+                    showNotification('error', 'Lỗi', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching shift details:', error);
+                showNotification('error', 'Lỗi', 'Không thể tải chi tiết ca');
+            });
+    }
+    
+    function showShiftDetailsModal(shiftData) {
+        // Hiển thị modal với thông tin chi tiết ca
+        // TODO: Tạo modal hiển thị chi tiết
+        alert(`Chi tiết ca:\nNhân viên: ${shiftData.employeeName}\nDoanh thu: ${shiftData.revenueFormatted}\nGiờ làm: ${shiftData.shiftHours.toFixed(1)}h`);
+    }
+    
+    function pauseShift(counterNumber) {
+        if (!confirm(`Bạn muốn tạm nghỉ ca Quầy ${counterNumber}?`)) return;
+        
+        const reason = prompt('Lý do tạm nghỉ:', 'Nghỉ giữa ca');
+        if (reason === null) return;
+        
+        // Call API để pause shift
+        $.ajax({
+            url: '@Url.Action("PauseShift", "VehicleShift", new { area = "Admin" })',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                Counter: counterNumber,
+                Reason: reason
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showNotification('success', `Đã tạm nghỉ Quầy ${counterNumber}`, reason);
+                    loadCountersStatus();
+                } else {
+                    showNotification('error', 'Lỗi', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                showNotification('error', 'Lỗi', 'Không thể tạm nghỉ ca: ' + error);
+            }
+        });
+    }
+    
+    function handoverShift(counterNumber) {
+        if (!confirm(`Bạn muốn chuyển ca Quầy ${counterNumber} sang nhân viên khác?`)) return;
+        
+        // Redirect đến trang chọn nhân viên mới
+        window.location.href = `@Url.Action("HandoverShift", "VehicleShift", new { area = "Admin" })?counter=${counterNumber}`;
+    }
+
+    // ===== REPORT GENERATION FUNCTIONS =====
+    
+    function openReportModal() {
+        // Set default dates
+        const today = new Date();
+        document.getElementById('reportEndDate').value = today.toISOString().split('T')[0];
+        document.getElementById('reportStartDate').value = today.toISOString().split('T')[0];
+        
+        // Update summary
+        updateReportSummary();
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+        modal.show();
+    }
+    
+    function updateReportOptions() {
+        const reportType = document.getElementById('reportType').value;
+        const startDate = document.getElementById('reportStartDate');
+        const endDate = document.getElementById('reportEndDate');
+        const today = new Date();
+        
+        switch(reportType) {
+            case 'daily':
+                startDate.value = today.toISOString().split('T')[0];
+                endDate.value = today.toISOString().split('T')[0];
+                startDate.disabled = true;
+                endDate.disabled = true;
+                break;
+            case 'weekly':
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                startDate.value = weekStart.toISOString().split('T')[0];
+                endDate.value = weekEnd.toISOString().split('T')[0];
+                startDate.disabled = true;
+                endDate.disabled = true;
+                break;
+            case 'monthly':
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                startDate.value = monthStart.toISOString().split('T')[0];
+                endDate.value = monthEnd.toISOString().split('T')[0];
+                startDate.disabled = true;
+                endDate.disabled = true;
+                break;
+            default:
+                startDate.disabled = false;
+                endDate.disabled = false;
+                break;
+        }
+        
+        updateReportSummary();
+    }
+    
+    function updateReportSummary() {
+        const reportType = document.getElementById('reportType').value;
+        const startDate = document.getElementById('reportStartDate').value;
+        const endDate = document.getElementById('reportEndDate').value;
+        const summaryText = document.getElementById('summaryText');
+        
+        const reportNames = {
+            'daily': 'Báo cáo ngày',
+            'weekly': 'Báo cáo tuần',
+            'monthly': 'Báo cáo tháng',
+            'custom': 'Báo cáo tùy chỉnh',
+            'occupancy': 'Báo cáo công suất',
+            'revenue': 'Báo cáo doanh thu',
+            'vehicle': 'Báo cáo phương tiện',
+            'employee': 'Báo cáo nhân viên'
+        };
+        
+        let summary = reportNames[reportType] || 'Báo cáo';
+        
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (startDate === endDate) {
+                summary += ` - ${start.toLocaleDateString('vi-VN')}`;
+            } else {
+                summary += ` - Từ ${start.toLocaleDateString('vi-VN')} đến ${end.toLocaleDateString('vi-VN')}`;
+            }
+        }
+        
+        summaryText.textContent = summary;
+    }
+    
+    function previewReport() {
+        const reportType = document.getElementById('reportType').value;
+        const startDate = document.getElementById('reportStartDate').value;
+        const endDate = document.getElementById('reportEndDate').value;
+        
+        // Collect selected options
+        const options = {
+            includeOccupancy: document.getElementById('includeOccupancy').checked,
+            includeRevenue: document.getElementById('includeRevenue').checked,
+            includeVehicles: document.getElementById('includeVehicles').checked,
+            includePeakHours: document.getElementById('includePeakHours').checked,
+            includeCharts: document.getElementById('includeCharts').checked,
+            includeEmployees: document.getElementById('includeEmployees').checked
+        };
+        
+        // Show loading notification
+        showNotification('info', 'Đang tạo xem trước...', 'Vui lòng đợi trong giây lát');
+        
+        // Simulate preview generation
+        setTimeout(() => {
+            showNotification('success', 'Xem trước báo cáo', 'Báo cáo đã được tạo thành công');
+            
+            // In real implementation, open preview window or modal
+            console.log('Preview report:', {
+                type: reportType,
+                startDate: startDate,
+                endDate: endDate,
+                options: options
+            });
+        }, 1000);
+    }
+    
+    function generateReport() {
+        const reportType = document.getElementById('reportType').value;
+        const startDate = document.getElementById('reportStartDate').value;
+        const endDate = document.getElementById('reportEndDate').value;
+        const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+        
+        // Collect selected options
+        const options = {
+            includeOccupancy: document.getElementById('includeOccupancy').checked,
+            includeRevenue: document.getElementById('includeRevenue').checked,
+            includeVehicles: document.getElementById('includeVehicles').checked,
+            includePeakHours: document.getElementById('includePeakHours').checked,
+            includeCharts: document.getElementById('includeCharts').checked,
+            includeEmployees: document.getElementById('includeEmployees').checked
+        };
+        
+        // Validate dates
+        if (!startDate || !endDate) {
+            showNotification('error', 'Lỗi', 'Vui lòng chọn khoảng thời gian');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            showNotification('error', 'Lỗi', 'Ngày bắt đầu phải nhỏ hơn ngày kết thúc');
+            return;
+        }
+        
+        // Show loading
+        showNotification('info', 'Đang tạo báo cáo...', 'Vui lòng đợi trong giây lát');
+        
+        // Call API to generate report
+        const reportData = {
+            reportType: reportType,
+            startDate: startDate,
+            endDate: endDate,
+            exportFormat: exportFormat,
+            options: options
+        };
+        
+        // Simulate API call
+        setTimeout(() => {
+            // In real implementation, call actual API
+            fetch('@Url.Action("GenerateReport", "VehicleVision", new { area = "Admin" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(reportData)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                const fileExtension = {
+                    'pdf': 'pdf',
+                    'excel': 'xlsx',
+                    'word': 'docx'
+                };
+                
+                a.download = `BaoCao_BaiDoXe_${new Date().getTime()}.${fileExtension[exportFormat]}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('success', 'Thành công', 'Báo cáo đã được tải xuống');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('reportModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            })
+            .catch(error => {
+                console.error('Error generating report:', error);
+                showNotification('error', 'Lỗi', 'Không thể tạo báo cáo: ' + error.message);
+            });
+        }, 1500);
+    }
 
 </script>

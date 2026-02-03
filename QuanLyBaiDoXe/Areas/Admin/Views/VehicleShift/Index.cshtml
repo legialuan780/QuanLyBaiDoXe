@@ -4,6 +4,11 @@
     ViewData["Title"] = "Quản lý ca làm việc";
 }
 
+@section Styles {
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+}
+
 <!-- Page Header -->
 <div class="page-header">
     <div>
@@ -227,7 +232,7 @@
 
     <!-- Shifts Table -->
     <div class="table-responsive">
-        <table class="table admin-table">
+        <table id="shiftsTable" class="table admin-table" style="width:100%">
             <thead>
                 <tr>
                     <th>Mã ca</th>
@@ -441,7 +446,44 @@
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
 
 @section Scripts {
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
 <script>
+    // ===== DATATABLES INITIALIZATION =====
+    let shiftsDataTable;
+    
+    $(document).ready(function() {
+        // Khởi tạo DataTables cho bảng danh sách ca
+        shiftsDataTable = $('#shiftsTable').DataTable({
+            "language": {
+                "lengthMenu": "Hiển thị _MENU_ ca mỗi trang",
+                "zeroRecords": "Không tìm thấy ca làm việc nào",
+                "info": "Trang _PAGE_ / _PAGES_",
+                "infoEmpty": "Không có ca làm việc",
+                "infoFiltered": "(lọc từ _MAX_ ca)",
+                "search": "Tìm kiếm:",
+                "paginate": {
+                    "first": "Đầu",
+                    "last": "Cuối",
+                    "next": "Sau",
+                    "previous": "Trước"
+                }
+            },
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+            "order": [[0, "desc"]],
+            "columnDefs": [
+                { "orderable": false, "targets": 10 }
+            ]
+        });
+        
+        // Load counter status
+        loadCountersStatus();
+        setInterval(loadCountersStatus, 10000);
+    });
+    
     // ===== COUNTER STATUS MANAGEMENT =====
         
     // Load trạng thái quầy khi trang load
@@ -795,20 +837,14 @@
 
         function filterByStatus() {
             const status = $('#filterStatus').val();
-            const rows = $('tbody tr');
             
             if (!status) {
-                rows.show();
+                shiftsDataTable.search('').draw();
                 return;
             }
             
-            rows.each(function() {
-                const badge = $(this).find('.badge');
-                const text = badge.text().trim();
-                const show = (status === '0' && text.includes('Đang trực')) ||
-                             (status === '1' && text.includes('Đã chốt'));
-                $(this).toggle(show);
-            });
+            const searchText = status === '0' ? 'Đang trực' : 'Đã chốt';
+            shiftsDataTable.search(searchText).draw();
         }
 
         function printShiftReport(shiftId) {

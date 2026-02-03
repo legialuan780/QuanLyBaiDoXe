@@ -17,9 +17,9 @@ public partial class LichLamViec
 
     public TimeOnly GioKetThuc { get; set; }
 
-    public int? LoaiCa { get; set; }
+    public int LoaiCa { get; set; }
 
-    public int? TrangThai { get; set; }
+    public int TrangThai { get; set; }
 
     public string? GhiChu { get; set; }
 

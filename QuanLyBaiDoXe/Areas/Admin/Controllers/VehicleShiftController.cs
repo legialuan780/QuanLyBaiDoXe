@@ -42,58 +42,35 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             return View(shifts);
         }
 
-        // Lịch làm việc - Timeline view theo ngày (Đã ẩn khỏi menu)
-        /*
+        // Lịch làm việc - Timeline view theo ngày
         public async Task<IActionResult> Schedule(DateTime? date)
         {
             var selectedDate = date ?? DateTime.Today;
 
-            // Lấy tất cả nhân viên đang làm việc
-            var allEmployees = await _context.NhanViens
-                .Where(nv => nv.TrangThaiLamViec == true)
-                .OrderBy(nv => nv.HoTen)
-                .ToListAsync();
-
-            // Lấy lịch làm việc của ngày được chọn và vài ngày xung quanh để hiển thị
-            var startDate = selectedDate.AddDays(-1);
-            var endDate = selectedDate.AddDays(1);
+            // Lấy lịch làm việc của ngày được chọn và ngày hôm trước (để lấy ca đêm)
+            var previousDate = selectedDate.AddDays(-1);
+            var currentDateOnly = DateOnly.FromDateTime(selectedDate);
+            var previousDateOnly = DateOnly.FromDateTime(previousDate);
 
             var schedules = await _context.LichLamViecs
                 .Include(l => l.MaNhanVienNavigation)
-                .Where(l => l.NgayLamViec >= DateOnly.FromDateTime(startDate) 
-                         && l.NgayLamViec <= DateOnly.FromDateTime(endDate))
+                .Where(l => l.NgayLamViec == currentDateOnly || 
+                           (l.NgayLamViec == previousDateOnly && l.LoaiCa == 3))
                 .Select(l => new ScheduleViewModel
                 {
                     MaLich = l.MaLich,
                     MaNhanVien = l.MaNhanVien,
-                    TenNhanVien = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : "N/A",
+                    TenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
                     NgayLamViec = l.NgayLamViec,
-                    CaLamViec = l.CaLamViec,
+                    CaLamViec = l.LoaiCa ?? 0,
                     GhiChu = l.GhiChu
                 })
                 .ToListAsync();
-
-            // Thêm tất cả nhân viên vào danh sách (kể cả người chưa có lịch)
-            var currentDateOnly = DateOnly.FromDateTime(selectedDate);
-            foreach (var emp in allEmployees)
-            {
-                // Nếu nhân viên chưa có trong schedules của ngày này, thêm một record rỗng
-                if (!schedules.Any(s => s.MaNhanVien == emp.MaNhanVien && s.NgayLamViec == currentDateOnly))
-                {
-                    schedules.Add(new ScheduleViewModel
-                    {
-                        MaNhanVien = emp.MaNhanVien,
-                        TenNhanVien = emp.HoTen,
-                        NgayLamViec = null // Không có lịch
-                    });
-                }
-            }
 
             ViewBag.SelectedDate = selectedDate;
 
             return View(schedules);
         }
-        */
 
         // Bảng chấm công - Tính giờ công nhân viên
         public async Task<IActionResult> TimeSheet(int? month, int? year)

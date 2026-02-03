@@ -1,0 +1,420 @@
+﻿@model List<QuanLyBaiDoXe.Models.Entities.DatCho>
+@{
+    ViewData["Title"] = "Đặt chỗ";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Quản lý đặt chỗ</h1>
+    <p class="page-subtitle">Đặt chỗ trước để đảm bảo có chỗ đỗ xe khi đến</p>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #ffc107;">
+            <h6 class="text-muted mb-2">Chờ duyệt</h6>
+            <h3 class="mb-0" id="pendingCount">@Model.Count(b => b.TrangThaiDatCho == 0)</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #28a745;">
+            <h6 class="text-muted mb-2">Đã duyệt</h6>
+            <h3 class="mb-0" id="approvedCount">@Model.Count(b => b.TrangThaiDatCho == 1)</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #dc3545;">
+            <h6 class="text-muted mb-2">Đã hủy</h6>
+            <h3 class="mb-0" id="cancelledCount">@Model.Count(b => b.TrangThaiDatCho == 2)</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #6c757d;">
+            <h6 class="text-muted mb-2">Hết hạn</h6>
+            <h3 class="mb-0" id="expiredCount">@Model.Count(b => b.TrangThaiDatCho == 3)</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <button class="btn btn-primary" onclick="openBookingModal()">
+            <i class="fas fa-plus-circle me-2"></i>Đặt chỗ mới
+        </button>
+        <a href="@Url.Action("Index", "ParkingMap")" class="btn btn-outline-info">
+            <i class="fas fa-map-marked-alt me-2"></i>Xem sơ đồ bãi xe
+        </a>
+    </div>
+</div>
+
+<!-- Booking List -->
+<div class="card-custom">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">
+            <i class="fas fa-list text-primary me-2"></i>
+            Danh sách đặt chỗ
+        </h5>
+        <div>
+            <select class="form-select form-select-sm" id="statusFilter" style="width: 200px;">
+                <option value="">Tất cả trạng thái</option>
+                <option value="0">Chờ duyệt</option>
+                <option value="1">Đã duyệt</option>
+                <option value="2">Đã hủy</option>
+                <option value="3">Hết hạn</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Vị trí</th>
+                    <th>Khu vực</th>
+                    <th>Thời gian đặt</th>
+                    <th>Thời gian đến dự kiến</th>
+                    <th>Hết hạn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTableBody">
+                @foreach (var booking in Model)
+                {
+                    var statusClass = booking.TrangThaiDatCho switch
+                    {
+                        0 => "warning",
+                        1 => "success",
+                        2 => "danger",
+                        3 => "secondary",
+                        _ => "secondary"
+                    };
+                    var statusText = booking.TrangThaiDatCho switch
+                    {
+                        0 => "Chờ duyệt",
+                        1 => "Đã duyệt",
+                        2 => "Đã hủy",
+                        3 => "Hết hạn",
+                        _ => "Không xác định"
+                    };
+                    <tr data-status="@booking.TrangThaiDatCho">
+                        <td>@booking.MaDatCho</td>
+                        <td><strong>@booking.MaViTriNavigation?.TenViTri</strong></td>
+                        <td>@booking.MaViTriNavigation?.MaKhuVucNavigation?.TenKhuVuc</td>
+                        <td>@booking.ThoiGianDat?.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@booking.ThoiGianDenDuKien?.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@booking.ThoiGianHetHan?.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="badge bg-@statusClass">@statusText</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewBookingDetail(@booking.MaDatCho)" title="Chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            @if (booking.TrangThaiDatCho == 0)
+                            {
+                                <button class="btn btn-sm btn-danger" onclick="cancelBooking(@booking.MaDatCho)" title="Hủy">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-plus text-primary me-2"></i>
+                    Đặt chỗ mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Chọn vị trí <span class="text-danger">*</span></label>
+                            <select class="form-select" id="maViTri" required>
+                                <option value="">-- Chọn vị trí --</option>
+                            </select>
+                            <small class="text-muted">Chỉ hiển thị các vị trí đang trống</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Khu vực</label>
+                            <input type="text" class="form-control" id="tenKhuVuc" readonly>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Thời gian đến dự kiến <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="thoiGianDenDuKien" required>
+                            <small class="text-muted">Vị trí sẽ được giữ trong 2 giờ kể từ thời gian này</small>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Lưu ý:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Yêu cầu đặt chỗ cần được admin duyệt</li>
+                                    <li>Vị trí sẽ tự động giải phóng sau 2 giờ nếu bạn không đến</li>
+                                    <li>Bạn có thể hủy đặt chỗ trước khi admin duyệt</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="submitBooking()">
+                    <i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle text-info me-2"></i>
+                    Chi tiết đặt chỗ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th width="40%">Mã đặt chỗ:</th>
+                        <td id="detailMaDatCho"></td>
+                    </tr>
+                    <tr>
+                        <th>Vị trí:</th>
+                        <td id="detailViTri"></td>
+                    </tr>
+                    <tr>
+                        <th>Khu vực:</th>
+                        <td id="detailKhuVuc"></td>
+                    </tr>
+                    <tr>
+                        <th>Thời gian đặt:</th>
+                        <td id="detailThoiGianDat"></td>
+                    </tr>
+                    <tr>
+                        <th>Thời gian đến dự kiến:</th>
+                        <td id="detailThoiGianDen"></td>
+                    </tr>
+                    <tr>
+                        <th>Thời gian hết hạn:</th>
+                        <td id="detailThoiGianHetHan"></td>
+                    </tr>
+                    <tr>
+                        <th>Trạng thái:</th>
+                        <td id="detailTrangThai"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let bookingModal, detailModal;
+        // FIX: Create safe object without circular references
+        let bookings = @Html.Raw(Json.Serialize(Model.Select(b => new {
+            maDatCho = b.MaDatCho,
+            maViTri = b.MaViTri,
+            tenViTri = b.MaViTriNavigation != null ? b.MaViTriNavigation.TenViTri : null,
+            tenKhuVuc = b.MaViTriNavigation != null && b.MaViTriNavigation.MaKhuVucNavigation != null ? b.MaViTriNavigation.MaKhuVucNavigation.TenKhuVuc : null,
+            thoiGianDat = b.ThoiGianDat,
+            thoiGianDenDuKien = b.ThoiGianDenDuKien,
+            thoiGianHetHan = b.ThoiGianHetHan,
+            trangThaiDatCho = b.TrangThaiDatCho
+        })));
+
+        $(document).ready(function() {
+            bookingModal = new bootstrap.Modal($('#bookingModal'));
+            detailModal = new bootstrap.Modal($('#detailModal'));
+
+            // Set minimum datetime to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            $('#thoiGianDenDuKien').attr('min', now.toISOString().slice(0, 16));
+            $('#thoiGianDenDuKien').val(now.toISOString().slice(0, 16));
+
+            // Filter by status
+            $('#statusFilter').on('change', function() {
+                const status = $(this).val();
+                if (status === '') {
+                    $('tbody tr').show();
+                } else {
+                    $('tbody tr').hide();
+                    $(`tbody tr[data-status="${status}"]`).show();
+                }
+            });
+
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                location.reload();
+            }, 30000);
+        });
+
+        function openBookingModal() {
+            // Load available spots
+            $.ajax({
+                url: '@Url.Action("GetAvailableSpots", "Booking", new { area = "User" })',
+                type: 'GET',
+                success: function(result) {
+                    if (result.success) {
+                        const select = $('#maViTri');
+                        select.empty();
+                        select.append('<option value="">-- Chọn vị trí --</option>');
+                        
+                        result.data.forEach(spot => {
+                            select.append(`<option value="${spot.maViTri}" data-area="${spot.tenKhuVuc}">${spot.tenViTri} - ${spot.tenKhuVuc}</option>`);
+                        });
+
+                        bookingModal.show();
+                    } else {
+                        showNotification('Không thể tải danh sách vị trí', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Có lỗi xảy ra', 'error');
+                }
+            });
+        }
+
+        // Update area when spot is selected
+        $('#maViTri').on('change', function() {
+            const selected = $(this).find(':selected');
+            $('#tenKhuVuc').val(selected.data('area') || '');
+        });
+
+        function submitBooking() {
+            const maViTri = $('#maViTri').val();
+            const thoiGianDenDuKien = $('#thoiGianDenDuKien').val();
+
+            if (!maViTri || !thoiGianDenDuKien) {
+                showNotification('Vui lòng điền đầy đủ thông tin', 'warning');
+                return;
+            }
+
+            // Parse local datetime string to Date object
+            const localDate = new Date(thoiGianDenDuKien);
+            
+            // Format to ISO string WITHOUT timezone conversion
+            // This keeps the date as-is in local timezone
+            const year = localDate.getFullYear();
+            const month = String(localDate.getMonth() + 1).padStart(2, '0');
+            const day = String(localDate.getDate()).padStart(2, '0');
+            const hours = String(localDate.getHours()).padStart(2, '0');
+            const minutes = String(localDate.getMinutes()).padStart(2, '0');
+            const seconds = String(localDate.getSeconds()).padStart(2, '0');
+            
+            const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+
+            const data = {
+                maViTri: parseInt(maViTri),
+                thoiGianDenDuKien: localDateTimeString
+            };
+
+            $.ajax({
+                url: '@Url.Action("CreateBooking", "Booking", new { area = "User" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        bookingModal.hide();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Có lỗi xảy ra', 'error');
+                }
+            });
+        }
+
+        function viewBookingDetail(id) {
+            const booking = bookings.find(b => b.maDatCho === id);
+            if (!booking) return;
+
+            $('#detailMaDatCho').text(booking.maDatCho);
+            $('#detailViTri').text(booking.tenViTri || '-');
+            $('#detailKhuVuc').text(booking.tenKhuVuc || '-');
+            $('#detailThoiGianDat').text(formatDateTime(booking.thoiGianDat));
+            $('#detailThoiGianDen').text(formatDateTime(booking.thoiGianDenDuKien));
+            $('#detailThoiGianHetHan').text(formatDateTime(booking.thoiGianHetHan));
+
+            const statusMap = {
+                0: '<span class="badge bg-warning">Chờ duyệt</span>',
+                1: '<span class="badge bg-success">Đã duyệt</span>',
+                2: '<span class="badge bg-danger">Đã hủy</span>',
+                3: '<span class="badge bg-secondary">Hết hạn</span>'
+            };
+            $('#detailTrangThai').html(statusMap[booking.trangThaiDatCho] || '-');
+
+            detailModal.show();
+        }
+
+        function cancelBooking(id) {
+            if (!confirm('Bạn có chắc muốn hủy đặt chỗ này?')) return;
+
+            $.ajax({
+                url: '@Url.Action("CancelBooking", "Booking", new { area = "User" })',
+                type: 'POST',
+                data: { id: id },
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Có lỗi xảy ra', 'error');
+                }
+            });
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN');
+        }
+
+        function showNotification(message, type) {
+            const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107';
+            const notification = $(`
+                <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px 25px; 
+                            background: ${bgColor}; color: white; border-radius: 8px; 
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" style="margin-right: 8px;"></i>
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(notification);
+            setTimeout(() => notification.fadeOut(() => notification.remove()), 3000);
+        }
+    </script>
+}

@@ -63,14 +63,23 @@ namespace QuanLyBaiDoXe.Areas.User.Controllers
                     return Json(new { success = false, message = "Vị trí không khả dụng!" });
                 }
 
+                // Lấy thời gian hiện tại (server time - should be Vietnam time)
+                var thoiGianDat = DateTime.Now;
+                
+                // Validate thời gian đến phải sau thời gian hiện tại
+                if (request.ThoiGianDenDuKien <= thoiGianDat)
+                {
+                    return Json(new { success = false, message = "Thời gian đến dự kiến phải sau thời gian hiện tại!" });
+                }
+
                 // Tạo đặt chỗ mới
                 var datCho = new DatCho
                 {
                     MaKhachHang = customerId,
                     MaViTri = request.MaViTri,
-                    ThoiGianDat = DateTime.Now,
+                    ThoiGianDat = thoiGianDat,
                     ThoiGianDenDuKien = request.ThoiGianDenDuKien,
-                    ThoiGianHetHan = request.ThoiGianDenDuKien.AddMinutes(30),
+                    ThoiGianHetHan = request.ThoiGianDenDuKien.AddHours(2), // Hết hạn sau 2 giờ kể từ thời gian đến dự kiến
                     TrangThaiDatCho = 0 // Pending - Chờ admin duyệt
                 };
 

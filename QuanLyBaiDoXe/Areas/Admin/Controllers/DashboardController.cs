@@ -43,6 +43,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 .Where(l => l.ThoiGianRa.HasValue && l.ThoiGianRa.Value.Date == yesterday && l.TongTien.HasValue)
                 .SumAsync(l => l.TongTien ?? 0);
 
+            // Đặt chỗ chờ duyệt
+            var pendingBookings = await _context.DatChos.CountAsync(dc => dc.TrangThaiDatCho == 0);
+
             // Tính tỷ lệ thay đổi
             decimal tyLeXeTrongBai = xeTrongBaiHomQua > 0 ? ((decimal)(xeTrongBai - xeTrongBaiHomQua) / xeTrongBaiHomQua * 100) : 0;
             decimal tyLeXeVao = xeVaoHomQua > 0 ? ((decimal)(xeVaoHomNay - xeVaoHomQua) / xeVaoHomQua * 100) : 0;
@@ -167,6 +170,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 XeVaoHomNay = xeVaoHomNay,
                 XeRaHomNay = xeRaHomNay,
                 DoanhThuHomNay = doanhThuHomNay,
+                PendingBookings = pendingBookings,
                 TyLeXeTrongBai = Math.Round(tyLeXeTrongBai, 1),
                 TyLeXeVao = Math.Round(tyLeXeVao, 1),
                 TyLeXeRa = Math.Round(tyLeXeRa, 1),

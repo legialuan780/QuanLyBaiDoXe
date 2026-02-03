@@ -1117,6 +1117,110 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
+
+    /* Account Info Modal Styles */
+    .account-info-box {
+        background: #f8f9fa;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    .account-info-box h6 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+    }
+
+    .credential-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .credential-box:hover {
+        border-color: #3498db;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+    }
+
+    .credential-box code {
+        flex: 1;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .btn-copy-credential {
+        background: #3498db;
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .btn-copy-credential:hover {
+        background: #2980b9;
+        transform: scale(1.1);
+    }
+
+    .btn-copy-credential:active {
+        transform: scale(0.95);
+    }
+
+    .copy-success-msg {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #27ae60;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+        z-index: 99999;
+        font-weight: 600;
+        font-size: 1rem;
+        animation: fadeInOut 0.3s ease-in-out;
+    }
+
+    @@keyframes fadeInOut {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    #accountInfoModal .modal-header.bg-success {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
+    }
+
+    #accountInfoModal .alert ul {
+        padding-left: 20px;
+        margin-top: 8px;
+    }
+
+    #accountInfoModal .alert ul li {
+        margin-bottom: 5px;
+    }
+
 </style>
 
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
@@ -1590,9 +1694,109 @@
                     saveBtn.prop('disabled', false).html(originalText);
                     
                     if (response.success) {
-                        alert(response.message);
-                        $('#addEmployeeModal').modal('hide');
-                        location.reload(); // Reload để cập nhật danh sách
+                        // Display account information
+                        if (response.account) {
+                            const accountInfo = `
+                                <div class="modal fade" id="accountInfoModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-success text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-check-circle"></i>
+                                                    Tạo nhân viên thành công!
+                                                </h5>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="alert alert-success mb-4">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    <strong>Thông báo:</strong> Hệ thống đã tự động tạo tài khoản đăng nhập cho nhân viên.
+                                                </div>
+                                                
+                                                <div class="account-info-box">
+                                                    <h6 class="mb-3">
+                                                        <i class="fas fa-user-circle"></i>
+                                                        Thông tin tài khoản
+                                                    </h6>
+                                                    
+                                                    <div class="row mb-3">
+                                                        <div class="col-4">
+                                                            <strong><i class="fas fa-user"></i> Tên đăng nhập:</strong>
+                                                        </div>
+                                                        <div class="col-8">
+                                                            <div class="credential-box">
+                                                                <code class="text-primary" style="font-size: 1.1rem;">${response.account.username}</code>
+                                                                <button class="btn-copy-credential" onclick="copyToClipboard('${response.account.username}', 'tên đăng nhập')">
+                                                                    <i class="fas fa-copy"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row mb-3">
+                                                        <div class="col-4">
+                                                            <strong><i class="fas fa-key"></i> Mật khẩu:</strong>
+                                                        </div>
+                                                        <div class="col-8">
+                                                            <div class="credential-box">
+                                                                <code class="text-danger" style="font-size: 1.1rem;">${response.account.password}</code>
+                                                                <button class="btn-copy-credential" onclick="copyToClipboard('${response.account.password}', 'mật khẩu')">
+                                                                    <i class="fas fa-copy"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-4">
+                                                            <strong><i class="fas fa-shield-alt"></i> Quyền hạn:</strong>
+                                                        </div>
+                                                        <div class="col-8">
+                                                            <span class="badge badge-info" style="font-size: 0.9rem;">${response.account.quyenHan}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="alert alert-warning mt-3">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    <strong>Lưu ý quan trọng:</strong>
+                                                    <ul class="mb-0 mt-2">
+                                                        <li>Vui lòng sao chép và gửi thông tin này cho nhân viên</li>
+                                                        <li>Thông tin chỉ hiển thị một lần duy nhất</li>
+                                                        <li>Nhân viên nên đổi mật khẩu sau lần đăng nhập đầu tiên</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn-secondary-admin" onclick="copyAllAccountInfo('${response.account.username}', '${response.account.password}', '${response.account.quyenHan}')">
+                                                    <i class="fas fa-copy"></i>
+                                                    Sao chép tất cả
+                                                </button>
+                                                <button type="button" class="btn-primary-admin" onclick="closeAccountInfoAndReload()">
+                                                    <i class="fas fa-check"></i>
+                                                    Đã lưu thông tin
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Remove existing modal if any
+                            $('#accountInfoModal').remove();
+                            
+                            // Add modal to body
+                            $('body').append(accountInfo);
+                            
+                            // Close add employee modal
+                            $('#addEmployeeModal').modal('hide');
+                            
+                            // Show account info modal
+                            $('#accountInfoModal').modal('show');
+                        } else {
+                            alert(response.message);
+                            $('#addEmployeeModal').modal('hide');
+                            location.reload();
+                        }
                     } else {
                         alert('Lỗi: ' + response.message);
                     }
@@ -1602,6 +1806,69 @@
                     alert('Có lỗi xảy ra khi thêm nhân viên: ' + error);
                 }
             });
+        }
+
+        // Helper function to copy to clipboard
+        function copyToClipboard(text, label) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    // Show success message
+                    const msg = $('<div class="copy-success-msg">Đã sao chép ' + label + '!</div>');
+                    $('body').append(msg);
+                    setTimeout(() => msg.fadeOut(300, () => msg.remove()), 2000);
+                }).catch(function(err) {
+                    alert('Không thể sao chép: ' + err);
+                });
+            } else {
+                // Fallback for older browsers
+                const tempInput = $('<input>');
+                $('body').append(tempInput);
+                tempInput.val(text).select();
+                document.execCommand('copy');
+                tempInput.remove();
+                
+                const msg = $('<div class="copy-success-msg">Đã sao chép ' + label + '!</div>');
+                $('body').append(msg);
+                setTimeout(() => msg.fadeOut(300, () => msg.remove()), 2000);
+            }
+        }
+
+        // Helper function to copy all account info
+        function copyAllAccountInfo(username, password, quyenHan) {
+            const text = `THÔNG TIN TÀI KHOẢN NHÂN VIÊN
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tên đăng nhập: ${username}
+Mật khẩu: ${password}
+Quyền hạn: ${quyenHan}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Lưu ý: Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    const msg = $('<div class="copy-success-msg">Đã sao chép toàn bộ thông tin!</div>');
+                    $('body').append(msg);
+                    setTimeout(() => msg.fadeOut(300, () => msg.remove()), 2000);
+                }).catch(function(err) {
+                    alert('Không thể sao chép: ' + err);
+                });
+            } else {
+                // Fallback
+                const tempInput = $('<textarea>');
+                $('body').append(tempInput);
+                tempInput.val(text).select();
+                document.execCommand('copy');
+                tempInput.remove();
+                
+                const msg = $('<div class="copy-success-msg">Đã sao chép toàn bộ thông tin!</div>');
+                $('body').append(msg);
+                setTimeout(() => msg.fadeOut(300, () => msg.remove()), 2000);
+            }
+        }
+
+        // Helper function to close account info modal and reload
+        function closeAccountInfoAndReload() {
+            $('#accountInfoModal').modal('hide');
+            location.reload();
         }
 
         let currentEmployeeId = 0;

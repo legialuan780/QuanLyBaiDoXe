@@ -1450,9 +1450,52 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     }
                 }
 
+                // Generate unique username
+                string username = await GenerateUniqueUsername(request.HoTen);
+                
+                // Check if username exists (for safety)
+                var existingUsername = await _context.TaiKhoans.AnyAsync(tk => tk.TenDangNhap == username);
+                if (existingUsername)
+                {
+                    // Add number suffix if exists
+                    int counter = 1;
+                    string tempUsername = username;
+                    while (await _context.TaiKhoans.AnyAsync(tk => tk.TenDangNhap == tempUsername))
+                    {
+                        tempUsername = username + counter;
+                        counter++;
+                    }
+                    username = tempUsername;
+                }
+
+                // Generate simple password (last 4 digits of phone or random)
+                string password = GenerateSimplePassword(request.SoDienThoai);
+
+                // Determine QuyenHan based on ChucVu - Map theo database constraint
+                // Database chỉ cho phép: 'Admin', 'Khách hàng', 'Nhân viên'
+                string quyenHan = request.ChucVu switch
+                {
+                    0 => "Admin",           // Admin
+                    _ => "Nhân viên"        // Tất cả nhân viên khác (Quản lý, Bảo vệ, Kỹ thuật, Nhân viên)
+                };
+
+                // Create account first
+                var taiKhoan = new TaiKhoan
+                {
+                    TenDangNhap = username,
+                    MatKhau = password, // In production, should be hashed
+                    QuyenHan = quyenHan,
+                    Email = request.SoDienThoai != null ? $"{request.SoDienThoai}@parking.com" : null,
+                    TrangThai = true
+                };
+
+                _context.TaiKhoans.Add(taiKhoan);
+                await _context.SaveChangesAsync();
+
                 // Create new employee
                 var employee = new NhanVien
                 {
+                    MaTaiKhoan = taiKhoan.MaTaiKhoan,
                     HoTen = request.HoTen.Trim(),
                     GioiTinh = request.GioiTinh,
                     SoDienThoai = request.SoDienThoai,
@@ -1485,12 +1528,74 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 return Json(new { 
                     success = true, 
                     message = "Thêm nhân viên thành công",
-                    employeeId = employee.MaNhanVien 
+                    employeeId = employee.MaNhanVien,
+                    account = new
+                    {
+                        username = username,
+                        password = password,
+                        quyenHan = quyenHan
+                    }
                 });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Helper method to generate unique username from employee name
+        private async Task<string> GenerateUniqueUsername(string hoTen)
+        {
+            // Remove Vietnamese accents and convert to lowercase
+            string username = RemoveVietnameseAccents(hoTen.Trim().ToLower());
+            
+            // Remove spaces and special characters
+            username = new string(username.Where(c => char.IsLetterOrDigit(c)).ToArray());
+            
+            // Take first 6-8 characters
+            username = username.Length > 8 ? username.Substring(0, 8) : username;
+            
+            return username;
+        }
+
+        // Helper method to remove Vietnamese accents
+        private string RemoveVietnameseAccents(string text)
+        {
+            var accents = new Dictionary<string, string>
+            {
+                {"á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ", "a"},
+                {"é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ", "e"},
+                {"í|ì|ỉ|ĩ|ị", "i"},
+                {"ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ", "o"},
+                {"ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự", "u"},
+                {"ý|ỳ|ỷ|ỹ|ỵ", "y"},
+                {"đ", "d"}
+            };
+
+            foreach (var accent in accents)
+            {
+                foreach (var c in accent.Key.Split('|'))
+                {
+                    text = text.Replace(c, accent.Value);
+                }
+            }
+
+            return text;
+        }
+
+        // Helper method to generate simple password
+        private string GenerateSimplePassword(string? soDienThoai)
+        {
+            if (!string.IsNullOrEmpty(soDienThoai) && soDienThoai.Length >= 4)
+            {
+                // Use last 4 digits of phone number
+                return soDienThoai.Substring(soDienThoai.Length - 4);
+            }
+            else
+            {
+                // Generate random 4-digit password
+                Random random = new Random();
+                return random.Next(1000, 9999).ToString();
             }
         }
 

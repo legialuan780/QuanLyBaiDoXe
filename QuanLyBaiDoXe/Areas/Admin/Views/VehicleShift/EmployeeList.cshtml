@@ -20,6 +20,10 @@
         </div>
     </div>
     <div class="page-header-actions">
+        <button class="btn-info-admin" data-bs-toggle="modal" data-bs-target="#weeklyOverviewModal">
+            <i class="fas fa-calendar-week"></i>
+            Xem tổng quan tuần
+        </button>
         <button class="btn-secondary-admin" data-bs-toggle="modal" data-bs-target="#assignCounterModal">
             <i class="fas fa-cash-register"></i>
             Phân công quầy
@@ -438,6 +442,157 @@
     </div>
 </div>
 
+<!-- Weekly Overview Modal -->
+<div class="modal fade" id="weeklyOverviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-week"></i>
+                    Tổng quan lịch làm việc tuần
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="week-navigation mb-4">
+                    <button class="btn-secondary-admin" onclick="loadWeeklyOverview(-7)">
+                        <i class="fas fa-chevron-left"></i> Tuần trước
+                    </button>
+                    <h5 class="d-inline-block mx-3" id="weekRangeDisplay">Đang tải...</h5>
+                    <button class="btn-secondary-admin" onclick="loadWeeklyOverview(7)">
+                        Tuần sau <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="btn-info-admin ms-3" onclick="loadWeeklyOverview(0)">
+                        <i class="fas fa-calendar-day"></i> Tuần hiện tại
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div id="weeklyOverviewLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="mt-3">Đang tải dữ liệu tuần...</p>
+                </div>
+
+                <!-- Weekly Schedule Grid -->
+                <div id="weeklyOverviewContent" style="display: none;">
+                    <div class="weekly-grid-container">
+                        <div class="weekly-grid-header">
+                            <div class="day-header">Ca / Ngày</div>
+                            <div class="day-header" id="day-0">Thứ 2</div>
+                            <div class="day-header" id="day-1">Thứ 3</div>
+                            <div class="day-header" id="day-2">Thứ 4</div>
+                            <div class="day-header" id="day-3">Thứ 5</div>
+                            <div class="day-header" id="day-4">Thứ 6</div>
+                            <div class="day-header" id="day-5">Thứ 7</div>
+                            <div class="day-header" id="day-6">CN</div>
+                        </div>
+
+                        <!-- Ca Sáng -->
+                        <div class="shift-row">
+                            <div class="shift-label">
+                                <i class="fas fa-sun"></i>
+                                <strong>Ca Sáng</strong>
+                                <small>(6h - 14h)</small>
+                            </div>
+                            <div class="shift-cell" id="morning-0"></div>
+                            <div class="shift-cell" id="morning-1"></div>
+                            <div class="shift-cell" id="morning-2"></div>
+                            <div class="shift-cell" id="morning-3"></div>
+                            <div class="shift-cell" id="morning-4"></div>
+                            <div class="shift-cell" id="morning-5"></div>
+                            <div class="shift-cell" id="morning-6"></div>
+                        </div>
+
+                        <!-- Ca Chiều -->
+                        <div class="shift-row">
+                            <div class="shift-label">
+                                <i class="fas fa-cloud-sun"></i>
+                                <strong>Ca Chiều</strong>
+                                <small>(14h - 22h)</small>
+                            </div>
+                            <div class="shift-cell" id="afternoon-0"></div>
+                            <div class="shift-cell" id="afternoon-1"></div>
+                            <div class="shift-cell" id="afternoon-2"></div>
+                            <div class="shift-cell" id="afternoon-3"></div>
+                            <div class="shift-cell" id="afternoon-4"></div>
+                            <div class="shift-cell" id="afternoon-5"></div>
+                            <div class="shift-cell" id="afternoon-6"></div>
+                        </div>
+
+                        <!-- Ca Đêm -->
+                        <div class="shift-row">
+                            <div class="shift-label">
+                                <i class="fas fa-moon"></i>
+                                <strong>Ca Đêm</strong>
+                                <small>(22h - 6h)</small>
+                            </div>
+                            <div class="shift-cell" id="night-0"></div>
+                            <div class="shift-cell" id="night-1"></div>
+                            <div class="shift-cell" id="night-2"></div>
+                            <div class="shift-cell" id="night-3"></div>
+                            <div class="shift-cell" id="night-4"></div>
+                            <div class="shift-cell" id="night-5"></div>
+                            <div class="shift-cell" id="night-6"></div>
+                        </div>
+                    </div>
+
+                    <!-- Available Employees Section -->
+                    <div class="mt-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-users"></i>
+                            Nhân viên rảnh trong tuần này
+                            <span class="badge badge-info" id="freeEmployeesCount">0</span>
+                        </h6>
+                        <div id="freeEmployeesList" class="free-employees-container">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="stat-box bg-teal">
+                                <div class="stat-number" id="stat-total-shifts">0</div>
+                                <div class="stat-label">Tổng ca đã xếp</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box bg-success">
+                                <div class="stat-number" id="stat-total-employees">0</div>
+                                <div class="stat-label">Nhân viên có lịch</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box bg-warning">
+                                <div class="stat-number" id="stat-free-employees">0</div>
+                                <div class="stat-label">Nhân viên rảnh</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box bg-info">
+                                <div class="stat-number" id="stat-empty-slots">0</div>
+                                <div class="stat-label">Ca trống</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Đóng
+                </button>
+                <button type="button" class="btn-primary-admin" onclick="printWeeklyOverview()">
+                    <i class="fas fa-print"></i>
+                    In lịch tuần
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Assign Counter Modal -->
 <div class="modal fade" id="assignCounterModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -779,6 +934,189 @@
     .available-employee-badge {
         font-size: 0.8rem;
     }
+
+    /* Weekly Overview Styles */
+    .week-navigation {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .weekly-grid-container {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .weekly-grid-header {
+        display: grid;
+        grid-template-columns: 150px repeat(7, 1fr);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: bold;
+    }
+
+    .day-header {
+        padding: 15px 10px;
+        text-align: center;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .day-header:last-child {
+        border-right: none;
+    }
+
+    .shift-row {
+        display: grid;
+        grid-template-columns: 150px repeat(7, 1fr);
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .shift-row:last-child {
+        border-bottom: none;
+    }
+
+    .shift-label {
+        padding: 15px;
+        background: #f8f9fa;
+        border-right: 2px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .shift-label i {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+
+    .shift-label strong {
+        font-size: 1rem;
+        color: #2c3e50;
+    }
+
+    .shift-label small {
+        color: #95a5a6;
+        font-size: 0.75rem;
+    }
+
+    .shift-cell {
+        padding: 10px;
+        min-height: 120px;
+        border-right: 1px solid #e0e0e0;
+        background: white;
+        transition: all 0.3s;
+    }
+
+    .shift-cell:last-child {
+        border-right: none;
+    }
+
+    .shift-cell:hover {
+        background: #f0f8ff;
+    }
+
+    .shift-cell.empty {
+        background: #fff9e6;
+    }
+
+    .shift-cell.filled {
+        background: #e8f8f5;
+    }
+
+    .employee-chip {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 3px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .employee-chip:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    .empty-slot-text {
+        color: #95a5a6;
+        font-size: 0.85rem;
+        font-style: italic;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .free-employees-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .free-employee-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .free-employee-chip:hover {
+        border-color: #3498db;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+    }
+
+    .free-employee-chip .employee-avatar-small {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .free-employee-chip .employee-name {
+        flex: 1;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .btn-info-admin {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .btn-info-admin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
 </style>
 
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
@@ -794,6 +1132,8 @@
     };
     let lockedCounters = {}; // Track which counters are locked (already assigned)
     let availableEmployees = [];
+    let currentWeekStart = new Date();
+    let weeklyOverviewData = null;
 
     // Reset form khi mở modal thêm nhân viên
     $('#addEmployeeModal').on('show.bs.modal', function() {
@@ -1748,6 +2088,161 @@
                     </div>
                 `);
             });
+        }
+    </script>
+
+    <!-- Weekly Overview Scripts -->
+    <script>
+        // Weekly Overview Functions
+        $('#weeklyOverviewModal').on('show.bs.modal', function() {
+            // Reset to current week when opening
+            currentWeekStart = getMonday(new Date());
+            loadWeeklyOverview(0);
+        });
+
+        function getMonday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function loadWeeklyOverview(daysOffset) {
+            if (daysOffset !== 0) {
+                currentWeekStart = new Date(currentWeekStart);
+                currentWeekStart.setDate(currentWeekStart.getDate() + daysOffset);
+            }
+
+            // Show loading
+            $('#weeklyOverviewLoading').show();
+            $('#weeklyOverviewContent').hide();
+
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+
+            // Update week range display
+            const formatDate = (date) => {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return `${day}/${month}/${date.getFullYear()}`;
+            };
+            $('#weekRangeDisplay').text(`${formatDate(currentWeekStart)} - ${formatDate(weekEnd)}`);
+
+            // Update day headers with dates
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                const dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+                $(`#day-${i}`).html(`<strong>${dayNames[i]}</strong><br><small>${formatDate(date)}</small>`);
+            }
+
+            // Load data from server
+            $.ajax({
+                url: '@Url.Action("GetWeeklyOverview", "VehicleShift", new { area = "Admin" })',
+                type: 'GET',
+                data: {
+                    weekStart: currentWeekStart.toISOString()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        weeklyOverviewData = response.data;
+                        renderWeeklyOverview();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                    $('#weeklyOverviewLoading').hide();
+                    $('#weeklyOverviewContent').show();
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi tải dữ liệu tuần');
+                    $('#weeklyOverviewLoading').hide();
+                }
+            });
+        }
+
+        function renderWeeklyOverview() {
+            if (!weeklyOverviewData) return;
+
+            const shifts = ['morning', 'afternoon', 'night'];
+            const shiftNames = { morning: 0, afternoon: 1, night: 2 };
+            
+            let totalShifts = 0;
+            let emptySlots = 0;
+
+            // Clear all cells first
+            for (let shift of shifts) {
+                for (let day = 0; day < 7; day++) {
+                    $(`#${shift}-${day}`).html('<div class="empty-slot-text">Chưa có ca</div>').removeClass('filled').addClass('empty');
+                }
+            }
+
+            // Populate cells with scheduled employees
+            if (weeklyOverviewData.schedules && weeklyOverviewData.schedules.length > 0) {
+                weeklyOverviewData.schedules.forEach(schedule => {
+                    const date = new Date(schedule.ngayLamViec);
+                    const dayIndex = (date.getDay() + 6) % 7; // Convert to Monday-Sunday (0-6)
+                    const shiftType = schedule.caLamViec === 0 ? 'morning' : schedule.caLamViec === 1 ? 'afternoon' : 'night';
+                    
+                    const cellId = `${shiftType}-${dayIndex}`;
+                    const cell = $(`#${cellId}`);
+                    
+                    // Check if cell is empty
+                    if (cell.find('.employee-chip').length === 0) {
+                        cell.html('').removeClass('empty').addClass('filled');
+                    }
+                    
+                    // Add employee chip
+                    cell.append(`<div class="employee-chip" title="${schedule.tenNhanVien}">${schedule.tenNhanVien}</div>`);
+                    totalShifts++;
+                });
+            }
+
+            // Count empty slots
+            $('.shift-cell.empty').each(function() {
+                emptySlots++;
+            });
+
+            // Render free employees
+            renderFreeEmployees();
+
+            // Update statistics
+            const uniqueEmployees = new Set(weeklyOverviewData.schedules.map(s => s.maNhanVien)).size;
+            const freeEmployees = weeklyOverviewData.freeEmployees ? weeklyOverviewData.freeEmployees.length : 0;
+            
+            $('#stat-total-shifts').text(totalShifts);
+            $('#stat-total-employees').text(uniqueEmployees);
+            $('#stat-free-employees').text(freeEmployees);
+            $('#stat-empty-slots').text(emptySlots);
+        }
+
+        function renderFreeEmployees() {
+            const freeEmployees = weeklyOverviewData.freeEmployees || [];
+            
+            $('#freeEmployeesCount').text(freeEmployees.length);
+            
+            if (freeEmployees.length === 0) {
+                $('#freeEmployeesList').html(`
+                    <div class="text-center py-4" style="grid-column: 1 / -1;">
+                        <i class="fas fa-user-check" style="font-size: 2rem; color: #27ae60;"></i>
+                        <p class="mt-2 text-muted">Tất cả nhân viên đều đã có lịch làm việc!</p>
+                    </div>
+                `);
+            } else {
+                let html = '';
+                freeEmployees.forEach(emp => {
+                    html += `
+                        <div class="free-employee-chip">
+                            <div class="employee-avatar-small">${emp.hoTen.substring(0, 1)}</div>
+                            <div class="employee-name">${emp.hoTen}</div>
+                        </div>
+                    `;
+                });
+                $('#freeEmployeesList').html(html);
+            }
+        }
+
+        function printWeeklyOverview() {
+            window.print();
         }
     </script>
 }

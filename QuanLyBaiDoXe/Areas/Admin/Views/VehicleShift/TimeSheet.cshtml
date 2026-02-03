@@ -27,6 +27,15 @@
             <i class="fas fa-file-excel"></i>
             Xuất Excel
         </button>
+        <button class="btn-warning-admin" onclick="openRequestApprovalModal()">
+            <i class="fas fa-tasks"></i>
+            Xét duyệt yêu cầu
+            <span id="pendingRequestBadge" class="badge bg-danger ms-1" style="display: none;">0</span>
+        </button>
+        <button class="btn-info-admin" onclick="openWorkScheduleModal()">
+            <i class="fas fa-calendar-week"></i>
+            Lịch làm việc
+        </button>
         <button class="btn-primary-admin" onclick="openCreateShiftModal()">
             <i class="fas fa-plus-circle"></i>
             Lập ca
@@ -174,11 +183,59 @@
                             {
                                 var now = DateTime.Now;
                                 var shiftStartTime = shift.ThoiGianNhanCa ?? DateTime.MinValue;
+                                var shiftEndTime = shift.ThoiGianGiaoCa;
                                 
-                                // Xác định trạng thái ca
-                                var isCurrent = day.CurrentShift != null && shift.MaCa == day.CurrentShift.MaCa;
-                                var isUpcoming = shiftStartTime > now; // Ca chưa bắt đầu = Sắp tới
-                                var isCompleted = shiftStartTime <= now && shift.TrangThaiCa == 1; // Ca đã diễn ra VÀ đã chốt
+                                // Xác định trạng thái ca dựa trên thời gian thực
+                                bool isCurrent = false;
+                                bool isUpcoming = false;
+                                bool isCompleted = shift.TrangThaiCa == 1; // Ca đã chốt
+                                
+                                if (!isCompleted)
+                                {
+                                    // Ca chưa chốt - kiểm tra thời gian
+                                    if (shiftStartTime > now)
+                                    {
+                                        // Ca chưa bắt đầu
+                                        isUpcoming = true;
+                                    }
+                                    else if (shiftEndTime.HasValue)
+                                    {
+                                        // Ca đã có thời gian kết thúc
+                                        if (now >= shiftStartTime && now <= shiftEndTime.Value)
+                                        {
+                                            // Thời gian hiện tại nằm trong khoảng ca làm việc
+                                            isCurrent = true;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Ca đã bắt đầu nhưng chưa có thời gian kết thúc
+                                        // Kiểm tra dựa trên ca làm việc tiêu chuẩn
+                                        var hour = shiftStartTime.Hour;
+                                        DateTime estimatedEndTime;
+                                        
+                                        if (hour >= 6 && hour < 14)
+                                        {
+                                            // Ca sáng: 6:00 - 14:00
+                                            estimatedEndTime = shiftStartTime.Date.AddHours(14);
+                                        }
+                                        else if (hour >= 14 && hour < 22)
+                                        {
+                                            // Ca chiều: 14:00 - 22:00
+                                            estimatedEndTime = shiftStartTime.Date.AddHours(22);
+                                        }
+                                        else
+                                        {
+                                            // Ca đêm: 22:00 - 6:00 (ngày hôm sau)
+                                            estimatedEndTime = shiftStartTime.Date.AddDays(1).AddHours(6);
+                                        }
+                                        
+                                        if (now >= shiftStartTime && now <= estimatedEndTime)
+                                        {
+                                            isCurrent = true;
+                                        }
+                                    }
+                                }
                                 
                                 var shiftClass = "shift-item";
                                 
@@ -864,9 +921,442 @@
         font-size: 13px;
         color: #7f8c8d;
     }
+
+    .btn-info-admin {
+        background: #17a2b8;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-info-admin:hover {
+        background: #138496;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .btn-warning-admin {
+        background: #ffc107;
+        color: #212529;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+    }
+
+    .btn-warning-admin:hover {
+        background: #e0a800;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .request-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 4px solid #ffc107;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+
+    .request-card:hover {
+        transform: translateX(2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .request-card.request-time-off {
+        border-left-color: #dc3545;
+    }
+
+    .request-card.request-shift-change {
+        border-left-color: #17a2b8;
+    }
+
+    .request-card.request-time-change {
+        border-left-color: #ffc107;
+    }
+
+    .request-card.approved {
+        background: linear-gradient(to right, #d4edda 0%, white 10%);
+        border-left-color: #28a745;
+    }
+
+    .request-card.rejected {
+        background: linear-gradient(to right, #f8d7da 0%, white 10%);
+        border-left-color: #dc3545;
+    }
+
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+
+    .request-employee {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .request-type-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .request-body {
+        padding: 15px 0;
+        border-top: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .request-info-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .request-info-row i {
+        width: 20px;
+        color: #6c757d;
+    }
+
+    .request-info-row strong {
+        min-width: 120px;
+        color: #495057;
+    }
+
+    .request-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .request-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .request-meta {
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    .no-requests {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .no-requests i {
+        font-size: 64px;
+        margin-bottom: 15px;
+        opacity: 0.3;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .filter-tab {
+        padding: 10px 20px;
+        background: transparent;
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+        position: relative;
+    }
+
+    .filter-tab:hover {
+        color: #495057;
+    }
+
+    .filter-tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+
+    .filter-tab .count-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-left: 5px;
+    }
+
+    .filter-tab.active .count-badge {
+        background: #667eea;
+        color: white;
+    }
+
+    .schedule-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+        transition: all 0.2s ease;
+    }
+
+    .schedule-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transform: translateX(2px);
+    }
+
+    .schedule-card.shift-morning {
+        border-left-color: #ffc107;
+        background: linear-gradient(to right, #fff3cd 0%, white 10%);
+    }
+
+    .schedule-card.shift-afternoon {
+        border-left-color: #17a2b8;
+        background: linear-gradient(to right, #d1ecf1 0%, white 10%);
+    }
+
+    .schedule-card.shift-night {
+        border-left-color: #6c757d;
+        background: linear-gradient(to right, #e9ecef 0%, white 10%);
+    }
+
+    .schedule-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .schedule-employee {
+        font-size: 16px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .schedule-time {
+        font-size: 14px;
+        color: #7f8c8d;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .schedule-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .no-schedule {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+    .no-schedule i {
+        font-size: 48px;
+        margin-bottom: 10px;
+        opacity: 0.3;
+    }
 </style>
 
 <link rel="stylesheet" href="~/css/vehicle-shift.css" />
+
+<!-- Work Schedule Modal -->
+<div class="modal fade" id="workScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-week"></i>
+                    Lịch làm việc - <span id="scheduleModalTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Date Selector -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-calendar-day"></i>
+                            Chọn ngày
+                        </label>
+                        <input type="date" class="form-control" id="scheduleDate" onchange="loadWorkSchedule()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-user"></i>
+                            Lọc theo nhân viên
+                        </label>
+                        <select class="form-select" id="scheduleEmployeeFilter" onchange="loadWorkSchedule()">
+                            <option value="">-- Tất cả nhân viên --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="openAddScheduleForm()">
+                            <i class="fas fa-plus"></i> Thêm lịch làm việc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Schedule Form (Hidden by default) -->
+                <div id="addScheduleForm" style="display: none;" class="mb-4 p-3 border rounded bg-light">
+                    <h6 class="mb-3"><i class="fas fa-plus-circle"></i> Thêm lịch làm việc mới</h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Nhân viên <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newScheduleEmployee" required>
+                                <option value="">-- Chọn nhân viên --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Ngày làm việc <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="newScheduleDate" required>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Giờ bắt đầu <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="newScheduleStartTime" value="06:00" required>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Giờ kết thúc <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="newScheduleEndTime" value="14:00" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Loại ca</label>
+                            <select class="form-select" id="newScheduleType">
+                                <option value="0">Ca thường</option>
+                                <option value="1">Tăng ca</option>
+                                <option value="2">Ca đêm</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-9 mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="newScheduleNote" rows="2" placeholder="Ghi chú (tùy chọn)"></textarea>
+                        </div>
+                        <div class="col-md-3 mb-3 d-flex align-items-end gap-2">
+                            <button class="btn btn-success flex-fill" onclick="submitAddSchedule()">
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeAddScheduleForm()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule List -->
+                <div id="scheduleListContainer">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Approval Modal -->
+<div class="modal fade" id="requestApprovalModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-tasks"></i>
+                    Xét duyệt yêu cầu
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Filter Tabs -->
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-status="0" onclick="filterRequests(0)">
+                        <i class="fas fa-clock"></i>
+                        Chờ duyệt
+                        <span class="count-badge" id="pendingCount">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="1" onclick="filterRequests(1)">
+                        <i class="fas fa-check-circle"></i>
+                        Đã duyệt
+                        <span class="count-badge" id="approvedCount">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="2" onclick="filterRequests(2)">
+                        <i class="fas fa-times-circle"></i>
+                        Từ chối
+                        <span class="count-badge" id="rejectedCount">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="-1" onclick="filterRequests(-1)">
+                        <i class="fas fa-list"></i>
+                        Tất cả
+                        <span class="count-badge" id="totalCount">0</span>
+                    </button>
+                </div>
+
+                <!-- Requests List -->
+                <div id="requestsListContainer">
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Detail Modal -->
+<div class="modal fade" id="requestDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    Chi tiết yêu cầu
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="requestDetailContent">
+                <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>
+            </div>
+            <div class="modal-footer" id="requestDetailFooter">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
@@ -1547,6 +2037,694 @@
                     todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }, 500);
+        });
+
+        // ========== WORK SCHEDULE FUNCTIONS ==========
+
+        // Mở modal lịch làm việc
+        function openWorkScheduleModal() {
+            $('#workScheduleModal').modal('show');
+            
+            // Set ngày mặc định là hôm nay
+            const today = new Date().toISOString().split('T')[0];
+            $('#scheduleDate').val(today);
+            $('#newScheduleDate').val(today);
+            
+            // Format title
+            const dateObj = new Date(today);
+            const dateStr = dateObj.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            $('#scheduleModalTitle').text(dateStr);
+            
+            // Load danh sách nhân viên
+            loadEmployeesForSchedule();
+            
+            // Load lịch làm việc
+            loadWorkSchedule();
+        }
+
+        // Load danh sách nhân viên cho lịch làm việc
+        function loadEmployeesForSchedule() {
+            $.get('@Url.Action("GetAvailableEmployees", "VehicleShift", new { area = "Admin" })', 
+                function(data) {
+                    let options = '<option value="">-- Tất cả nhân viên --</option>';
+                    let addOptions = '<option value="">-- Chọn nhân viên --</option>';
+                    
+                    data.forEach(emp => {
+                        options += `<option value="${emp.maNhanVien}">${emp.hoTen} - ${emp.chucVu}</option>`;
+                        addOptions += `<option value="${emp.maNhanVien}">${emp.hoTen} - ${emp.chucVu}</option>`;
+                    });
+                    
+                    $('#scheduleEmployeeFilter').html(options);
+                    $('#newScheduleEmployee').html(addOptions);
+                }
+            ).fail(function() {
+                alert('Lỗi khi tải danh sách nhân viên');
+            });
+        }
+
+        // Load lịch làm việc
+        function loadWorkSchedule() {
+            const date = $('#scheduleDate').val();
+            const employeeId = $('#scheduleEmployeeFilter').val();
+            
+            if (!date) {
+                $('#scheduleListContainer').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Vui lòng chọn ngày</div>');
+                return;
+            }
+
+            // Update title
+            const dateObj = new Date(date);
+            const dateStr = dateObj.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            $('#scheduleModalTitle').text(dateStr);
+
+            $('#scheduleListContainer').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>');
+            
+            $.get('@Url.Action("GetWorkSchedules", "VehicleShift", new { area = "Admin" })', 
+                { date: date, employeeId: employeeId },
+                function(data) {
+                    if (data.success && data.schedules && data.schedules.length > 0) {
+                        displayWorkSchedules(data.schedules);
+                    } else {
+                        $('#scheduleListContainer').html(`
+                            <div class="no-schedule">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>Không có lịch làm việc nào trong ngày này</p>
+                            </div>
+                        `);
+                    }
+                }
+            ).fail(function() {
+                $('#scheduleListContainer').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Lỗi khi tải dữ liệu</div>');
+            });
+        }
+
+        // Hiển thị danh sách lịch làm việc
+        function displayWorkSchedules(schedules) {
+            let html = '';
+            
+            schedules.forEach(schedule => {
+                const shiftClass = schedule.loaiCa === 0 ? 'shift-morning' : 
+                                 schedule.loaiCa === 1 ? 'shift-afternoon' : 'shift-night';
+                
+                const shiftIcon = schedule.loaiCa === 0 ? 'fa-sun' : 
+                                schedule.loaiCa === 1 ? 'fa-cloud-sun' : 'fa-moon';
+                
+                const shiftTypeName = schedule.loaiCa === 0 ? 'Ca thường' : 
+                                    schedule.loaiCa === 1 ? 'Tăng ca' : 'Ca đêm';
+                
+                const statusBadge = schedule.trangThai === 1 
+                    ? '<span class="badge bg-success">Làm việc</span>' 
+                    : '<span class="badge bg-secondary">Nghỉ</span>';
+
+                html += `
+                    <div class="schedule-card ${shiftClass}">
+                        <div class="schedule-header">
+                            <div>
+                                <div class="schedule-employee">
+                                    <i class="fas fa-user"></i>
+                                    ${schedule.tenNhanVien}
+                                    ${statusBadge}
+                                </div>
+                                <div class="schedule-time">
+                                    <i class="fas ${shiftIcon}"></i>
+                                    <strong>${shiftTypeName}</strong>
+                                    <span class="mx-2">|</span>
+                                    <i class="fas fa-clock"></i>
+                                    ${schedule.gioBatDau} - ${schedule.gioKetThuc}
+                                </div>
+                                ${schedule.ghiChu ? `<small class="text-muted"><i class="fas fa-sticky-note"></i> ${schedule.ghiChu}</small>` : ''}
+                            </div>
+                            <div class="schedule-actions">
+                                <button class="btn btn-sm btn-warning" onclick="editWorkSchedule(${schedule.maLich})" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteWorkSchedule(${schedule.maLich})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            $('#scheduleListContainer').html(html);
+        }
+
+        // Mở form thêm lịch
+        function openAddScheduleForm() {
+            $('#addScheduleForm').slideDown();
+            
+            // Set ngày mặc định
+            const selectedDate = $('#scheduleDate').val();
+            if (selectedDate) {
+                $('#newScheduleDate').val(selectedDate);
+            }
+        }
+
+        // Đóng form thêm lịch
+        function closeAddScheduleForm() {
+            $('#addScheduleForm').slideUp();
+            
+            // Reset form
+            $('#newScheduleEmployee').val('');
+            $('#newScheduleDate').val('');
+            $('#newScheduleStartTime').val('06:00');
+            $('#newScheduleEndTime').val('14:00');
+            $('#newScheduleType').val('0');
+            $('#newScheduleNote').val('');
+        }
+
+        // Submit thêm lịch làm việc
+        function submitAddSchedule() {
+            const employeeId = $('#newScheduleEmployee').val();
+            const date = $('#newScheduleDate').val();
+            const startTime = $('#newScheduleStartTime').val();
+            const endTime = $('#newScheduleEndTime').val();
+            const type = parseInt($('#newScheduleType').val());
+            const note = $('#newScheduleNote').val();
+
+            if (!employeeId || !date || !startTime || !endTime) {
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+                return;
+            }
+
+            // Validate time
+            if (startTime >= endTime) {
+                alert('Giờ kết thúc phải lớn hơn giờ bắt đầu');
+                return;
+            }
+
+            const data = {
+                MaNhanVien: parseInt(employeeId),
+                NgayLamViec: date,
+                GioBatDau: startTime,
+                GioKetThuc: endTime,
+                LoaiCa: type,
+                TrangThai: 1,
+                GhiChu: note
+            };
+
+            $.ajax({
+                url: '@Url.Action("AddWorkSchedule", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message || 'Thêm lịch làm việc thành công!');
+                        closeAddScheduleForm();
+                        loadWorkSchedule();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi thêm lịch làm việc');
+                }
+            });
+        }
+
+        // Sửa lịch làm việc
+        function editWorkSchedule(scheduleId) {
+            // TODO: Implement edit functionality
+            alert('Chức năng sửa lịch đang được phát triển');
+        }
+
+        // Xóa lịch làm việc
+        function deleteWorkSchedule(scheduleId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa lịch làm việc này?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("DeleteWorkSchedule", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { id: scheduleId },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message || 'Xóa lịch làm việc thành công!');
+                        loadWorkSchedule();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi xóa lịch làm việc');
+                }
+            });
+        }
+
+        // ========== REQUEST APPROVAL FUNCTIONS ==========
+
+        let currentRequestStatus = 0; // Mặc định hiển thị "Chờ duyệt"
+
+        // Mở modal xét duyệt yêu cầu
+        function openRequestApprovalModal() {
+            $('#requestApprovalModal').modal('show');
+            currentRequestStatus = 0;
+            loadScheduleRequests();
+        }
+
+        // Load danh sách yêu cầu
+        function loadScheduleRequests() {
+            $('#requestsListContainer').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Đang tải...</p></div>');
+            
+            $.get('@Url.Action("GetScheduleRequests", "VehicleShift", new { area = "Admin" })', 
+                { status: currentRequestStatus },
+                function(data) {
+                    if (data.success) {
+                        // Update counts
+                        $('#pendingCount').text(data.counts.pending || 0);
+                        $('#approvedCount').text(data.counts.approved || 0);
+                        $('#rejectedCount').text(data.counts.rejected || 0);
+                        $('#totalCount').text(data.counts.total || 0);
+                        
+                        // Update badge on button
+                        const pendingCount = data.counts.pending || 0;
+                        if (pendingCount > 0) {
+                            $('#pendingRequestBadge').text(pendingCount).show();
+                        } else {
+                            $('#pendingRequestBadge').hide();
+                        }
+                        
+                        // Display requests
+                        if (data.requests && data.requests.length > 0) {
+                            displayScheduleRequests(data.requests);
+                        } else {
+                            $('#requestsListContainer').html(`
+                                <div class="no-requests">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>Không có yêu cầu nào</p>
+                                </div>
+                            `);
+                        }
+                    } else {
+                        $('#requestsListContainer').html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ${data.message || 'Lỗi khi tải dữ liệu'}
+                            </div>
+                        `);
+                    }
+                }
+            ).fail(function() {
+                $('#requestsListContainer').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i>
+                        Lỗi khi tải dữ liệu yêu cầu
+                    </div>
+                `);
+            });
+        }
+
+        // Filter requests by status
+        function filterRequests(status) {
+            currentRequestStatus = status;
+            
+            // Update active tab
+            $('.filter-tab').removeClass('active');
+            $(`.filter-tab[data-status="${status}"]`).addClass('active');
+            
+            // Reload requests
+            loadScheduleRequests();
+        }
+
+        // Hiển thị danh sách yêu cầu
+        function displayScheduleRequests(requests) {
+            let html = '';
+            
+            requests.forEach(request => {
+                const requestTypeClass = request.loaiYeuCau === 0 ? 'request-time-off' : 
+                                       request.loaiYeuCau === 1 ? 'request-shift-change' : 'request-time-change';
+                
+                const requestTypeIcon = request.loaiYeuCau === 0 ? 'fa-calendar-times' : 
+                                      request.loaiYeuCau === 1 ? 'fa-exchange-alt' : 'fa-clock';
+                
+                const requestTypeName = request.loaiYeuCau === 0 ? 'Xin nghỉ' : 
+                                      request.loaiYeuCau === 1 ? 'Đổi ca' : 'Đổi giờ';
+                
+                const requestTypeColor = request.loaiYeuCau === 0 ? 'danger' : 
+                                       request.loaiYeuCau === 1 ? 'info' : 'warning';
+                
+                let statusBadge = '';
+                let statusClass = '';
+                
+                if (request.trangThaiDuyet === 0) {
+                    statusBadge = '<span class="badge bg-warning">Chờ duyệt</span>';
+                } else if (request.trangThaiDuyet === 1) {
+                    statusBadge = '<span class="badge bg-success">Đã duyệt</span>';
+                    statusClass = 'approved';
+                } else if (request.trangThaiDuyet === 2) {
+                    statusBadge = '<span class="badge bg-danger">Từ chối</span>';
+                    statusClass = 'rejected';
+                } else if (request.trangThaiDuyet === 3) {
+                    statusBadge = '<span class="badge bg-secondary">Đã hủy</span>';
+                }
+
+                const requestDate = new Date(request.ngayYeuCau);
+                const formattedDate = requestDate.toLocaleString('vi-VN');
+
+                html += `
+                    <div class="request-card ${requestTypeClass} ${statusClass}">
+                        <div class="request-header">
+                            <div>
+                                <div class="request-employee">
+                                    <i class="fas fa-user-circle"></i>
+                                    ${request.tenNhanVien}
+                                    <span class="request-type-badge bg-${requestTypeColor} text-white">
+                                        <i class="fas ${requestTypeIcon}"></i> ${requestTypeName}
+                                    </span>
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="request-body">
+                            <div class="request-info-row">
+                                <i class="fas fa-calendar"></i>
+                                <strong>Ngày yêu cầu:</strong>
+                                <span>${formattedDate}</span>
+                            </div>
+                            
+                            ${request.ngayLamMoi ? `
+                            <div class="request-info-row">
+                                <i class="fas fa-calendar-day"></i>
+                                <strong>Ngày làm mới:</strong>
+                                <span>${new Date(request.ngayLamMoi).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${request.gioBatDauMoi && request.gioKetThucMoi ? `
+                            <div class="request-info-row">
+                                <i class="fas fa-clock"></i>
+                                <strong>Giờ làm mới:</strong>
+                                <span>${request.gioBatDauMoi} - ${request.gioKetThucMoi}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${request.lyDo ? `
+                            <div class="request-info-row">
+                                <i class="fas fa-comment"></i>
+                                <strong>Lý do:</strong>
+                                <span>${request.lyDo}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${request.tenNhanVienDuyet ? `
+                            <div class="request-info-row">
+                                <i class="fas fa-user-check"></i>
+                                <strong>Người duyệt:</strong>
+                                <span>${request.tenNhanVienDuyet}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${request.ghiChuDuyet ? `
+                            <div class="request-info-row">
+                                <i class="fas fa-sticky-note"></i>
+                                <strong>Ghi chú duyệt:</strong>
+                                <span>${request.ghiChuDuyet}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="request-footer">
+                            <div class="request-meta">
+                                <small class="text-muted">
+                                    <i class="fas fa-hashtag"></i> Mã: ${request.maDangKy}
+                                </small>
+                            </div>
+                            <div class="request-actions">
+                                <button class="btn btn-sm btn-info" onclick="viewRequestDetail(${request.maDangKy})" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i> Chi tiết
+                                </button>
+                                ${request.trangThaiDuyet === 0 ? `
+                                    <button class="btn btn-sm btn-success" onclick="approveRequest(${request.maDangKy})" title="Duyệt">
+                                        <i class="fas fa-check"></i> Duyệt
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectRequest(${request.maDangKy})" title="Từ chối">
+                                        <i class="fas fa-times"></i> Từ chối
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            $('#requestsListContainer').html(html);
+        }
+
+        // Xem chi tiết yêu cầu
+        function viewRequestDetail(requestId) {
+            $('#requestDetailModal').modal('show');
+            $('#requestDetailContent').html('<p class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Đang tải...</p>');
+            
+            $.get('@Url.Action("GetRequestDetail", "VehicleShift", new { area = "Admin" })', 
+                { id: requestId },
+                function(data) {
+                    if (data.success && data.request) {
+                        displayRequestDetail(data.request);
+                    } else {
+                        $('#requestDetailContent').html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ${data.message || 'Không tìm thấy thông tin yêu cầu'}
+                            </div>
+                        `);
+                    }
+                }
+            ).fail(function() {
+                $('#requestDetailContent').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i>
+                        Lỗi khi tải dữ liệu
+                    </div>
+                `);
+            });
+        }
+
+        // Hiển thị chi tiết yêu cầu
+        function displayRequestDetail(request) {
+            const requestTypeName = request.loaiYeuCau === 0 ? 'Xin nghỉ' : 
+                                  request.loaiYeuCau === 1 ? 'Đổi ca' : 'Đổi giờ';
+            
+            const statusText = request.trangThaiDuyet === 0 ? 'Chờ duyệt' :
+                             request.trangThaiDuyet === 1 ? 'Đã duyệt' :
+                             request.trangThaiDuyet === 2 ? 'Từ chối' : 'Đã hủy';
+            
+            const statusClass = request.trangThaiDuyet === 0 ? 'warning' :
+                              request.trangThaiDuyet === 1 ? 'success' :
+                              request.trangThaiDuyet === 2 ? 'danger' : 'secondary';
+
+            let html = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Thông tin chung</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="40%" class="fw-bold">Mã yêu cầu:</td>
+                                <td>#${request.maDangKy}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Nhân viên:</td>
+                                <td>${request.tenNhanVien}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Loại yêu cầu:</td>
+                                <td><span class="badge bg-info">${requestTypeName}</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Trạng thái:</td>
+                                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Ngày yêu cầu:</td>
+                                <td>${new Date(request.ngayYeuCau).toLocaleString('vi-VN')}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Thông tin thay đổi</h6>
+                        <table class="table table-sm table-borderless">
+                            ${request.ngayLamMoi ? `
+                            <tr>
+                                <td width="40%" class="fw-bold">Ngày làm mới:</td>
+                                <td>${new Date(request.ngayLamMoi).toLocaleDateString('vi-VN')}</td>
+                            </tr>
+                            ` : ''}
+                            ${request.gioBatDauMoi ? `
+                            <tr>
+                                <td class="fw-bold">Giờ bắt đầu mới:</td>
+                                <td>${request.gioBatDauMoi}</td>
+                            </tr>
+                            ` : ''}
+                            ${request.gioKetThucMoi ? `
+                            <tr>
+                                <td class="fw-bold">Giờ kết thúc mới:</td>
+                                <td>${request.gioKetThucMoi}</td>
+                            </tr>
+                            ` : ''}
+                            ${!request.ngayLamMoi && !request.gioBatDauMoi ? `
+                            <tr>
+                                <td colspan="2" class="text-muted fst-italic">Không có thay đổi</td>
+                            </tr>
+                            ` : ''}
+                        </table>
+                    </div>
+                </div>
+                
+                ${request.lyDo ? `
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Lý do</h6>
+                    <div class="alert alert-light">
+                        <i class="fas fa-comment"></i> ${request.lyDo}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${request.tenNhanVienDuyet || request.ghiChuDuyet ? `
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Thông tin duyệt</h6>
+                    <table class="table table-sm table-borderless">
+                        ${request.tenNhanVienDuyet ? `
+                        <tr>
+                            <td width="20%" class="fw-bold">Người duyệt:</td>
+                            <td>${request.tenNhanVienDuyet}</td>
+                        </tr>
+                        ` : ''}
+                        ${request.thoiGianDuyet ? `
+                        <tr>
+                            <td class="fw-bold">Thời gian duyệt:</td>
+                            <td>${new Date(request.thoiGianDuyet).toLocaleString('vi-VN')}</td>
+                        </tr>
+                        ` : ''}
+                        ${request.ghiChuDuyet ? `
+                        <tr>
+                            <td class="fw-bold">Ghi chú:</td>
+                            <td>${request.ghiChuDuyet}</td>
+                        </tr>
+                        ` : ''}
+                    </table>
+                </div>
+                ` : ''}
+            `;
+            
+            $('#requestDetailContent').html(html);
+            
+            // Update footer buttons
+            if (request.trangThaiDuyet === 0) {
+                $('#requestDetailFooter').html(`
+                    <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-success" onclick="approveRequestFromDetail(${request.maDangKy})">
+                        <i class="fas fa-check"></i> Duyệt yêu cầu
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="rejectRequestFromDetail(${request.maDangKy})">
+                        <i class="fas fa-times"></i> Từ chối
+                    </button>
+                `);
+            } else {
+                $('#requestDetailFooter').html(`
+                    <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Đóng</button>
+                `);
+            }
+        }
+
+        // Duyệt yêu cầu
+        function approveRequest(requestId) {
+            if (!confirm('Bạn có chắc chắn muốn duyệt yêu cầu này?')) {
+                return;
+            }
+
+            const note = prompt('Ghi chú (tùy chọn):');
+            
+            $.ajax({
+                url: '@Url.Action("ApproveRequest", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 
+                    RequestId: requestId,
+                    Note: note 
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message || 'Duyệt yêu cầu thành công!');
+                        loadScheduleRequests();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi duyệt yêu cầu');
+                }
+            });
+        }
+
+        // Từ chối yêu cầu
+        function rejectRequest(requestId) {
+            const reason = prompt('Vui lòng nhập lý do từ chối:');
+            
+            if (!reason) {
+                alert('Vui lòng nhập lý do từ chối');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("RejectRequest", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 
+                    RequestId: requestId,
+                    Note: reason 
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message || 'Từ chối yêu cầu thành công!');
+                        loadScheduleRequests();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi từ chối yêu cầu');
+                }
+            });
+        }
+
+        // Duyệt yêu cầu từ modal chi tiết
+        function approveRequestFromDetail(requestId) {
+            $('#requestDetailModal').modal('hide');
+            approveRequest(requestId);
+        }
+
+        // Từ chối yêu cầu từ modal chi tiết
+        function rejectRequestFromDetail(requestId) {
+            $('#requestDetailModal').modal('hide');
+            rejectRequest(requestId);
+        }
+
+        // Load pending count on page load
+        $(document).ready(function() {
+            // Existing code...
+            
+            // Load pending request count
+            $.get('@Url.Action("GetPendingRequestCount", "VehicleShift", new { area = "Admin" })', 
+                function(data) {
+                    if (data.success && data.count > 0) {
+                        $('#pendingRequestBadge').text(data.count).show();
+                    }
+                }
+            );
         });
     </script>
 }

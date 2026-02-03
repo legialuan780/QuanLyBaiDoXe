@@ -914,6 +914,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 _context.CaLamViecs.Add(shift);
                 await _context.SaveChangesAsync();
 
+                // Tự động tạo lịch làm việc trong LichLamViec
+                await CreateScheduleFromShift(shift);
+
                 return Json(new { success = true, message = "Mở ca thành công", shiftId = shift.MaCa });
             }
             catch (Exception ex)
@@ -953,6 +956,12 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Tự động tạo lịch làm việc cho tất cả ca vừa tạo
+                foreach (var shift in createdShifts)
+                {
+                    await CreateScheduleFromShift(shift);
+                }
 
                 return Json(new 
                 { 
@@ -1599,6 +1608,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     _context.CaLamViecs.Add(newShift);
                     await _context.SaveChangesAsync();
 
+                    // Tự động tạo lịch làm việc trong LichLamViec
+                    await CreateScheduleFromShift(newShift);
+
                     createdShifts.Add(newShift.MaCa);
                 }
 
@@ -1983,6 +1995,656 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
             return View(viewModel);
         }
+
+        // ========== WORK SCHEDULE API METHODS ==========
+
+        // API: Lấy tổng quan lịch làm việc tuần (Weekly Overview)
+        [HttpGet]
+        public async Task<IActionResult> GetWeeklyOverview(string weekStart)
+        {
+            try
+            {
+                DateTime startDate = string.IsNullOrEmpty(weekStart) 
+                    ? GetMonday(DateTime.Today)
+                    : DateTime.Parse(weekStart);
+                
+                var endDate = startDate.AddDays(6);
+
+                // Lấy tất cả nhân viên đang làm việc
+                var allEmployees = await _context.NhanViens
+                    .Where(nv => nv.TrangThaiLamViec == true)
+                    .Select(nv => new
+                    {
+                        nv.MaNhanVien,
+                        nv.HoTen,
+                        nv.ChucVu
+                    })
+                    .ToListAsync();
+
+                // Lấy lịch làm việc trong tuần
+                var schedules = await _context.LichLamViecs
+                    .Include(l => l.MaNhanVienNavigation)
+                    .Where(l => l.NgayLamViec >= DateOnly.FromDateTime(startDate) 
+                             && l.NgayLamViec <= DateOnly.FromDateTime(endDate))
+                    .Select(l => new
+                    {
+                        maLich = l.MaLich,
+                        maNhanVien = l.MaNhanVien,
+                        tenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
+                        ngayLamViec = l.NgayLamViec,
+                        caLamViec = l.LoaiCa,
+                        ghiChu = l.GhiChu
+                    })
+                    .ToListAsync();
+
+                // Tìm nhân viên rảnh (không có lịch trong tuần)
+                var employeesWithSchedule = schedules.Select(s => s.maNhanVien).Distinct().ToList();
+                var freeEmployees = allEmployees
+                    .Where(emp => !employeesWithSchedule.Contains(emp.MaNhanVien))
+                    .Select(emp => new
+                    {
+                        maNhanVien = emp.MaNhanVien,
+                        hoTen = emp.HoTen,
+                        chucVu = emp.ChucVu
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        schedules = schedules,
+                        freeEmployees = freeEmployees,
+                        weekStart = startDate,
+                        weekEnd = endDate
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Helper method to get Monday of the week
+        private DateTime GetMonday(DateTime date)
+        {
+            int daysToMonday = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+            return date.AddDays(-daysToMonday).Date;
+        }
+
+        // Helper method: Tự động tạo lịch làm việc từ ca làm việc
+        private async Task CreateScheduleFromShift(CaLamViec shift)
+        {
+            try
+            {
+                if (!shift.ThoiGianNhanCa.HasValue)
+                    return;
+
+                var ngayLamViec = DateOnly.FromDateTime(shift.ThoiGianNhanCa.Value);
+                var gioNhanCa = TimeOnly.FromDateTime(shift.ThoiGianNhanCa.Value);
+                
+                // Xác định loại ca dựa trên giờ nhận ca
+                int loaiCa = DetermineShiftType(gioNhanCa);
+                
+                // Tính giờ kết thúc dự kiến dựa trên loại ca
+                TimeOnly gioKetThucDuKien = loaiCa switch
+                {
+                    0 => new TimeOnly(14, 0),  // Ca sáng: 6h - 14h
+                    1 => new TimeOnly(22, 0),  // Ca chiều: 14h - 22h
+                    2 => new TimeOnly(6, 0),   // Ca đêm: 22h - 6h
+                    _ => gioNhanCa.AddHours(8) // Mặc định 8 tiếng
+                };
+
+                // Kiểm tra xem đã có lịch trong ngày này chưa
+                var existingSchedule = await _context.LichLamViecs
+                    .FirstOrDefaultAsync(l => 
+                        l.MaNhanVien == shift.MaNhanVien && 
+                        l.NgayLamViec == ngayLamViec &&
+                        l.LoaiCa == loaiCa);
+
+                if (existingSchedule != null)
+                {
+                    // Đã có lịch rồi, không cần tạo mới
+                    return;
+                }
+
+                // Tạo lịch làm việc mới
+                var lichLamViec = new LichLamViec
+                {
+                    MaNhanVien = shift.MaNhanVien ?? 0,
+                    NgayLamViec = ngayLamViec,
+                    GioBatDau = gioNhanCa,
+                    GioKetThuc = gioKetThucDuKien,
+                    LoaiCa = loaiCa,
+                    TrangThai = 1, // Đã xác nhận (vì đã bắt đầu ca)
+                    GhiChu = $"Tự động tạo từ ca #{shift.MaCa}"
+                };
+
+                _context.LichLamViecs.Add(lichLamViec);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log error nhưng không throw để không ảnh hưởng đến việc tạo ca
+                Console.WriteLine($"Lỗi khi tạo lịch từ ca {shift.MaCa}: {ex.Message}");
+            }
+        }
+
+        // Helper method: Xác định loại ca dựa trên giờ
+        private int DetermineShiftType(TimeOnly time)
+        {
+            var hour = time.Hour;
+            
+            if (hour >= 6 && hour < 14)
+                return 0; // Ca sáng
+            else if (hour >= 14 && hour < 22)
+                return 1; // Ca chiều
+            else
+                return 2; // Ca đêm
+        }
+
+        // API: Lấy lịch làm việc theo ngày
+        [HttpGet]
+        public async Task<IActionResult> GetWorkSchedules(string date, int? employeeId)
+        {
+            try
+            {
+                var selectedDate = DateOnly.Parse(date);
+                
+                var query = _context.LichLamViecs
+                    .Include(l => l.MaNhanVienNavigation)
+                    .Where(l => l.NgayLamViec == selectedDate);
+
+                if (employeeId.HasValue && employeeId.Value > 0)
+                {
+                    query = query.Where(l => l.MaNhanVien == employeeId.Value);
+                }
+
+                var schedules = await query
+                    .OrderBy(l => l.GioBatDau)
+                    .Select(l => new
+                    {
+                        maLich = l.MaLich,
+                        maNhanVien = l.MaNhanVien,
+                        tenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
+                        ngayLamViec = l.NgayLamViec,
+                        gioBatDau = l.GioBatDau.ToString("HH:mm"),
+                        gioKetThuc = l.GioKetThuc.ToString("HH:mm"),
+                        loaiCa = l.LoaiCa ?? 0,
+                        trangThai = l.TrangThai ?? 1,
+                        ghiChu = l.GhiChu
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, schedules = schedules });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Thêm lịch làm việc mới
+        [HttpPost]
+        public async Task<IActionResult> AddWorkSchedule([FromBody] AddWorkScheduleRequest request)
+        {
+            try
+            {
+                var ngayLamViec = DateOnly.Parse(request.NgayLamViec);
+                var gioBatDau = TimeOnly.Parse(request.GioBatDau);
+                var gioKetThuc = TimeOnly.Parse(request.GioKetThuc);
+
+                // Validate giờ
+                if (gioKetThuc <= gioBatDau)
+                {
+                    return Json(new { success = false, message = "Giờ kết thúc phải lớn hơn giờ bắt đầu" });
+                }
+
+                // Kiểm tra trùng lịch
+                var existingSchedule = await _context.LichLamViecs
+                    .Where(l => l.MaNhanVien == request.MaNhanVien 
+                             && l.NgayLamViec == ngayLamViec)
+                    .FirstOrDefaultAsync();
+
+                if (existingSchedule != null)
+                {
+                    // Kiểm tra trùng giờ
+                    if ((gioBatDau >= existingSchedule.GioBatDau && gioBatDau < existingSchedule.GioKetThuc) ||
+                        (gioKetThuc > existingSchedule.GioBatDau && gioKetThuc <= existingSchedule.GioKetThuc))
+                    {
+                        return Json(new { success = false, message = "Nhân viên đã có lịch trùng giờ trong ngày này" });
+                    }
+                }
+
+                var schedule = new LichLamViec
+                {
+                    MaNhanVien = request.MaNhanVien,
+                    NgayLamViec = ngayLamViec,
+                    GioBatDau = gioBatDau,
+                    GioKetThuc = gioKetThuc,
+                    LoaiCa = request.LoaiCa,
+                    TrangThai = request.TrangThai,
+                    GhiChu = request.GhiChu
+                };
+
+                _context.LichLamViecs.Add(schedule);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Thêm lịch làm việc thành công", scheduleId = schedule.MaLich });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Cập nhật lịch làm việc
+        [HttpPost]
+        public async Task<IActionResult> UpdateWorkSchedule([FromBody] UpdateWorkScheduleRequest request)
+        {
+            try
+            {
+                var schedule = await _context.LichLamViecs.FindAsync(request.MaLich);
+                if (schedule == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy lịch làm việc" });
+                }
+
+                if (!string.IsNullOrEmpty(request.NgayLamViec))
+                {
+                    schedule.NgayLamViec = DateOnly.Parse(request.NgayLamViec);
+                }
+
+                if (!string.IsNullOrEmpty(request.GioBatDau))
+                {
+                    schedule.GioBatDau = TimeOnly.Parse(request.GioBatDau);
+                }
+
+                if (!string.IsNullOrEmpty(request.GioKetThuc))
+                {
+                    schedule.GioKetThuc = TimeOnly.Parse(request.GioKetThuc);
+                }
+
+                // Validate giờ
+                if (schedule.GioKetThuc <= schedule.GioBatDau)
+                {
+                    return Json(new { success = false, message = "Giờ kết thúc phải lớn hơn giờ bắt đầu" });
+                }
+
+                if (request.LoaiCa.HasValue)
+                {
+                    schedule.LoaiCa = request.LoaiCa.Value;
+                }
+
+                if (request.TrangThai.HasValue)
+                {
+                    schedule.TrangThai = request.TrangThai.Value;
+                }
+
+                schedule.GhiChu = request.GhiChu;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Cập nhật lịch làm việc thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Xóa lịch làm việc
+        [HttpPost]
+        public async Task<IActionResult> DeleteWorkSchedule(int id)
+        {
+            try
+            {
+                var schedule = await _context.LichLamViecs.FindAsync(id);
+                if (schedule == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy lịch làm việc" });
+                }
+
+                _context.LichLamViecs.Remove(schedule);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Xóa lịch làm việc thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy lịch làm việc của nhân viên trong tuần
+        [HttpGet]
+        public async Task<IActionResult> GetEmployeeWeekSchedule(int employeeId, string weekStart)
+        {
+            try
+            {
+                var startDate = DateOnly.Parse(weekStart);
+                var endDate = startDate.AddDays(6);
+
+                var schedules = await _context.LichLamViecs
+                    .Include(l => l.MaNhanVienNavigation)
+                    .Where(l => l.MaNhanVien == employeeId 
+                             && l.NgayLamViec >= startDate 
+                             && l.NgayLamViec <= endDate)
+                    .OrderBy(l => l.NgayLamViec)
+                    .ThenBy(l => l.GioBatDau)
+                    .Select(l => new
+                    {
+                        maLich = l.MaLich,
+                        maNhanVien = l.MaNhanVien,
+                        tenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
+                        ngayLamViec = l.NgayLamViec,
+                        gioBatDau = l.GioBatDau.ToString("HH:mm"),
+                        gioKetThuc = l.GioKetThuc.ToString("HH:mm"),
+                        loaiCa = l.LoaiCa ?? 0,
+                        trangThai = l.TrangThai ?? 1,
+                        ghiChu = l.GhiChu
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, schedules = schedules });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy thống kê lịch làm việc theo tháng
+        [HttpGet]
+        public async Task<IActionResult> GetWorkScheduleMonthStats(int month, int year, int? employeeId)
+        {
+            try
+            {
+                var startDate = new DateOnly(year, month, 1);
+                var endDate = startDate.AddMonths(1).AddDays(-1);
+
+                var query = _context.LichLamViecs
+                    .Where(l => l.NgayLamViec >= startDate && l.NgayLamViec <= endDate);
+
+                if (employeeId.HasValue && employeeId.Value > 0)
+                {
+                    query = query.Where(l => l.MaNhanVien == employeeId.Value);
+                }
+
+                var schedules = await query.ToListAsync();
+
+                var stats = new
+                {
+                    totalSchedules = schedules.Count,
+                    workingDays = schedules.Where(s => s.TrangThai == 1).Count(),
+                    offDays = schedules.Where(s => s.TrangThai == 0).Count(),
+                    morningShifts = schedules.Where(s => s.LoaiCa == 0).Count(),
+                    afternoonShifts = schedules.Where(s => s.LoaiCa == 1).Count(),
+                    nightShifts = schedules.Where(s => s.LoaiCa == 2).Count(),
+                    totalHours = schedules.Sum(s => (s.GioKetThuc.ToTimeSpan() - s.GioBatDau.ToTimeSpan()).TotalHours)
+                };
+
+                return Json(new { success = true, stats = stats });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // ========== SCHEDULE REQUEST APPROVAL API METHODS ==========
+
+        // API: Lấy danh sách yêu cầu đổi ca/nghỉ
+        [HttpGet]
+        public async Task<IActionResult> GetScheduleRequests(int status = -1)
+        {
+            try
+            {
+                var query = _context.DangKyLiches
+                    .Include(d => d.MaNhanVienNavigation)
+                    .Include(d => d.MaNhanVienDuyetNavigation)
+                    .AsQueryable();
+
+                // Filter by status if specified
+                if (status >= 0)
+                {
+                    query = query.Where(d => d.TrangThaiDuyet == status);
+                }
+
+                var requests = await query
+                    .OrderByDescending(d => d.NgayYeuCau)
+                    .Select(d => new
+                    {
+                        maDangKy = d.MaDangKy,
+                        maNhanVien = d.MaNhanVien,
+                        tenNhanVien = d.MaNhanVienNavigation != null ? d.MaNhanVienNavigation.HoTen : "N/A",
+                        maLich = d.MaLich,
+                        loaiYeuCau = d.LoaiYeuCau,
+                        ngayYeuCau = d.NgayYeuCau,
+                        ngayLamMoi = d.NgayLamMoi,
+                        gioBatDauMoi = d.GioBatDauMoi != null ? d.GioBatDauMoi.Value.ToString("HH:mm") : null,
+                        gioKetThucMoi = d.GioKetThucMoi != null ? d.GioKetThucMoi.Value.ToString("HH:mm") : null,
+                        lyDo = d.LyDo,
+                        trangThaiDuyet = d.TrangThaiDuyet ?? 0,
+                        maNhanVienDuyet = d.MaNhanVienDuyet,
+                        tenNhanVienDuyet = d.MaNhanVienDuyetNavigation != null ? d.MaNhanVienDuyetNavigation.HoTen : null,
+                        thoiGianDuyet = d.ThoiGianDuyet,
+                        ghiChuDuyet = d.GhiChuDuyet
+                    })
+                    .ToListAsync();
+
+                // Get counts
+                var allRequests = await _context.DangKyLiches.ToListAsync();
+                var counts = new
+                {
+                    pending = allRequests.Count(r => r.TrangThaiDuyet == 0),
+                    approved = allRequests.Count(r => r.TrangThaiDuyet == 1),
+                    rejected = allRequests.Count(r => r.TrangThaiDuyet == 2),
+                    total = allRequests.Count
+                };
+
+                return Json(new { success = true, requests = requests, counts = counts });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy chi tiết yêu cầu
+        [HttpGet]
+        public async Task<IActionResult> GetRequestDetail(int id)
+        {
+            try
+            {
+                var request = await _context.DangKyLiches
+                    .Include(d => d.MaNhanVienNavigation)
+                    .Include(d => d.MaNhanVienDuyetNavigation)
+                    .Include(d => d.MaLichNavigation)
+                    .Where(d => d.MaDangKy == id)
+                    .Select(d => new
+                    {
+                        maDangKy = d.MaDangKy,
+                        maNhanVien = d.MaNhanVien,
+                        tenNhanVien = d.MaNhanVienNavigation != null ? d.MaNhanVienNavigation.HoTen : "N/A",
+                        maLich = d.MaLich,
+                        loaiYeuCau = d.LoaiYeuCau,
+                        ngayYeuCau = d.NgayYeuCau,
+                        ngayLamMoi = d.NgayLamMoi,
+                        gioBatDauMoi = d.GioBatDauMoi != null ? d.GioBatDauMoi.Value.ToString("HH:mm") : null,
+                        gioKetThucMoi = d.GioKetThucMoi != null ? d.GioKetThucMoi.Value.ToString("HH:mm") : null,
+                        lyDo = d.LyDo,
+                        trangThaiDuyet = d.TrangThaiDuyet ?? 0,
+                        maNhanVienDuyet = d.MaNhanVienDuyet,
+                        tenNhanVienDuyet = d.MaNhanVienDuyetNavigation != null ? d.MaNhanVienDuyetNavigation.HoTen : null,
+                        thoiGianDuyet = d.ThoiGianDuyet,
+                        ghiChuDuyet = d.GhiChuDuyet
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (request == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy yêu cầu" });
+                }
+
+                return Json(new { success = true, request = request });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Lấy số lượng yêu cầu chờ duyệt
+        [HttpGet]
+        public async Task<IActionResult> GetPendingRequestCount()
+        {
+            try
+            {
+                var count = await _context.DangKyLiches
+                    .Where(d => d.TrangThaiDuyet == 0)
+                    .CountAsync();
+
+                return Json(new { success = true, count = count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Duyệt yêu cầu
+        [HttpPost]
+        public async Task<IActionResult> ApproveRequest([FromBody] ApproveRejectRequestRequest request)
+        {
+            try
+            {
+                var scheduleRequest = await _context.DangKyLiches
+                    .Include(d => d.MaLichNavigation)
+                    .FirstOrDefaultAsync(d => d.MaDangKy == request.RequestId);
+
+                if (scheduleRequest == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy yêu cầu" });
+                }
+
+                if (scheduleRequest.TrangThaiDuyet != 0)
+                {
+                    return Json(new { success = false, message = "Yêu cầu đã được xử lý rồi" });
+                }
+
+                // Get current user ID (you'll need to implement this based on your auth system)
+                var currentUserId = GetCurrentUserId();
+
+                // Update request status
+                scheduleRequest.TrangThaiDuyet = 1; // Approved
+                scheduleRequest.MaNhanVienDuyet = currentUserId;
+                scheduleRequest.ThoiGianDuyet = DateTime.Now;
+                scheduleRequest.GhiChuDuyet = request.Note;
+
+                // Apply changes based on request type
+                if (scheduleRequest.LoaiYeuCau == 0) // Time off
+                {
+                    // Mark schedule as off
+                    if (scheduleRequest.MaLich.HasValue)
+                    {
+                        var schedule = scheduleRequest.MaLichNavigation;
+                        if (schedule != null)
+                        {
+                            schedule.TrangThai = 0; // Off
+                        }
+                    }
+                }
+                else if (scheduleRequest.LoaiYeuCau == 1) // Shift change
+                {
+                    // Update schedule date
+                    if (scheduleRequest.MaLich.HasValue && scheduleRequest.NgayLamMoi.HasValue)
+                    {
+                        var schedule = scheduleRequest.MaLichNavigation;
+                        if (schedule != null)
+                        {
+                            schedule.NgayLamViec = scheduleRequest.NgayLamMoi.Value;
+                        }
+                    }
+                }
+                else if (scheduleRequest.LoaiYeuCau == 2) // Time change
+                {
+                    // Update schedule time
+                    if (scheduleRequest.MaLich.HasValue 
+                        && scheduleRequest.GioBatDauMoi.HasValue 
+                        && scheduleRequest.GioKetThucMoi.HasValue)
+                    {
+                        var schedule = scheduleRequest.MaLichNavigation;
+                        if (schedule != null)
+                        {
+                            schedule.GioBatDau = scheduleRequest.GioBatDauMoi.Value;
+                            schedule.GioKetThuc = scheduleRequest.GioKetThucMoi.Value;
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Duyệt yêu cầu thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // API: Từ chối yêu cầu
+        [HttpPost]
+        public async Task<IActionResult> RejectRequest([FromBody] ApproveRejectRequestRequest request)
+        {
+            try
+            {
+                var scheduleRequest = await _context.DangKyLiches
+                    .FirstOrDefaultAsync(d => d.MaDangKy == request.RequestId);
+
+                if (scheduleRequest == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy yêu cầu" });
+                }
+
+                if (scheduleRequest.TrangThaiDuyet != 0)
+                {
+                    return Json(new { success = false, message = "Yêu cầu đã được xử lý rồi" });
+                }
+
+                // Get current user ID
+                var currentUserId = GetCurrentUserId();
+
+                // Update request status
+                scheduleRequest.TrangThaiDuyet = 2; // Rejected
+                scheduleRequest.MaNhanVienDuyet = currentUserId;
+                scheduleRequest.ThoiGianDuyet = DateTime.Now;
+                scheduleRequest.GhiChuDuyet = request.Note;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Từ chối yêu cầu thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        // Helper method to get current user ID
+        private int GetCurrentUserId()
+        {
+            // TODO: Implement based on your authentication system
+            // For now, return a default value
+            var userIdClaim = User.FindFirst("MaNhanVien");
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return userId;
+            }
+            return 1; // Default admin ID
+        }
     }
 
     // Request models
@@ -2253,6 +2915,66 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         public decimal TienDauCa { get; set; }
         public string? GhiChuBanGiao { get; set; }
     }
+
+    // Request models for Work Schedule
+    public class AddWorkScheduleRequest
+    {
+        [Required(ErrorMessage = "Mã nhân viên không được để trống")]
+        [Range(1, int.MaxValue, ErrorMessage = "Mã nhân viên không hợp lệ")]
+        public int MaNhanVien { get; set; }
+
+        [Required(ErrorMessage = "Ngày làm việc không được để trống")]
+        public string NgayLamViec { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Giờ bắt đầu không được để trống")]
+        public string GioBatDau { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Giờ kết thúc không được để trống")]
+        public string GioKetThuc { get; set; } = string.Empty;
+
+        [Range(0, 2, ErrorMessage = "Loại ca phải từ 0 đến 2 (0: Thường, 1: Tăng ca, 2: Đêm)")]
+        public int LoaiCa { get; set; } = 0;
+
+        [Range(0, 1, ErrorMessage = "Trạng thái phải là 0 (Nghỉ) hoặc 1 (Làm)")]
+        public int TrangThai { get; set; } = 1;
+
+        [StringLength(255, ErrorMessage = "Ghi chú không được quá 255 ký tự")]
+        public string? GhiChu { get; set; }
+    }
+
+    public class UpdateWorkScheduleRequest
+    {
+        [Required(ErrorMessage = "Mã lịch không được để trống")]
+        [Range(1, int.MaxValue, ErrorMessage = "Mã lịch không hợp lệ")]
+        public int MaLich { get; set; }
+
+        public string? NgayLamViec { get; set; }
+
+        public string? GioBatDau { get; set; }
+
+        public string? GioKetThuc { get; set; }
+
+        public int? LoaiCa { get; set; }
+
+        public int? TrangThai { get; set; }
+
+        public string? GhiChu { get; set; }
+    }
+
+    // Request models for Schedule Request Approval
+    public class ApproveRejectRequestRequest
+    {
+        [Required(ErrorMessage = "Mã yêu cầu không được để trống")]
+        [Range(1, int.MaxValue, ErrorMessage = "Mã yêu cầu không hợp lệ")]
+        public int RequestId { get; set; }
+
+        [StringLength(255, ErrorMessage = "Ghi chú không được quá 255 ký tự")]
+        public string? Note { get; set; }
+    }
 }
+
+
+
+
 
 

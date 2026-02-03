@@ -27,8 +27,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     TenCauHinh = c.TenCauHinh,
                     MaLoaiXe = c.MaLoaiXe,
                     TenLoaiXe = c.MaLoaiXeNavigation != null ? c.MaLoaiXeNavigation.TenLoaiXe : null,
-                    GioBatDau = c.GioBatDau.HasValue ? c.GioBatDau.Value.ToString("HH:mm") : null,
-                    GioKetThuc = c.GioKetThuc.HasValue ? c.GioKetThuc.Value.ToString("HH:mm") : null,
+                    GioBatDau = c.GioBatDau != null ? c.GioBatDau.ToString("HH:mm") : null,
+                    GioKetThuc = c.GioKetThuc != null ? c.GioKetThuc.ToString("HH:mm") : null,
                     IsUuTien = c.IsUuTien ?? false,
                     SoBlock = c.ChiTietGia.Count,
                     ChiTietGia = c.ChiTietGia.OrderBy(d => d.ThuTuBlock).Select(d => new PricingDetailDto
@@ -74,8 +74,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     TenCauHinh = c.TenCauHinh,
                     MaLoaiXe = c.MaLoaiXe,
                     TenLoaiXe = c.MaLoaiXeNavigation != null ? c.MaLoaiXeNavigation.TenLoaiXe : null,
-                    GioBatDau = c.GioBatDau.HasValue ? c.GioBatDau.Value.ToString("HH:mm") : null,
-                    GioKetThuc = c.GioKetThuc.HasValue ? c.GioKetThuc.Value.ToString("HH:mm") : null,
+                    GioBatDau = c.GioBatDau != null ? c.GioBatDau.ToString("HH:mm") : null,
+                    GioKetThuc = c.GioKetThuc != null ? c.GioKetThuc.ToString("HH:mm") : null,
                     IsUuTien = c.IsUuTien ?? false,
                     SoBlock = c.ChiTietGia.Count,
                     ChiTietGia = c.ChiTietGia.OrderBy(d => d.ThuTuBlock).Select(d => new PricingDetailDto
@@ -122,8 +122,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     TenCauHinh = c.TenCauHinh,
                     MaLoaiXe = c.MaLoaiXe,
                     TenLoaiXe = c.MaLoaiXeNavigation != null ? c.MaLoaiXeNavigation.TenLoaiXe : null,
-                    GioBatDau = c.GioBatDau.HasValue ? c.GioBatDau.Value.ToString("HH:mm") : null,
-                    GioKetThuc = c.GioKetThuc.HasValue ? c.GioKetThuc.Value.ToString("HH:mm") : null,
+                    GioBatDau = c.GioBatDau != null ? c.GioBatDau.ToString("HH:mm") : null,
+                    GioKetThuc = c.GioKetThuc != null ? c.GioKetThuc.ToString("HH:mm") : null,
                     IsUuTien = c.IsUuTien ?? false,
                     SoBlock = c.ChiTietGia.Count,
                     ChiTietGia = c.ChiTietGia.OrderBy(d => d.ThuTuBlock).Select(d => new PricingDetailDto
@@ -154,8 +154,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     TenCauHinh = c.TenCauHinh,
                     MaLoaiXe = c.MaLoaiXe,
                     TenLoaiXe = c.MaLoaiXeNavigation != null ? c.MaLoaiXeNavigation.TenLoaiXe : null,
-                    GioBatDau = c.GioBatDau.HasValue ? c.GioBatDau.Value.ToString("HH:mm") : null,
-                    GioKetThuc = c.GioKetThuc.HasValue ? c.GioKetThuc.Value.ToString("HH:mm") : null,
+                    GioBatDau = c.GioBatDau != null ? c.GioBatDau.ToString("HH:mm") : null,
+                    GioKetThuc = c.GioKetThuc != null ? c.GioKetThuc.ToString("HH:mm") : null,
                     IsUuTien = c.IsUuTien ?? false,
                     SoBlock = c.ChiTietGia.Count,
                     ChiTietGia = c.ChiTietGia.OrderBy(d => d.ThuTuBlock).Select(d => new PricingDetailDto
@@ -210,9 +210,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 var config = new CauHinhGium
                 {
                     TenCauHinh = request.TenCauHinh,
-                    MaLoaiXe = request.MaLoaiXe,
-                    GioBatDau = !string.IsNullOrEmpty(request.GioBatDau) ? TimeOnly.Parse(request.GioBatDau) : null,
-                    GioKetThuc = !string.IsNullOrEmpty(request.GioKetThuc) ? TimeOnly.Parse(request.GioKetThuc) : null,
+                    MaLoaiXe = request.MaLoaiXe.Value, // <-- Fix: use .Value to convert int? to int
+                    GioBatDau = !string.IsNullOrEmpty(request.GioBatDau) ? TimeOnly.Parse(request.GioBatDau) : default,
+                    GioKetThuc = !string.IsNullOrEmpty(request.GioKetThuc) ? TimeOnly.Parse(request.GioKetThuc) : default,
                     IsUuTien = request.IsUuTien
                 };
 
@@ -265,9 +265,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 }
 
                 config.TenCauHinh = request.TenCauHinh;
-                config.MaLoaiXe = request.MaLoaiXe;
-                config.GioBatDau = !string.IsNullOrEmpty(request.GioBatDau) ? TimeOnly.Parse(request.GioBatDau) : null;
-                config.GioKetThuc = !string.IsNullOrEmpty(request.GioKetThuc) ? TimeOnly.Parse(request.GioKetThuc) : null;
+                config.MaLoaiXe = request.MaLoaiXe.Value;
+                config.GioBatDau = !string.IsNullOrEmpty(request.GioBatDau) ? TimeOnly.Parse(request.GioBatDau) : default;
+                config.GioKetThuc = !string.IsNullOrEmpty(request.GioKetThuc) ? TimeOnly.Parse(request.GioKetThuc) : default;
                 config.IsUuTien = request.IsUuTien;
 
                 // Xóa chi tiết cũ

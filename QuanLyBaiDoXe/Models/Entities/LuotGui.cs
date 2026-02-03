@@ -13,7 +13,7 @@ public partial class LuotGui
 
     public int? MaCaVao { get; set; }
 
-    public DateTime? ThoiGianVao { get; set; }
+    public DateTime ThoiGianVao { get; set; }
 
     public string? BienSoVao { get; set; }
 

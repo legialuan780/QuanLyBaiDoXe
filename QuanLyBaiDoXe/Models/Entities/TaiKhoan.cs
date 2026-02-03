@@ -11,6 +11,8 @@ public partial class TaiKhoan
 
     public string MatKhau { get; set; } = null!;
 
+    public string QuyenHan { get; set; } = null!;
+
     public bool? TrangThai { get; set; }
 
     public virtual KhachHang? KhachHang { get; set; }

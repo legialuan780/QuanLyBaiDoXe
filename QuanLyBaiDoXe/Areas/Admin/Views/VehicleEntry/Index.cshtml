@@ -703,7 +703,7 @@
                                 @if (!string.IsNullOrEmpty(luotGui.HinhAnhVao))
                                 {
                                     <img src="@luotGui.HinhAnhVao" alt="Hình vào" class="vehicle-image-thumb" 
-                                         onclick="showImageModal('@luotGui.HinhAnhVao', 'Xe vào', '@luotGui.BienSoVao', '@luotGui.ThoiGianVao?.ToString("dd/MM/yyyy HH:mm:ss")')" />
+                                         onclick="showImageModal('@luotGui.HinhAnhVao', 'Xe vào', '@luotGui.BienSoVao', '@(luotGui.ThoiGianVao != null ? luotGui.ThoiGianVao.ToString("dd/MM/yyyy HH:mm:ss") : "")')" />
                                 }
                                 else
                                 {
@@ -711,8 +711,8 @@
                                 }
                             </td>
                             <td>@luotGui.MaTheNavigation?.MaLoaiXeNavigation?.TenLoaiXe</td>
-                            <td>@luotGui.ThoiGianVao?.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="time-elapsed" data-start="@luotGui.ThoiGianVao?.ToString("o")">--:--:--</td>
+                            <td>@(luotGui.ThoiGianVao == null ? "" : luotGui.ThoiGianVao.ToString("dd/MM/yyyy HH:mm"))</td>
+                            <td class="time-elapsed" data-start="@(luotGui.ThoiGianVao != null ? luotGui.ThoiGianVao.ToString("o") : "")">--:--:--</td>
                             <td>@luotGui.MaViTriNavigation?.TenViTri</td>
                             <td>
                                 <button class="btn-secondary-admin btn-sm btn-quick-out" data-mathe="@luotGui.MaThe" data-bienso="@luotGui.BienSoVao" data-hinhvao="@luotGui.HinhAnhVao">

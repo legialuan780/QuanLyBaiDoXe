@@ -1749,9 +1749,41 @@
         // Không reset pendingPaymentData ở đây để có thể thử lại
     }
 
-    function showMomoQR() {
-        document.getElementById('paymentMethodsSection').style.display = 'none';
-        document.getElementById('momoQRSection').classList.add('show');
+    async function showMomoQR() {
+        if (!pendingPaymentData) {
+            showAlertModal('Không có dữ liệu thanh toán!', 'error', 'Lỗi');
+            return;
+        }
+
+        // Đóng modal thanh toán và hiển thị loading
+        closePaymentModal();
+        showNotification('Đang chuyển đến trang thanh toán MoMo...', 'success');
+
+        try {
+            // Gọi API tạo thanh toán MoMo
+            const response = await fetch('/Admin/VehicleEntry/CreateMoMoPayment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    maThe: pendingPaymentData.maThe,
+                    bienSo: pendingPaymentData.bienSo,
+                    hinhAnh: capturedImageData
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.payUrl) {
+                // Redirect trực tiếp đến trang thanh toán MoMo
+                window.location.href = data.payUrl;
+            } else {
+                // Lỗi từ MoMo
+                showAlertModal(data.message || 'Không thể tạo thanh toán MoMo. Vui lòng thử lại!', 'error', 'Lỗi MoMo');
+            }
+        } catch (err) {
+            console.error('MoMo Error:', err);
+            showAlertModal('Lỗi kết nối đến MoMo! Vui lòng thử lại.', 'error', 'Lỗi kết nối');
+        }
     }
 
     function backToPaymentMethods() {
@@ -1847,8 +1879,35 @@
         });
     }
 
+    // Kiểm tra thanh toán MoMo thành công từ URL parameter
+    function checkMoMoPaymentResult() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const momoResult = urlParams.get('momoResult');
+        const amount = urlParams.get('amount');
+        const transactionId = urlParams.get('transactionId');
+        const errorMessage = urlParams.get('errorMessage');
+        
+        if (momoResult === 'success') {
+            const successMsg = `Thanh toán MoMo thành công!\n\nSố tiền: ${amount || '0'} VNĐ\nMã giao dịch: ${transactionId || '-'}`;
+            showAlertModal(successMsg, 'success', 'Thanh toán thành công');
+            // Xóa query params khỏi URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Refresh danh sách và thống kê
+            refreshVehiclesList();
+            refreshStats();
+        } else if (momoResult === 'failed') {
+            const failMsg = errorMessage ? decodeURIComponent(errorMessage) : 'Thanh toán MoMo thất bại. Vui lòng thử lại!';
+            showAlertModal(failMsg, 'error', 'Thanh toán thất bại');
+            // Xóa query params khỏi URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     // Event listeners
     document.addEventListener('DOMContentLoaded', function () {
+        // Kiểm tra kết quả thanh toán MoMo
+        checkMoMoPaymentResult();
+        
         initCamera();
 
         document.getElementById('btnCapture').addEventListener('click', captureImage);

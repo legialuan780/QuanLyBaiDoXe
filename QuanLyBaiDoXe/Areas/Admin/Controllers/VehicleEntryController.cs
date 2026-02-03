@@ -14,17 +14,20 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         private readonly QuanLyBaiDoXeContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILicensePlateRecognitionService _plateRecognitionService;
+        private readonly IMoMoService _momoService;
 
         public VehicleEntryController(
             IVehicleEntryService vehicleEntryService,
             QuanLyBaiDoXeContext context,
             IWebHostEnvironment webHostEnvironment,
-            ILicensePlateRecognitionService plateRecognitionService)
+            ILicensePlateRecognitionService plateRecognitionService,
+            IMoMoService momoService)
         {
             _vehicleEntryService = vehicleEntryService;
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _plateRecognitionService = plateRecognitionService;
+            _momoService = momoService;
             }
 
                 public async Task<IActionResult> Index()
@@ -472,15 +475,204 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         }
 
         private static TheXeDto MapToTheXeDto(TheXe theXe, bool dangGui)
-        {
-            return new TheXeDto
-            {
-                MaThe = theXe.MaThe,
-                TenLoaiXe = theXe.MaLoaiXeNavigation?.TenLoaiXe,
-                LoaiThe = theXe.LoaiThe,
-                TrangThai = theXe.TrangThai,
-                DangGui = dangGui
-            };
+                {
+                    return new TheXeDto
+                    {
+                        MaThe = theXe.MaThe,
+                        TenLoaiXe = theXe.MaLoaiXeNavigation?.TenLoaiXe,
+                        LoaiThe = theXe.LoaiThe,
+                        TrangThai = theXe.TrangThai,
+                        DangGui = dangGui
+                    };
+                }
+
+                /// <summary>
+                /// Tạo thanh toán MoMo
+                /// </summary>
+                [HttpPost]
+                public async Task<IActionResult> CreateMoMoPayment([FromBody] MoMoPaymentRequest request)
+                {
+                    try
+                    {
+                        if (string.IsNullOrEmpty(request.MaThe))
+                        {
+                            return Json(new { success = false, message = "Mã thẻ không hợp lệ!" });
+                        }
+
+                        var luotGui = await _vehicleEntryService.GetLuotGuiDangGuiByMaTheAsync(request.MaThe);
+                        if (luotGui == null)
+                        {
+                            return Json(new { success = false, message = "Không tìm thấy lượt gửi của thẻ này!" });
+                        }
+
+                        // Tính tiền
+                        var thoiGianRa = DateTime.Now;
+                        var tongTien = await _vehicleEntryService.TinhTienGuiXePreviewAsync(luotGui, thoiGianRa);
+
+                        if (tongTien <= 0)
+                        {
+                            return Json(new { success = false, message = "Số tiền thanh toán phải lớn hơn 0!" });
+                        }
+
+                        // Tạo mã đơn hàng unique
+                        var orderId = $"PARKING_{luotGui.MaLuotGui}_{DateTime.Now:yyyyMMddHHmmss}";
+                        var orderInfo = $"Thanh toán phí gửi xe - Mã thẻ: {request.MaThe} - Biển số: {luotGui.BienSoVao}";
+
+                        // Gọi MoMo API
+                        var momoResponse = await _momoService.CreatePaymentAsync(orderId, (long)tongTien, orderInfo);
+
+                        if (momoResponse.Success)
+                        {
+                            // Lưu thông tin thanh toán pending (có thể lưu vào database nếu cần)
+                            return Json(new
+                            {
+                                success = true,
+                                payUrl = momoResponse.PayUrl,
+                                qrCodeUrl = momoResponse.QrCodeUrl,
+                                deepLink = momoResponse.DeepLink,
+                                orderId = orderId,
+                                amount = tongTien,
+                                message = "Tạo thanh toán MoMo thành công!"
+                            });
+                        }
+
+                        return Json(new
+                        {
+                            success = false,
+                            message = momoResponse.Message ?? "Không thể tạo thanh toán MoMo"
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        return Json(new { success = false, message = ex.Message });
+                    }
+                }
+
+                /// <summary>
+                /// Callback URL khi thanh toán MoMo hoàn thành (redirect từ MoMo)
+                /// </summary>
+                [HttpGet]
+                public async Task<IActionResult> MoMoReturn(
+                    string partnerCode,
+                    string orderId,
+                    string requestId,
+                    long amount,
+                    string orderInfo,
+                    string orderType,
+                    long transId,
+                    int resultCode,
+                    string message,
+                    string payType,
+                    long responseTime,
+                    string extraData,
+                    string signature)
+                {
+                    // Kiểm tra kết quả thanh toán
+                    if (resultCode == 0)
+                    {
+                        // Thanh toán thành công
+                        // Parse orderId để lấy MaLuotGui: PARKING_{MaLuotGui}_{timestamp}
+                        var parts = orderId.Split('_');
+                        if (parts.Length >= 2 && long.TryParse(parts[1], out var maLuotGui))
+                        {
+                            var luotGui = await _context.LuotGuis
+                                .Include(l => l.MaTheNavigation)
+                                .FirstOrDefaultAsync(l => l.MaLuotGui == maLuotGui && l.TrangThai == 0);
+
+                            if (luotGui != null)
+                            {
+                                // Xử lý xe ra
+                                await _vehicleEntryService.XuLyXeRaAsync(
+                                    luotGui.MaThe!,
+                                    luotGui.BienSoVao ?? "",
+                                    null);
+                            }
+                        }
+
+                        // Format số tiền với dấu phân cách
+                        var formattedAmount = amount.ToString("N0");
+                        return RedirectToAction("Index", new { momoResult = "success", amount = formattedAmount, transactionId = transId });
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", new { momoResult = "failed", errorMessage = message });
+                    }
+                }
+
+                /// <summary>
+                /// IPN URL - MoMo gọi để thông báo kết quả thanh toán (server-to-server)
+                /// </summary>
+                [HttpPost]
+                public async Task<IActionResult> MoMoNotify([FromBody] MoMoCallbackRequest request)
+                {
+                    try
+                    {
+                        // Xác minh chữ ký
+                        if (!_momoService.VerifySignature(request))
+                        {
+                            return BadRequest(new { message = "Invalid signature" });
+                        }
+
+                        if (request.ResultCode == 0)
+                        {
+                            // Thanh toán thành công
+                            var parts = request.OrderId.Split('_');
+                            if (parts.Length >= 2 && long.TryParse(parts[1], out var maLuotGui))
+                            {
+                                var luotGui = await _context.LuotGuis
+                                    .Include(l => l.MaTheNavigation)
+                                    .FirstOrDefaultAsync(l => l.MaLuotGui == maLuotGui && l.TrangThai == 0);
+
+                                if (luotGui != null)
+                                {
+                                    // Xử lý xe ra
+                                    await _vehicleEntryService.XuLyXeRaAsync(
+                                        luotGui.MaThe!,
+                                        luotGui.BienSoVao ?? "",
+                                        null);
+                                }
+                            }
+                        }
+
+                        return Ok(new { message = "Received" });
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(500, new { message = ex.Message });
+                    }
+                }
+
+                /// <summary>
+                /// Kiểm tra trạng thái thanh toán MoMo
+                /// </summary>
+                [HttpGet]
+                public async Task<IActionResult> CheckMoMoPaymentStatus(string orderId)
+                {
+                    try
+                    {
+                        // Parse orderId để lấy MaLuotGui
+                        var parts = orderId.Split('_');
+                        if (parts.Length >= 2 && long.TryParse(parts[1], out var maLuotGui))
+                        {
+                            var luotGui = await _context.LuotGuis.FindAsync(maLuotGui);
+                            if (luotGui != null)
+                            {
+                                // TrangThai = 1 nghĩa là đã thanh toán và xe đã ra
+                                return Json(new
+                                {
+                                    success = true,
+                                    paid = luotGui.TrangThai == 1,
+                                    message = luotGui.TrangThai == 1 ? "Đã thanh toán" : "Chưa thanh toán"
+                                });
+                            }
+                        }
+
+                        return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+                    }
+                    catch (Exception ex)
+                    {
+                        return Json(new { success = false, message = ex.Message });
+                    }
+                }
+            }
         }
-    }
-}

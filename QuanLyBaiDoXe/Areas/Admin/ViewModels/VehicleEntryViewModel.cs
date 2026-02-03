@@ -128,13 +128,23 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
             }
 
             /// <summary>
-            /// Request model cho xác nhận xe ra
-            /// </summary>
-            public class ConfirmXeRaRequest
-            {
-                public string MaThe { get; set; } = string.Empty;
-                public string? BienSo { get; set; }
-                public string? HinhAnh { get; set; }
-                public string PhuongThucThanhToan { get; set; } = "cash"; // "cash" hoặc "momo"
+                /// Request model cho xác nhận xe ra
+                /// </summary>
+                public class ConfirmXeRaRequest
+                {
+                    public string MaThe { get; set; } = string.Empty;
+                    public string? BienSo { get; set; }
+                    public string? HinhAnh { get; set; }
+                    public string PhuongThucThanhToan { get; set; } = "cash"; // "cash" hoặc "momo"
+                }
+
+                /// <summary>
+                /// Request model cho thanh toán MoMo
+                /// </summary>
+                public class MoMoPaymentRequest
+                {
+                    public string MaThe { get; set; } = string.Empty;
+                    public string? BienSo { get; set; }
+                    public string? HinhAnh { get; set; }
+                }
             }
-        }

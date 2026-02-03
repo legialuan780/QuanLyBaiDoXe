@@ -30,6 +30,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 // Register License Plate Recognition service
 builder.Services.AddHttpClient<ILicensePlateRecognitionService, PlateRecognizerService>();
 
+// Register MoMo Payment service
+builder.Services.AddHttpClient<IMoMoService, MoMoService>();
+
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

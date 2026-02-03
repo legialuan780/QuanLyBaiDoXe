@@ -1,4 +1,4 @@
-﻿/* Vehicle Type Management Page Styles */
+/* Vehicle Type Management Page Styles */
 
 /* DataTables Custom Styles */
 .dataTables_wrapper .dataTables_length,
@@ -51,42 +51,67 @@ table.dataTable tbody tr:hover {
     background-color: rgba(33, 166, 145, 0.08);
 }
 
+/* DataTables Info & Pagination - Giống trang Cấu hình giá */
 .dataTables_wrapper .dataTables_info {
     padding-top: 15px;
     font-size: 13px;
-    color: var(--light-gray);
+    color: #6c757d;
 }
 
 .dataTables_wrapper .dataTables_paginate {
     padding-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 6px 12px;
+    padding: 8px 14px;
     margin: 0 2px;
-    border: 1px solid #e5e9f2;
-    border-radius: 6px;
+    border: 1px solid #d2d6da;
+    border-radius: 8px;
     background: white;
-    color: var(--dark-teal);
+    color: #344767;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: var(--primary-teal);
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
     color: white;
-    border-color: var(--primary-teal);
+    border-color: #0d6efd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: var(--primary-teal);
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
     color: white;
-    border-color: var(--primary-teal);
+    border-color: #0d6efd;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+/* Price Badge */
+.price-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 /* Vehicle Type Name */

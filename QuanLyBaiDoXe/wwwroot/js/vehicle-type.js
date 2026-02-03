@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vehicle Type Management Module
  */
 const VehicleType = (function () {
@@ -53,6 +53,16 @@ const VehicleType = (function () {
                     render: function (data) {
                         return data || '--';
                     }
+                },
+                {
+                    data: 'giaThang',
+                    render: function (data) {
+                        if (data != null && data > 0) {
+                            return `<span class="price-badge">${new Intl.NumberFormat('vi-VN').format(data)}đ</span>`;
+                        }
+                        return '<span class="count-badge zero">Chưa có</span>';
+                    },
+                    className: 'text-center'
                 },
                 {
                     data: 'soLuongThe',
@@ -181,6 +191,7 @@ const VehicleType = (function () {
                     $('#editMaLoaiXe').val(data.maLoaiXe);
                     $('#editTenLoaiXe').val(data.tenLoaiXe);
                     $('#editMoTa').val(data.moTa || '');
+                    $('#editGiaThang').val(data.giaThang || '');
                     openModal('editModal');
                 } else {
                     showNotification(response.message || 'Không thể tải thông tin loại xe', 'error');
@@ -210,6 +221,7 @@ const VehicleType = (function () {
                     $('#detailMaLoaiXe').text(data.maLoaiXe);
                     $('#detailTenLoaiXe').text(data.tenLoaiXe || '--');
                     $('#detailMoTa').text(data.moTa || '--');
+                    $('#detailGiaThang').text(data.giaThang ? new Intl.NumberFormat('vi-VN').format(data.giaThang) + 'đ' : '--');
                     $('#detailSoLuongThe').text(data.soLuongThe);
                     $('#detailSoLuongTheHoatDong').text(data.soLuongTheHoatDong);
                     $('#detailSoLuongCauHinhGia').text(data.soLuongCauHinhGia);
@@ -229,9 +241,11 @@ const VehicleType = (function () {
      * Handle create vehicle type
      */
     function handleCreate() {
+        const giaThangVal = $('#addGiaThang').val();
         const formData = {
             tenLoaiXe: $('#addTenLoaiXe').val().trim(),
-            moTa: $('#addMoTa').val().trim() || null
+            moTa: $('#addMoTa').val().trim() || null,
+            giaThang: giaThangVal ? parseFloat(giaThangVal) : null
         };
 
         if (!formData.tenLoaiXe) {
@@ -268,10 +282,12 @@ const VehicleType = (function () {
      * Handle update vehicle type
      */
     function handleUpdate() {
+        const giaThangVal = $('#editGiaThang').val();
         const formData = {
             maLoaiXe: parseInt($('#editMaLoaiXe').val()),
             tenLoaiXe: $('#editTenLoaiXe').val().trim(),
-            moTa: $('#editMoTa').val().trim() || null
+            moTa: $('#editMoTa').val().trim() || null,
+            giaThang: giaThangVal ? parseFloat(giaThangVal) : null
         };
 
         if (!formData.tenLoaiXe) {

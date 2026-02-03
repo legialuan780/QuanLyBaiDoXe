@@ -24,6 +24,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaLoaiXe = l.MaLoaiXe,
                     TenLoaiXe = l.TenLoaiXe,
                     MoTa = l.MoTa,
+                    GiaThang = l.GiaThang,
                     SoLuongThe = l.TheXes.Count,
                     SoLuongTheHoatDong = l.TheXes.Count(t => t.TrangThai == 1),
                     SoLuongCauHinhGia = l.CauHinhGia.Count
@@ -53,6 +54,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaLoaiXe = l.MaLoaiXe,
                     TenLoaiXe = l.TenLoaiXe,
                     MoTa = l.MoTa,
+                    GiaThang = l.GiaThang,
                     SoLuongThe = l.TheXes.Count,
                     SoLuongTheHoatDong = l.TheXes.Count(t => t.TrangThai == 1),
                     SoLuongCauHinhGia = l.CauHinhGia.Count
@@ -72,6 +74,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaLoaiXe = l.MaLoaiXe,
                     TenLoaiXe = l.TenLoaiXe,
                     MoTa = l.MoTa,
+                    GiaThang = l.GiaThang,
                     SoLuongThe = l.TheXes.Count,
                     SoLuongTheHoatDong = l.TheXes.Count(t => t.TrangThai == 1),
                     SoLuongCauHinhGia = l.CauHinhGia.Count
@@ -108,7 +111,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 var loaiXe = new LoaiXe
                 {
                     TenLoaiXe = request.TenLoaiXe.Trim(),
-                    MoTa = request.MoTa?.Trim()
+                    MoTa = request.MoTa?.Trim(),
+                    GiaThang = request.GiaThang
                 };
 
                 _context.LoaiXes.Add(loaiXe);
@@ -154,6 +158,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                 loaiXe.TenLoaiXe = request.TenLoaiXe.Trim();
                 loaiXe.MoTa = request.MoTa?.Trim();
+                loaiXe.GiaThang = request.GiaThang;
 
                 await _context.SaveChangesAsync();
 

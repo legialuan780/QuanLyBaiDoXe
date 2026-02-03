@@ -13,6 +13,7 @@
         public int MaLoaiXe { get; set; }
         public string? TenLoaiXe { get; set; }
         public string? MoTa { get; set; }
+        public decimal? GiaThang { get; set; }
         public int SoLuongThe { get; set; }
         public int SoLuongTheHoatDong { get; set; }
         public int SoLuongCauHinhGia { get; set; }
@@ -23,5 +24,6 @@
         public int? MaLoaiXe { get; set; }
         public string TenLoaiXe { get; set; } = string.Empty;
         public string? MoTa { get; set; }
+        public decimal? GiaThang { get; set; }
     }
 }

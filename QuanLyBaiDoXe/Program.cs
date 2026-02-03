@@ -80,8 +80,15 @@ app.MapGet("/", context =>
 
 // Route cho Area Admin
 app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+    name: "admin",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}",
+    constraints: new { area = "Admin" });
+
+// Route cho Area User (Khách hàng)
+app.MapControllerRoute(
+    name: "user",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}",
+    constraints: new { area = "User" });
 
 app.MapControllerRoute(
     name: "default",

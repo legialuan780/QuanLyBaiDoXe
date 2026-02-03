@@ -1,0 +1,259 @@
+﻿@model QuanLyBaiDoXe.Models.Entities.KhachHang
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Thông tin cá nhân</h1>
+    <p class="page-subtitle">Quản lý thông tin tài khoản của bạn</p>
+</div>
+
+<div class="row">
+    <!-- Profile Information -->
+    <div class="col-md-8">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">
+                    <i class="fas fa-user text-primary me-2"></i>
+                    Thông tin tài khoản
+                </h5>
+            </div>
+            <form id="profileForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="hoTen" value="@Model.HoTen" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="soDienThoai" value="@Model.SoDienThoai" required>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" id="diaChi" value="@Model.DiaChi">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Biển số xe mặc định</label>
+                        <input type="text" class="form-control" id="bienSoXeMacDinh" value="@Model.BienSoXeMacDinh" style="text-transform: uppercase;">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" value="@Model.MaTaiKhoanNavigation?.TenDangNhap" disabled>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Lưu thay đổi
+                </button>
+            </form>
+        </div>
+
+        <!-- CCCD Verification -->
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">
+                    <i class="fas fa-id-card text-success me-2"></i>
+                    Xác thực CCCD
+                </h5>
+            </div>
+            <form id="cccdForm">
+                <div class="mb-3">
+                    <label class="form-label">Số CCCD/CMND</label>
+                    <input type="text" class="form-control" id="cccd" value="@Model.Cccd" placeholder="Nhập số CCCD/CMND">
+                    <small class="form-text text-muted">Xác thực CCCD để sử dụng đầy đủ các dịch vụ</small>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check me-2"></i>Xác thực
+                </button>
+            </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">
+                    <i class="fas fa-lock text-warning me-2"></i>
+                    Đổi mật khẩu
+                </h5>
+            </div>
+            <form id="passwordForm">
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu cũ <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="oldPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="newPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Account Summary -->
+    <div class="col-md-4">
+        <div class="card-custom" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="text-center mb-4">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 36px; font-weight: 700;">
+                    @Model.HoTen.Substring(0, 1).ToUpper()
+                </div>
+            </div>
+            <h4 class="text-center mb-1">@Model.HoTen</h4>
+            <p class="text-center" style="opacity: 0.9;">Khách hàng</p>
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 16px; margin-top: 16px;">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tài khoản:</span>
+                    <span>@Model.MaTaiKhoanNavigation?.TenDangNhap</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Số điện thoại:</span>
+                    <span>@Model.SoDienThoai</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>CCCD:</span>
+                    <span>@(Model.Cccd ?? "Chưa xác thực")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-custom">
+            <h6 class="mb-3"><i class="fas fa-shield-alt text-info me-2"></i>Bảo mật tài khoản</h6>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span>Xác thực CCCD</span>
+                @if (string.IsNullOrEmpty(Model.Cccd))
+                {
+                    <span class="badge bg-danger">Chưa</span>
+                }
+                else
+                {
+                    <span class="badge bg-success">Đã xác thực</span>
+                }
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+                <span>Đổi mật khẩu</span>
+                <button class="btn btn-sm btn-outline-primary" onclick="$('#passwordForm')[0].scrollIntoView({behavior: 'smooth'})">
+                    Đổi ngay
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Update profile
+            $('#profileForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const data = {
+                    hoTen: $('#hoTen').val(),
+                    soDienThoai: $('#soDienThoai').val(),
+                    diaChi: $('#diaChi').val(),
+                    bienSoXeMacDinh: $('#bienSoXeMacDinh').val()
+                };
+
+                $.ajax({
+                    url: '@Url.Action("UpdateProfile", "Profile", new { area = "User" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(result) {
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showNotification('Có lỗi xảy ra', 'error');
+                    }
+                });
+            });
+
+            // Update CCCD
+            $('#cccdForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const data = {
+                    cccd: $('#cccd').val()
+                };
+
+                $.ajax({
+                    url: '@Url.Action("UpdateCCCD", "Profile", new { area = "User" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(result) {
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showNotification('Có lỗi xảy ra', 'error');
+                    }
+                });
+            });
+
+            // Change password
+            $('#passwordForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const newPassword = $('#newPassword').val();
+                const confirmPassword = $('#confirmPassword').val();
+
+                if (newPassword !== confirmPassword) {
+                    showNotification('Mật khẩu xác nhận không khớp', 'error');
+                    return;
+                }
+
+                const data = {
+                    oldPassword: $('#oldPassword').val(),
+                    newPassword: newPassword
+                };
+
+                $.ajax({
+                    url: '@Url.Action("ChangePassword", "Profile", new { area = "User" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(result) {
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            $('#passwordForm')[0].reset();
+                        } else {
+                            showNotification(result.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showNotification('Có lỗi xảy ra', 'error');
+                    }
+                });
+            });
+        });
+
+        function showNotification(message, type) {
+            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            const notification = $(`
+                <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px 25px; 
+                            background: ${bgColor}; color: white; border-radius: 8px; 
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" style="margin-right: 8px;"></i>
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(notification);
+            setTimeout(() => notification.fadeOut(() => notification.remove()), 3000);
+        }
+    </script>
+}

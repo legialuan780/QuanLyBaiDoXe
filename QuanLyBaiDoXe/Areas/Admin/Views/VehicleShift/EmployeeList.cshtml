@@ -79,6 +79,14 @@
 <div class="admin-card">
     <div class="admin-card-header">
         <h3 class="admin-card-title">Danh sách nhân viên</h3>
+        <div class="view-toggle-buttons">
+            <button class="btn-view-toggle active" id="btn-card-view" onclick="switchToCardView()" title="Xem dạng thẻ">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <button class="btn-view-toggle" id="btn-list-view" onclick="switchToListView()" title="Xem dạng danh sách">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
     </div>
     
     <!-- Filter Row -->
@@ -182,6 +190,88 @@
                 </div>
             </div>
         }
+    </div>
+
+    <!-- Employee Table View -->
+    <div class="employee-table-view" id="employeeTableView" style="display: none;">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã NV</th>
+                        <th>Họ tên</th>
+                        <th>Chức vụ</th>
+                        <th>Số điện thoại</th>
+                        <th>Tuổi</th>
+                        <th>Ngày vào làm</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var emp in Model)
+                        {
+                            <tr class="employee-row" data-position="@emp.ChucVu" data-status="@emp.TrangThaiLamViec.ToString().ToLower()" data-search="@emp.HoTen.ToLower() @emp.SoDienThoai">
+                                <td>
+                                    <strong>@("NV" + emp.MaNhanVien.ToString("D4"))</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="employee-avatar-small">
+                                            @emp.HoTen.Substring(0, 1)
+                                        </div>
+                                        <strong>@emp.HoTen</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">@emp.ChucVuText</span>
+                                </td>
+                                <td>@(emp.SoDienThoai ?? "Chưa có")</td>
+                                <td>@emp.Tuoi tuổi</td>
+                                <td>@emp.NgayVaoLam?.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (emp.TrangThaiLamViec)
+                                    {
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-circle"></i>
+                                            Đang làm việc
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">
+                                            <i class="fas fa-circle"></i>
+                                            Đã nghỉ việc
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group-sm">
+                                        <button class="btn-sm btn-secondary-admin" onclick="viewEmployeeDetail(@emp.MaNhanVien)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-sm btn-primary-admin" onclick="viewPersonalSchedule(@emp.MaNhanVien, '@emp.HoTen')" title="Lịch cá nhân">
+                                            <i class="fas fa-calendar-week"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="fas fa-users-slash" style="font-size: 2rem; color: #95a5a6;"></i>
+                                <p class="mt-2 text-muted">Chưa có nhân viên nào</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -723,7 +813,84 @@
 </div>
 
 <style>
-    .counter-box {
+/* View Toggle Buttons */
+.admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.view-toggle-buttons {
+    display: flex;
+    gap: 5px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.btn-view-toggle {
+    background: transparent;
+    border: none;
+    color: #95a5a6;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1.1rem;
+}
+
+.btn-view-toggle:hover {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.btn-view-toggle.active {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Employee Table Styles */
+.employee-table-view {
+    padding: 20px;
+}
+
+.employee-row {
+    transition: all 0.3s;
+}
+
+.employee-row:hover {
+    background: #f0f8ff !important;
+    transform: scale(1.01);
+}
+
+.employee-avatar-small {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.btn-group-sm {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-group-sm .btn-sm {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+}
+
+.counter-box {
         border: 2px solid #e0e0e0;
         border-radius: 12px;
         padding: 20px;
@@ -1238,6 +1405,40 @@
     let availableEmployees = [];
     let currentWeekStart = new Date();
     let weeklyOverviewData = null;
+    let currentView = 'card'; // 'card' or 'list'
+
+    // View Toggle Functions
+    function switchToCardView() {
+        currentView = 'card';
+        $('.employee-grid').show();
+        $('#employeeTableView').hide();
+        $('#btn-card-view').addClass('active');
+        $('#btn-list-view').removeClass('active');
+        
+        // Save preference to localStorage
+        localStorage.setItem('employeeViewPreference', 'card');
+    }
+
+    function switchToListView() {
+        currentView = 'list';
+        $('.employee-grid').hide();
+        $('#employeeTableView').show();
+        $('#btn-card-view').removeClass('active');
+        $('#btn-list-view').addClass('active');
+        
+        // Save preference to localStorage
+        localStorage.setItem('employeeViewPreference', 'list');
+    }
+
+    // Load view preference on page load
+    $(document).ready(function() {
+        const savedView = localStorage.getItem('employeeViewPreference') || 'card';
+        if (savedView === 'list') {
+            switchToListView();
+        } else {
+            switchToCardView();
+        }
+    });
 
     // Reset form khi mở modal thêm nhân viên
     $('#addEmployeeModal').on('show.bs.modal', function() {
@@ -1604,44 +1805,79 @@
     }
 
     function filterEmployees() {
-            const position = $('#filterPosition').val();
-            const status = $('#filterStatus').val();
+        const position = $('#filterPosition').val();
+        const status = $('#filterStatus').val();
+        
+        // Filter cards
+        $('.employee-card').each(function() {
+            const cardPosition = $(this).data('position').toString();
+            const cardStatus = $(this).attr('data-status');
             
-            $('.employee-card').each(function() {
-                const cardPosition = $(this).data('position').toString();
-                const cardStatus = $(this).attr('data-status'); // Use attr() to get string value
-                
-                let showCard = true;
-                
-                if (position && cardPosition !== position) {
-                    showCard = false;
-                }
-                
-                if (status && cardStatus !== status) {
-                    showCard = false;
-                }
-                
-                if (showCard) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
+            let showCard = true;
+            
+            if (position && cardPosition !== position) {
+                showCard = false;
+            }
+            
+            if (status && cardStatus !== status) {
+                showCard = false;
+            }
+            
+            if (showCard) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
 
-        function searchEmployees() {
-            const searchText = $('#searchEmployee').val().toLowerCase();
+        // Filter table rows
+        $('.employee-row').each(function() {
+            const rowPosition = $(this).data('position').toString();
+            const rowStatus = $(this).attr('data-status');
             
-            $('.employee-card').each(function() {
-                const searchData = $(this).data('search');
-                
-                if (searchData.includes(searchText)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
+            let showRow = true;
+            
+            if (position && rowPosition !== position) {
+                showRow = false;
+            }
+            
+            if (status && rowStatus !== status) {
+                showRow = false;
+            }
+            
+            if (showRow) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+
+    function searchEmployees() {
+        const searchText = $('#searchEmployee').val().toLowerCase();
+        
+        // Search in cards
+        $('.employee-card').each(function() {
+            const searchData = $(this).data('search');
+            
+            if (searchData.includes(searchText)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+
+        // Search in table rows
+        $('.employee-row').each(function() {
+            const searchData = $(this).data('search');
+            
+            if (searchData.includes(searchText)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
 
         // Thêm nhân viên mới
         function createEmployee() {

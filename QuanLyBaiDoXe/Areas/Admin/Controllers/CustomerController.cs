@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+ï»¿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Areas.Admin.ViewModels;
@@ -25,7 +25,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             
             var query = _context.KhachHangs
                 .Include(k => k.MaTaiKhoanNavigation)
-                .Include(k => k.VeThangs)
+                .Include(k => k.TheThangs)
                 .AsQueryable();
 
             // Search filter
@@ -44,7 +44,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             var totalCustomers = await _context.KhachHangs.CountAsync();
             var customersWithAccount = await _context.KhachHangs.CountAsync(k => k.MaTaiKhoan != null);
             var customersWithMonthlyTicket = await _context.KhachHangs
-                .CountAsync(k => k.VeThangs.Any(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now)));
+                .CountAsync(k => k.TheThangs.Any(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now)));
 
             // Pagination
             var totalCount = await query.CountAsync();
@@ -78,14 +78,14 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         {
             var customer = await _context.KhachHangs
                 .Include(k => k.MaTaiKhoanNavigation)
-                .Include(k => k.VeThangs)
+                .Include(k => k.TheThangs)
                     .ThenInclude(v => v.MaTheNavigation)
                         .ThenInclude(t => t.MaLoaiXeNavigation)
                 .FirstOrDefaultAsync(k => k.MaKhachHang == id);
 
             if (customer == null)
             {
-                return Json(new { success = false, message = "Không tìm th?y khách hàng!" });
+                return Json(new { success = false, message = "KhÃ´ng tÃ¬m th?y khÃ¡ch hÃ ng!" });
             }
 
             return Json(new
@@ -101,9 +101,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     bienSoXeMacDinh = customer.BienSoXeMacDinh,
                     maTaiKhoan = customer.MaTaiKhoan,
                     tenDangNhap = customer.MaTaiKhoanNavigation?.TenDangNhap,
-                    veThangs = customer.VeThangs.Select(v => new
+                    veThangs = customer.TheThangs.Select(v => new
                     {
-                        maVeThang = v.MaVeThang,
+                        maVeThang = v.MaTheThang,
                         maThe = v.MaThe,
                         tenLoaiXe = v.MaTheNavigation?.MaLoaiXeNavigation?.TenLoaiXe,
                         ngayBatDau = v.NgayBatDau,
@@ -134,7 +134,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                 if (existingPhone)
                 {
-                    return Json(new { success = false, message = "S? ?i?n tho?i ?ã t?n t?i!" });
+                    return Json(new { success = false, message = "S? ?i?n tho?i ?Ã£ t?n t?i!" });
                 }
 
                 // Check if CCCD already exists
@@ -145,7 +145,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                     if (existingCccd)
                     {
-                        return Json(new { success = false, message = "CCCD ?ã t?n t?i!" });
+                        return Json(new { success = false, message = "CCCD ?Ã£ t?n t?i!" });
                     }
                 }
 
@@ -161,7 +161,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 _context.KhachHangs.Add(customer);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Thêm khách hàng thành công!" });
+                return Json(new { success = true, message = "ThÃªm khÃ¡ch hÃ ng thÃ nh cÃ´ng!" });
             }
             catch (Exception ex)
             {
@@ -187,7 +187,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                 if (customer == null)
                 {
-                    return Json(new { success = false, message = "Không tìm th?y khách hàng!" });
+                    return Json(new { success = false, message = "KhÃ´ng tÃ¬m th?y khÃ¡ch hÃ ng!" });
                 }
 
                 // Check if phone number already exists (excluding current customer)
@@ -196,7 +196,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                 if (existingPhone)
                 {
-                    return Json(new { success = false, message = "S? ?i?n tho?i ?ã t?n t?i!" });
+                    return Json(new { success = false, message = "S? ?i?n tho?i ?Ã£ t?n t?i!" });
                 }
 
                 // Check if CCCD already exists (excluding current customer)
@@ -207,7 +207,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                     if (existingCccd)
                     {
-                        return Json(new { success = false, message = "CCCD ?ã t?n t?i!" });
+                        return Json(new { success = false, message = "CCCD ?Ã£ t?n t?i!" });
                     }
                 }
 
@@ -219,7 +219,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "C?p nh?t khách hàng thành công!" });
+                return Json(new { success = true, message = "C?p nh?t khÃ¡ch hÃ ng thÃ nh cÃ´ng!" });
             }
             catch (Exception ex)
             {
@@ -233,33 +233,33 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             try
             {
                 var customer = await _context.KhachHangs
-                    .Include(k => k.VeThangs)
+                    .Include(k => k.TheThangs)
                     .Include(k => k.DatChos)
                     .FirstOrDefaultAsync(k => k.MaKhachHang == id);
 
                 if (customer == null)
                 {
-                    return Json(new { success = false, message = "Không tìm th?y khách hàng!" });
+                    return Json(new { success = false, message = "KhÃ´ng tÃ¬m th?y khÃ¡ch hÃ ng!" });
                 }
 
                 // Check if customer has active monthly tickets
-                var hasActiveTickets = customer.VeThangs.Any(v => v.TrangThai == true);
+                var hasActiveTickets = customer.TheThangs.Any(v => v.TrangThai == true);
                 if (hasActiveTickets)
                 {
-                    return Json(new { success = false, message = "Không th? xóa khách hàng có vé tháng ?ang ho?t ??ng!" });
+                    return Json(new { success = false, message = "KhÃ´ng th? xÃ³a khÃ¡ch hÃ ng cÃ³ vÃ© thÃ¡ng ?ang ho?t ??ng!" });
                 }
 
                 // Check if customer has active bookings
                 var hasActiveBookings = customer.DatChos.Any(d => d.TrangThaiDatCho == 0);
                 if (hasActiveBookings)
                 {
-                    return Json(new { success = false, message = "Không th? xóa khách hàng có ??t ch? ?ang ho?t ??ng!" });
+                    return Json(new { success = false, message = "KhÃ´ng th? xÃ³a khÃ¡ch hÃ ng cÃ³ ??t ch? ?ang ho?t ??ng!" });
                 }
 
                 _context.KhachHangs.Remove(customer);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, message = "Xóa khách hàng thành công!" });
+                return Json(new { success = true, message = "XÃ³a khÃ¡ch hÃ ng thÃ nh cÃ´ng!" });
             }
             catch (Exception ex)
             {
@@ -273,7 +273,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             var totalCustomers = await _context.KhachHangs.CountAsync();
             var customersWithAccount = await _context.KhachHangs.CountAsync(k => k.MaTaiKhoan != null);
             var customersWithMonthlyTicket = await _context.KhachHangs
-                .CountAsync(k => k.VeThangs.Any(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now)));
+                .CountAsync(k => k.TheThangs.Any(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now)));
             var newCustomersThisMonth = await _context.KhachHangs
                 .CountAsync(k => k.MaKhachHang >= 1); // Simplified - you may want to add a CreatedDate column
 

@@ -125,7 +125,7 @@
                     @foreach (var customer in Model.Customers)
                     {
                         var hasAccount = customer.MaTaiKhoan != null;
-                        var activeTickets = customer.VeThangs.Count(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now));
+                        var activeTickets = customer.TheThangs.Count(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now));
                         
                         <tr>
                             <td><strong>#@customer.MaKhachHang</strong></td>

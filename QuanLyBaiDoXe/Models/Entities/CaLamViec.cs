@@ -23,6 +23,8 @@ public partial class CaLamViec
 
     public int? TrangThaiCa { get; set; }
 
+    public virtual ICollection<LichLamViec> LichLamViecs { get; set; } = new List<LichLamViec>();
+
     public virtual ICollection<LuotGui> LuotGuiMaCaRaNavigations { get; set; } = new List<LuotGui>();
 
     public virtual ICollection<LuotGui> LuotGuiMaCaVaoNavigations { get; set; } = new List<LuotGui>();

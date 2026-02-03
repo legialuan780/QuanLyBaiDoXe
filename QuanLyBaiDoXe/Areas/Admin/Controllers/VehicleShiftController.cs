@@ -66,7 +66,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 {
                     MaLich = l.MaLich,
                     MaNhanVien = l.MaNhanVien,
-                    TenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
+                    TenNhanVien = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : "N/A",
                     NgayLamViec = l.NgayLamViec,
                     CaLamViec = l.CaLamViec,
                     GhiChu = l.GhiChu
@@ -383,7 +383,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaNhanVien = l.MaNhanVien,
                     TenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
                     NgayLamViec = l.NgayLamViec,
-                    CaLamViec = l.CaLamViec,
+                    CaLamViec = l.LoaiCa,
                     GhiChu = l.GhiChu
                 })
                 .ToListAsync();
@@ -428,7 +428,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaNhanVien = l.MaNhanVien,
                     TenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
                     NgayLamViec = l.NgayLamViec,
-                    CaLamViec = l.CaLamViec,
+                    CaLamViec = l.LoaiCa,
                     GhiChu = l.GhiChu
                 })
                 .ToListAsync();
@@ -500,7 +500,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                              && c.TrangThaiCa == 0)
                     .FirstOrDefaultAsync();
 
-                var (startHour, endHour) = schedule.CaLamViec switch
+                var (startHour, endHour) = schedule.LoaiCa switch
                 {
                     1 => (6, 14),
                     2 => (14, 22),
@@ -508,7 +508,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     _ => (0, 0)
                 };
 
-                var shiftName = schedule.CaLamViec switch
+                var shiftName = schedule.LoaiCa switch
                 {
                     1 => "Ca sáng",
                     2 => "Ca chiều",
@@ -533,7 +533,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     role = role,
                     shiftName = shiftName,
                     startTime = $"{startHour:D2}:00",
-                    endTime = schedule.CaLamViec == 3 ? "06:00" : $"{endHour:D2}:00",
+                    endTime = schedule.LoaiCa == 3 ? "06:00" : $"{endHour:D2}:00",
                     note = schedule.GhiChu,
                     isActive = activeShift != null,
                     activeShift = activeShift != null ? new
@@ -654,10 +654,6 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             }
         }
 
-        // API: Lấy chi tiết ca làm việc theo ngày (cũ)
-
-        // Lập lịch tuần (cũ)
-
         // API: Lưu lịch ca làm việc
         [HttpPost]
         public async Task<IActionResult> SaveShiftSchedule([FromBody] SaveScheduleRequest request)
@@ -675,7 +671,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         return Json(new { success = false, message = "Không tìm thấy lịch" });
                     }
 
-                    schedule.CaLamViec = request.CaLamViec;
+                    schedule.LoaiCa = request.CaLamViec;
                     schedule.GhiChu = request.GhiChu;
                 }
                 else
@@ -688,7 +684,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     if (existing != null)
                     {
                         // Update existing
-                        existing.CaLamViec = request.CaLamViec;
+                        existing.LoaiCa = request.CaLamViec;
                         existing.GhiChu = request.GhiChu;
                         schedule = existing;
                     }
@@ -699,7 +695,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         {
                             MaNhanVien = request.MaNhanVien,
                             NgayLamViec = ngayLamViec,
-                            CaLamViec = request.CaLamViec,
+                            LoaiCa = request.CaLamViec,
                             GhiChu = request.GhiChu
                         };
                         _context.LichLamViecs.Add(schedule);
@@ -799,7 +795,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     {
                         MaNhanVien = employees[employeeIndex % employees.Count].MaNhanVien,
                         NgayLamViec = currentDate,
-                        CaLamViec = 1, // Ca sáng
+                        LoaiCa = 1, // Ca sáng
                         GhiChu = "Tự động phân ca"
                     });
 
@@ -810,7 +806,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     {
                         MaNhanVien = employees[employeeIndex % employees.Count].MaNhanVien,
                         NgayLamViec = currentDate,
-                        CaLamViec = 2, // Ca chiều
+                        LoaiCa = 2, // Ca chiều
                         GhiChu = "Tự động phân ca"
                     });
 
@@ -1005,33 +1001,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             }
         }
 
-        // API: Thêm lịch làm việc (Đã ẩn - Không dùng)
-        /*
-        [HttpPost]
-        public async Task<IActionResult> AddSchedule([FromBody] AddScheduleRequest request)
-        {
-            try
-            {
-                var schedule = new LichLamViec
-                {
-                    MaNhanVien = request.MaNhanVien,
-                    NgayLamViec = request.NgayLamViec,
-                    CaLamViec = request.CaLamViec,
-                    GhiChu = request.GhiChu
-                };
-
-                _context.LichLamViecs.Add(schedule);
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, message = "Thêm lịch thành công" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
-            }
-        }
-
         // API: Xóa lịch làm việc (Đã ẩn - Không dùng)
+        /*
         [HttpPost]
         public async Task<IActionResult> DeleteSchedule(int id)
         {
@@ -1527,11 +1498,10 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     {
                         maNhanVien = nv.MaNhanVien,
                         hoTen = nv.HoTen,
-                        chucVu = nv.ChucVu ?? 0,
-                        chucVuText = nv.ChucVu == 0 ? "Admin" :
-                                    nv.ChucVu == 1 ? "Quản lý" :
-                                    nv.ChucVu == 2 ? "Bảo vệ" :
-                                    nv.ChucVu == 3 ? "Kỹ thuật" : "Nhân viên",
+                        chucVu = nv.ChucVu == 0 ? "Admin" :
+                                 nv.ChucVu == 1 ? "Quản lý" :
+                                 nv.ChucVu == 2 ? "Bảo vệ" :
+                                 nv.ChucVu == 3 ? "Kỹ thuật" : "Nhân viên",
                         soDienThoai = nv.SoDienThoai,
                         trangThaiLamViec = nv.TrangThaiLamViec ?? false
                     })
@@ -1552,31 +1522,25 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             try
             {
                 // Lấy các ca đang trực (TrangThaiCa = 0)
-                var activeShifts = await _context.CaLamViecs
+                var activeShift = await _context.CaLamViecs
                     .Include(c => c.MaNhanVienNavigation)
-                    .Where(c => c.TrangThaiCa == 0 && c.ThoiGianNhanCa.HasValue)
-                    .OrderBy(c => c.MaCa)
-                    .Take(3) // Chỉ lấy 3 ca đầu tiên (tương ứng 3 quầy)
+                    .Where(c => c.TrangThaiCa == 0)
+                    .OrderByDescending(c => c.ThoiGianNhanCa)
                     .Select(c => new
                     {
                         counter = GetCounterNumber(c.MaCa), // Sẽ map ca ID sang số quầy 1, 2, 3
                         employee = new
                         {
                             maNhanVien = c.MaNhanVien,
-                            hoTen = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : "N/A",
-                            chucVu = c.MaNhanVienNavigation != null ? (c.MaNhanVienNavigation.ChucVu ?? 0) : 0,
-                            chucVuText = c.MaNhanVienNavigation != null
-                                ? (c.MaNhanVienNavigation.ChucVu == 0 ? "Admin" :
-                                   c.MaNhanVienNavigation.ChucVu == 1 ? "Quản lý" :
-                                   c.MaNhanVienNavigation.ChucVu == 2 ? "Bảo vệ" :
-                                   c.MaNhanVienNavigation.ChucVu == 3 ? "Kỹ thuật" : "Nhân viên")
-                                : "N/A"
+                            hoTen = c.MaNhanVienNavigation != null ? c.MaNhanVienNavigation.HoTen : null,
+                            maNhanVienFormatted = $"NV{c.MaNhanVien:D4}",
+                            chucVu = c.MaNhanVienNavigation != null && c.MaNhanVienNavigation.ChucVu == 1 ? "Quản lý" : "Nhân viên"
                         },
                         maCa = c.MaCa
                     })
                     .ToListAsync();
 
-                return Json(new { success = true, data = activeShifts });
+                return Json(new { success = true, data = activeShift });
             }
             catch (Exception ex)
             {
@@ -1625,7 +1589,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     {
                         MaNhanVien = assignment.MaNhanVien,
                         ThoiGianNhanCa = DateTime.Now,
-                        TienDauCa = 0, // Có thể cho phép nhập tiền đầu ca
+                        TienDauCa = 0,
                         TongTienHeThong = 0,
                         TienMatBanGiao = 0,
                         TrangThaiCa = 0, // Đang trực
@@ -1981,7 +1945,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaNhanVien = l.MaNhanVien,
                     TenNhanVien = employee.HoTen,
                     NgayLamViec = l.NgayLamViec,
-                    CaLamViec = l.CaLamViec,
+                    CaLamViec = l.LoaiCa,
                     GhiChu = l.GhiChu
                 })
                 .ToListAsync();
@@ -2044,7 +2008,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         public decimal TienMatBanGiao { get; set; }
 
         [StringLength(500, ErrorMessage = "Ghi chú không được quá 500 ký tự")]
-        public string GhiChu { get; set; } = string.Empty;
+        public string? GhiChu { get; set; } = string.Empty;
     }
 
     // Request models

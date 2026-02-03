@@ -163,7 +163,7 @@ namespace QuanLyBaiDoXe.Services
                 return 0;
             }
 
-            var thoiGianGui = luotGui.ThoiGianRa.Value - luotGui.ThoiGianVao.Value;
+            var thoiGianGui = luotGui.ThoiGianRa.Value - luotGui.ThoiGianVao;
             var soPhut = (int)Math.Ceiling(thoiGianGui.TotalMinutes);
 
             // Lấy loại xe từ thẻ

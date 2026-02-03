@@ -29,7 +29,13 @@ public partial class NhanVien
 
     public virtual ICollection<CaLamViec> CaLamViecs { get; set; } = new List<CaLamViec>();
 
+    public virtual ICollection<DangKyLich> DangKyLichMaNhanVienDuyetNavigations { get; set; } = new List<DangKyLich>();
+
+    public virtual ICollection<DangKyLich> DangKyLichMaNhanVienNavigations { get; set; } = new List<DangKyLich>();
+
     public virtual ICollection<LichLamViec> LichLamViecs { get; set; } = new List<LichLamViec>();
+
+    public virtual ICollection<LichSuGiaHanVe> LichSuGiaHanVes { get; set; } = new List<LichSuGiaHanVe>();
 
     public virtual TaiKhoan? MaTaiKhoanNavigation { get; set; }
 

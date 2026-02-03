@@ -19,6 +19,8 @@ public partial class VeThang
 
     public bool? TrangThai { get; set; }
 
+    public virtual ICollection<LichSuGiaHanVe> LichSuGiaHanVes { get; set; } = new List<LichSuGiaHanVe>();
+
     public virtual KhachHang? MaKhachHangNavigation { get; set; }
 
     public virtual TheXe? MaTheNavigation { get; set; }

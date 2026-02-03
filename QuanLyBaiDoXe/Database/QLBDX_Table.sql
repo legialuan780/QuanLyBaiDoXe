@@ -22,6 +22,7 @@ CREATE TABLE TaiKhoan (
     MaTaiKhoan INT PRIMARY KEY IDENTITY(1,1),
     TenDangNhap VARCHAR(50) UNIQUE NOT NULL,
     MatKhau VARCHAR(255) NOT NULL, -- Khuyến nghị Hash mật khẩu ở Backend
+    QuyenHan NVARCHAR(50) NOT NULL DEFAULT N'Khách hàng' CHECK (QuyenHan IN (N'Admin', N'Khách hàng', N'Nhân viên')),
     TrangThai BIT DEFAULT 1
 );
 
@@ -34,7 +35,7 @@ CREATE TABLE NhanVien (
     CCCD VARCHAR(20) UNIQUE,
     SoDienThoai VARCHAR(15),
     DiaChi NVARCHAR(200),
-    ChucVu INT DEFAULT 1, -- 0: Quản lý, 1: Bảo vệ, 2: Kỹ thuật, 3: Kế toán
+    ChucVu INT DEFAULT 1, -- 0: Admin, 1: Quản lý, 2: Bảo vệ, 3: Kỹ thuật, 4: Nhân viên
     NgayVaoLam DATE DEFAULT GETDATE(),
     TrangThaiLamViec BIT DEFAULT 1
 );
@@ -66,6 +67,49 @@ CREATE TABLE CaLamViec (
 );
 
 ----------------------------------------------------------
+-- ⭐ PHẦN 2.1: LỊCH LÀM VIỆC & ĐĂNG KÝ LỊCH (MỚI)
+----------------------------------------------------------
+
+CREATE TABLE LichLamViec (
+    MaLich INT IDENTITY PRIMARY KEY,
+    MaNhanVien INT NOT NULL REFERENCES NhanVien(MaNhanVien),
+    MaCa INT NULL REFERENCES CaLamViec(MaCa),
+    NgayLamViec DATE NOT NULL,
+    GioBatDau TIME NOT NULL,
+    GioKetThuc TIME NOT NULL,
+    LoaiCa INT DEFAULT 0, -- 0: Thường | 1: Tăng ca | 2: Đêm
+    TrangThai INT DEFAULT 1, -- 0: Nghỉ | 1: Làm
+    GhiChu NVARCHAR(255),
+    CONSTRAINT CHK_GioLam CHECK (GioKetThuc > GioBatDau)
+);
+
+CREATE TABLE DangKyLich (
+    MaDangKy INT IDENTITY PRIMARY KEY,
+    MaNhanVien INT NOT NULL REFERENCES NhanVien(MaNhanVien),
+    MaLich INT REFERENCES LichLamViec(MaLich),
+
+    LoaiYeuCau INT NOT NULL,
+    -- 0: Xin nghỉ
+    -- 1: Đổi ca
+    -- 2: Đổi giờ
+
+    NgayYeuCau DATETIME DEFAULT GETDATE(),
+
+    NgayLamMoi DATE NULL,
+    GioBatDauMoi TIME NULL,
+    GioKetThucMoi TIME NULL,
+
+    LyDo NVARCHAR(500),
+
+    TrangThaiDuyet INT DEFAULT 0,
+    -- 0: Chờ duyệt | 1: Duyệt | 2: Từ chối | 3: Hủy
+
+    MaNhanVienDuyet INT REFERENCES NhanVien(MaNhanVien),
+    ThoiGianDuyet DATETIME,
+    GhiChuDuyet NVARCHAR(255)
+);
+
+----------------------------------------------------------
 -- PHẦN 3: CẤU HÌNH XE & GIÁ (BLOCK LŨY TIẾN)
 ----------------------------------------------------------
 
@@ -76,12 +120,12 @@ CREATE TABLE LoaiXe (
 );
 
 CREATE TABLE CauHinhGia (
-    MaCauHinh INT PRIMARY KEY IDENTITY(1,1),
-    TenCauHinh NVARCHAR(100), 
-    MaLoaiXe INT REFERENCES LoaiXe(MaLoaiXe),
-    GioBatDau TIME, 
-    GioKetThuc TIME, 
-    LoaiGia INT DEFAULT 0 -- 0: Giá Block, 1: Giá Qua Đêm, 2: Ngày Lễ
+    MaCauHinh INT IDENTITY(1,1) PRIMARY KEY,
+    TenCauHinh NVARCHAR(100) NOT NULL,
+    MaLoaiXe INT NOT NULL REFERENCES LoaiXe(MaLoaiXe),
+    GioBatDau TIME NOT NULL,
+    GioKetThuc TIME NOT NULL,
+    IsUuTien BIT DEFAULT 0 -- 1: Ưu tiên (Lễ / Đêm / Đặc biệt)
 );
 
 CREATE TABLE ChiTietGia (

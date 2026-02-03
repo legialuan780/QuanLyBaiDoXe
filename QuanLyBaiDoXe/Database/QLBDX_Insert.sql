@@ -1,4 +1,4 @@
-﻿USE QuanLyBaiDoXe;
+USE QuanLyBaiDoXe;
 GO
 
 ----------------------------------------------------------
@@ -37,7 +37,7 @@ GO
 -- 1. TÀI KHOẢN (20)
 ----------------------------------------------------------
 INSERT INTO TaiKhoan (TenDangNhap, MatKhau, QuyenHan,Email, TrangThai) VALUES
-('admin',      'admin@123',  N'Admin',	'admin1@gmail.com',		 1), -- MaTK: 1
+('admin',      'admin@123',  N'Admin',	'phamleanhkhoa2005@gmail.com',		 1), -- MaTK: 1
 ('quanly01',   'ql01@123',   N'Nhân viên','nv1@gmail.com', 1), -- MaTK: 2
 ('quanly02',   'ql02@123',   N'Nhân viên','nv2@gmail.com', 1), -- MaTK: 3
 ('kythuat01',  'kt01@123',   N'Nhân viên','nv3@gmail.com', 1), -- MaTK: 4

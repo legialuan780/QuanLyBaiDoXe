@@ -1,4 +1,4 @@
-using QuanLyBaiDoXe.Models.Entities;
+﻿using QuanLyBaiDoXe.Models.Entities;
 using QuanLyBaiDoXe.ViewModels;
 
 namespace QuanLyBaiDoXe.Services
@@ -13,5 +13,11 @@ namespace QuanLyBaiDoXe.Services
         Task<bool> CCCDExistsAsync(string cccd);
         string HashPassword(string password);
         bool VerifyPassword(string hashedPassword, string password);
+
+        // Forgot Password methods with OTP
+        Task<(bool Success, string? ErrorMessage, TaiKhoan? Account)> GetAccountByEmailAsync(string email);
+        Task<string> GenerateOtpAsync(int accountId);
+        Task<(bool Success, string? ErrorMessage)> VerifyOtpAsync(string email, string otpCode);
+        Task<(bool Success, string? ErrorMessage)> ResetPasswordWithOtpAsync(string email, string otpCode, string newPassword);
     }
 }

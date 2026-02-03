@@ -20,4 +20,6 @@ public partial class TaiKhoan
     public virtual KhachHang? KhachHang { get; set; }
 
     public virtual NhanVien? NhanVien { get; set; }
+
+    public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
 }

@@ -11,10 +11,12 @@ namespace QuanLyBaiDoXe.Controllers
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IEmailService _emailService;
 
-        public AccountController(IAuthService authService)
+        public AccountController(IAuthService authService, IEmailService emailService)
         {
             _authService = authService;
+            _emailService = emailService;
         }
 
         #region Login
@@ -224,6 +226,182 @@ namespace QuanLyBaiDoXe.Controllers
         public IActionResult AccessDenied()
         {
             return View("~/Views/Account/AccessDenied.cshtml");
+        }
+
+        #endregion
+
+        #region Forgot Password
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return View("~/Views/Account/ForgotPassword.cshtml");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Account/ForgotPassword.cshtml", model);
+            }
+
+            var (success, errorMessage, account) = await _authService.GetAccountByEmailAsync(model.Email);
+
+            if (!success || account == null)
+            {
+                ModelState.AddModelError(string.Empty, errorMessage ?? "Email không tồn tại trong hệ thống!");
+                return View("~/Views/Account/ForgotPassword.cshtml", model);
+            }
+
+            // Generate OTP
+            var otpCode = await _authService.GenerateOtpAsync(account.MaTaiKhoan);
+
+            // Get user name for email
+            var userName = account.NhanVien?.HoTen ?? account.KhachHang?.HoTen ?? account.TenDangNhap;
+
+            // Send OTP email
+            var emailSent = await _emailService.SendOtpEmailAsync(model.Email, otpCode, userName);
+
+            if (!emailSent)
+            {
+                ModelState.AddModelError(string.Empty, "Có lỗi xảy ra khi gửi email. Vui lòng thử lại sau.");
+                return View("~/Views/Account/ForgotPassword.cshtml", model);
+            }
+
+            TempData["Email"] = model.Email;
+            TempData["OtpSent"] = true;
+            return RedirectToAction("VerifyOtp");
+        }
+
+        #endregion
+
+        #region Verify OTP
+
+        [HttpGet]
+        public IActionResult VerifyOtp()
+        {
+            var email = TempData["Email"]?.ToString();
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+
+            TempData.Keep("Email");
+            var model = new VerifyOtpViewModel { Email = email };
+            return View("~/Views/Account/VerifyOtp.cshtml", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyOtp(VerifyOtpViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Account/VerifyOtp.cshtml", model);
+            }
+
+            var (success, errorMessage) = await _authService.VerifyOtpAsync(model.Email, model.OtpCode);
+
+            if (!success)
+            {
+                ModelState.AddModelError(string.Empty, errorMessage ?? "Mã OTP không đúng!");
+                return View("~/Views/Account/VerifyOtp.cshtml", model);
+            }
+
+            // Store email and OTP in TempData for reset password step
+            TempData["Email"] = model.Email;
+            TempData["OtpCode"] = model.OtpCode;
+            TempData["OtpVerified"] = true;
+            return RedirectToAction("ResetPassword");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(new { success = false, message = "Email không hợp lệ!" });
+            }
+
+            var (success, errorMessage, account) = await _authService.GetAccountByEmailAsync(email);
+
+            if (!success || account == null)
+            {
+                return Json(new { success = false, message = errorMessage ?? "Email không tồn tại!" });
+            }
+
+            // Generate new OTP
+            var otpCode = await _authService.GenerateOtpAsync(account.MaTaiKhoan);
+
+            // Get user name for email
+            var userName = account.NhanVien?.HoTen ?? account.KhachHang?.HoTen ?? account.TenDangNhap;
+
+            // Send OTP email
+            var emailSent = await _emailService.SendOtpEmailAsync(email, otpCode, userName);
+
+            if (!emailSent)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra khi gửi email!" });
+            }
+
+            return Json(new { success = true, message = "Mã OTP mới đã được gửi đến email của bạn!" });
+        }
+
+        #endregion
+
+        #region Reset Password
+
+        [HttpGet]
+        public IActionResult ResetPassword()
+        {
+            var email = TempData["Email"]?.ToString();
+            var otpCode = TempData["OtpCode"]?.ToString();
+            var otpVerified = TempData["OtpVerified"] as bool?;
+
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(otpCode) || otpVerified != true)
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+
+            TempData.Keep("Email");
+            TempData.Keep("OtpCode");
+            TempData.Keep("OtpVerified");
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = otpCode
+            };
+
+            return View("~/Views/Account/ResetPassword.cshtml", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Account/ResetPassword.cshtml", model);
+            }
+
+            var (success, errorMessage) = await _authService.ResetPasswordWithOtpAsync(model.Email, model.Token, model.NewPassword);
+
+            if (!success)
+            {
+                ModelState.AddModelError(string.Empty, errorMessage ?? "Có lỗi xảy ra!");
+                return View("~/Views/Account/ResetPassword.cshtml", model);
+            }
+
+            TempData["ResetPasswordSuccess"] = "Mật khẩu đã được đặt lại thành công! Vui lòng đăng nhập với mật khẩu mới.";
+            return RedirectToAction("Login");
         }
 
         #endregion

@@ -195,5 +195,139 @@ namespace QuanLyBaiDoXe.Services
             // So sánh trực tiếp plain text
             return hashedPassword == password;
         }
+
+        public async Task<(bool Success, string? ErrorMessage, TaiKhoan? Account)> GetAccountByEmailAsync(string email)
+        {
+            try
+            {
+                var account = await _context.TaiKhoans
+                    .Include(t => t.NhanVien)
+                    .Include(t => t.KhachHang)
+                    .FirstOrDefaultAsync(t => t.Email == email);
+
+                if (account == null)
+                {
+                    return (false, "Email không tồn tại trong hệ thống!", null);
+                }
+
+                if (account.TrangThai == false)
+                {
+                    return (false, "Tài khoản đã bị khóa!", null);
+                }
+
+                return (true, null, account);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi hệ thống: {ex.Message}", null);
+            }
+        }
+
+        public async Task<string> GenerateOtpAsync(int accountId)
+        {
+            // Invalidate any existing OTPs for this account
+            var existingTokens = await _context.PasswordResetTokens
+                .Where(t => t.MaTaiKhoan == accountId && !t.IsUsed)
+                .ToListAsync();
+
+            foreach (var existingToken in existingTokens)
+            {
+                existingToken.IsUsed = true;
+            }
+
+            // Generate 6-digit OTP
+            var random = new Random();
+            var otpCode = random.Next(100000, 999999).ToString();
+
+            var resetToken = new PasswordResetToken
+            {
+                MaTaiKhoan = accountId,
+                Token = otpCode,
+                CreatedAt = DateTime.Now,
+                ExpiresAt = DateTime.Now.AddMinutes(5), // OTP expires in 5 minutes
+                IsUsed = false
+            };
+
+            _context.PasswordResetTokens.Add(resetToken);
+            await _context.SaveChangesAsync();
+
+            return otpCode;
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> VerifyOtpAsync(string email, string otpCode)
+        {
+            try
+            {
+                var account = await _context.TaiKhoans
+                    .FirstOrDefaultAsync(t => t.Email == email);
+
+                if (account == null)
+                {
+                    return (false, "Email không tồn tại trong hệ thống!");
+                }
+
+                var resetToken = await _context.PasswordResetTokens
+                    .FirstOrDefaultAsync(t => t.MaTaiKhoan == account.MaTaiKhoan 
+                        && t.Token == otpCode 
+                        && !t.IsUsed);
+
+                if (resetToken == null)
+                {
+                    return (false, "Mã OTP không đúng!");
+                }
+
+                if (resetToken.ExpiresAt < DateTime.Now)
+                {
+                    return (false, "Mã OTP đã hết hạn! Vui lòng yêu cầu mã mới.");
+                }
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi hệ thống: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> ResetPasswordWithOtpAsync(string email, string otpCode, string newPassword)
+        {
+            try
+            {
+                var account = await _context.TaiKhoans
+                    .FirstOrDefaultAsync(t => t.Email == email);
+
+                if (account == null)
+                {
+                    return (false, "Email không tồn tại trong hệ thống!");
+                }
+
+                var resetToken = await _context.PasswordResetTokens
+                    .FirstOrDefaultAsync(t => t.MaTaiKhoan == account.MaTaiKhoan 
+                        && t.Token == otpCode 
+                        && !t.IsUsed);
+
+                if (resetToken == null)
+                {
+                    return (false, "Mã OTP không hợp lệ!");
+                }
+
+                if (resetToken.ExpiresAt < DateTime.Now)
+                {
+                    return (false, "Mã OTP đã hết hạn!");
+                }
+
+                // Update password
+                account.MatKhau = newPassword;
+                resetToken.IsUsed = true;
+
+                await _context.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi hệ thống: {ex.Message}");
+            }
+        }
     }
 }

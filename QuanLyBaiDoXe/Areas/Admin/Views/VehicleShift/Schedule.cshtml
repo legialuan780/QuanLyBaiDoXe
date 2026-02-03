@@ -89,18 +89,26 @@
         <!-- Timeline Body -->
         <div class="timeline-body">
             @{
-                var employees = Model.GroupBy(s => new { s.MaNhanVien, s.TenNhanVien })
+                var currentDateSchedule = DateOnly.FromDateTime(selectedDate);
+                var previousDate = currentDateSchedule.AddDays(-1);
+                
+                // Lấy tất cả nhân viên có lịch trong ngày hiện tại hoặc ca đêm từ ngày trước
+                var relevantSchedules = Model.Where(s => 
+                    s.NgayLamViec == currentDateSchedule || 
+                    (s.NgayLamViec == previousDate && s.CaLamViec == 3)
+                ).ToList();
+                
+                var employees = relevantSchedules
+                    .GroupBy(s => new { s.MaNhanVien, s.TenNhanVien })
                     .OrderBy(g => g.Key.TenNhanVien)
                     .ToList();
-                
-                var currentDateSchedule = DateOnly.FromDateTime(selectedDate);
             }
 
             @if (employees.Any())
             {
                 @foreach (var emp in employees)
                 {
-                    var empSchedules = emp.Where(s => s.NgayLamViec == currentDateSchedule).ToList();
+                    var empSchedules = emp.ToList();
                     
                     <div class="timeline-row">
                         <div class="timeline-employee-cell">
@@ -121,52 +129,118 @@
                             }
                             
                             
+                            
                             <!-- Shift bars -->
                             @foreach (var schedule in empSchedules)
                             {
-                                var startHour = 0.0;
-                                var duration = 0.0;
                                 var shiftClass = "";
                                 var shiftIcon = "";
+                                var caLamViec = schedule.CaLamViec ?? 0;
                                 
-                                switch (schedule.CaLamViec)
+                                var isNightShiftFromPreviousDay = schedule.NgayLamViec == previousDate && caLamViec == 3;
+                                var isNightShiftOfCurrentDay = schedule.NgayLamViec == currentDateSchedule && caLamViec == 3;
+                                
+                                switch (caLamViec)
                                 {
                                     case 1: // Ca sáng 6h-14h
-                                        startHour = 6;
-                                        duration = 8;
+                                        var startHour1 = 6.0;
+                                        var duration1 = 8.0;
                                         shiftClass = "shift-morning";
                                         shiftIcon = "fa-sun";
+                                        
+                                        var leftPosition1 = (startHour1 / 24.0) * 100;
+                                        var width1 = (duration1 / 24.0) * 100;
+                                        
+                                        <div class="shift-bar @shiftClass" 
+                                             style="left: @leftPosition1%; width: @width1%"
+                                             onclick="viewScheduleDetail(@schedule.MaLich)"
+                                             title="Ca sáng (6h-14h)">
+                                            <div class="shift-bar-content">
+                                                <i class="fas @shiftIcon"></i>
+                                                <span class="shift-bar-text">@emp.Key.TenNhanVien - Ca @caLamViec</span>
+                                                @if (!string.IsNullOrEmpty(schedule.GhiChu))
+                                                {
+                                                    <i class="fas fa-sticky-note shift-note-icon" title="@schedule.GhiChu"></i>
+                                                }
+                                            </div>
+                                        </div>
                                         break;
+                                        
                                     case 2: // Ca chiều 14h-22h
-                                        startHour = 14;
-                                        duration = 8;
+                                        var startHour2 = 14.0;
+                                        var duration2 = 8.0;
                                         shiftClass = "shift-afternoon";
                                         shiftIcon = "fa-cloud-sun";
+                                        
+                                        var leftPosition2 = (startHour2 / 24.0) * 100;
+                                        var width2 = (duration2 / 24.0) * 100;
+                                        
+                                        <div class="shift-bar @shiftClass" 
+                                             style="left: @leftPosition2%; width: @width2%"
+                                             onclick="viewScheduleDetail(@schedule.MaLich)"
+                                             title="Ca chiều (14h-22h)">
+                                            <div class="shift-bar-content">
+                                                <i class="fas @shiftIcon"></i>
+                                                <span class="shift-bar-text">@emp.Key.TenNhanVien - Ca @caLamViec</span>
+                                                @if (!string.IsNullOrEmpty(schedule.GhiChu))
+                                                {
+                                                    <i class="fas fa-sticky-note shift-note-icon" title="@schedule.GhiChu"></i>
+                                                }
+                                            </div>
+                                        </div>
                                         break;
+                                        
                                     case 3: // Ca đêm 22h-6h (next day)
-                                        startHour = 22;
-                                        duration = 8;
                                         shiftClass = "shift-night";
                                         shiftIcon = "fa-moon";
+                                        
+                                        if (isNightShiftFromPreviousDay)
+                                        {
+                                            // Hiển thị phần tiếp theo của ca đêm hôm qua (0h-6h)
+                                            var startHour3a = 0.0;
+                                            var duration3a = 6.0;
+                                            var leftPosition3a = (startHour3a / 24.0) * 100;
+                                            var width3a = (duration3a / 24.0) * 100;
+                                            
+                                            <div class="shift-bar @shiftClass" 
+                                                 style="left: @leftPosition3a%; width: @width3a%"
+                                                 onclick="viewScheduleDetail(@schedule.MaLich)"
+                                                 title="Ca đêm (tiếp) (0h-6h)">
+                                                <div class="shift-bar-content">
+                                                    <i class="fas @shiftIcon"></i>
+                                                    <span class="shift-bar-text">@emp.Key.TenNhanVien - Ca @caLamViec</span>
+                                                    @if (!string.IsNullOrEmpty(schedule.GhiChu))
+                                                    {
+                                                        <i class="fas fa-sticky-note shift-note-icon" title="@schedule.GhiChu"></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        
+                                        if (isNightShiftOfCurrentDay)
+                                        {
+                                            // Hiển thị phần đầu của ca đêm hôm nay (22h-24h)
+                                            var startHour3b = 22.0;
+                                            var duration3b = 2.0;
+                                            var leftPosition3b = (startHour3b / 24.0) * 100;
+                                            var width3b = (duration3b / 24.0) * 100;
+                                            
+                                            <div class="shift-bar @shiftClass" 
+                                                 style="left: @leftPosition3b%; width: @width3b%"
+                                                 onclick="viewScheduleDetail(@schedule.MaLich)"
+                                                 title="Ca đêm (22h-6h)">
+                                                <div class="shift-bar-content">
+                                                    <i class="fas @shiftIcon"></i>
+                                                    <span class="shift-bar-text">@emp.Key.TenNhanVien - Ca @caLamViec</span>
+                                                    @if (!string.IsNullOrEmpty(schedule.GhiChu))
+                                                    {
+                                                        <i class="fas fa-sticky-note shift-note-icon" title="@schedule.GhiChu"></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
                                         break;
                                 }
-                                
-                                var leftPosition = (startHour / 24.0) * 100;
-                                var width = (duration / 24.0) * 100;
-                                
-                                <div class="shift-bar @shiftClass" 
-                                     style="left: @leftPosition%; width: @width%"
-                                     onclick="viewScheduleDetail(@schedule.MaLich)"
-                                     title="@schedule.TenCa">
-                                    <div class="shift-bar-content">
-                                        <i class="fas @shiftIcon"></i>
-                                        <span class="shift-bar-text">@emp.Key.TenNhanVien - Ca @schedule.CaLamViec</span>
-                                        @if (!string.IsNullOrEmpty(schedule.GhiChu))
-                                        {
-                                            <i class="fas fa-sticky-note shift-note-icon" title="@schedule.GhiChu"></i>
-                                        }
-                                    </div>
-                                </div>
                             }
                             
                             

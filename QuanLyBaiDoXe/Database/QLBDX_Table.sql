@@ -1,4 +1,4 @@
-USE master;
+﻿USE master;
 GO
 
 -- 1. XỬ LÝ DATABASE (Xóa nếu tồn tại để làm mới hoàn toàn)
@@ -89,11 +89,18 @@ CREATE TABLE LichLamViec (
     NgayLamViec DATE NOT NULL,
     GioBatDau TIME NOT NULL,
     GioKetThuc TIME NOT NULL,
-    LoaiCa INT DEFAULT 0, -- 0: Thường | 1: Tăng ca | 2: Đêm
-    TrangThai INT DEFAULT 1, -- 0: Nghỉ | 1: Làm
+    LoaiCa INT NOT NULL DEFAULT 0, -- 0: Thường | 1: Tăng ca | 2: Đêm
+    TrangThai INT NOT NULL DEFAULT 1, -- 0: Nghỉ | 1: Làm
     GhiChu NVARCHAR(255),
-    CONSTRAINT CHK_GioLam CHECK (GioKetThuc > GioBatDau)
+
+    CONSTRAINT CHK_GioLam CHECK (
+        (LoaiCa IN (0,1) AND GioKetThuc > GioBatDau)
+        OR
+        (LoaiCa = 2 AND GioKetThuc < GioBatDau)
+    )
 );
+GO
+
 
 CREATE TABLE DangKyLich (
     MaDangKy INT IDENTITY PRIMARY KEY,

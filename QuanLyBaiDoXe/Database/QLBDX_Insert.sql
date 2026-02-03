@@ -9,8 +9,8 @@ DELETE FROM LichLamViec;
 DELETE FROM LuotGui;
 DELETE FROM SuCo;
 DELETE FROM DatCho;
-DELETE FROM VeThang;
-DELETE FROM LichSuGiaHanVe;
+DELETE FROM TheThang;
+DELETE FROM LichSuGiaHanThe;
 DELETE FROM CaLamViec;
 DELETE FROM NhanVien;
 DELETE FROM KhachHang;
@@ -36,27 +36,27 @@ GO
 ----------------------------------------------------------
 -- 1. TÀI KHOẢN (20)
 ----------------------------------------------------------
-INSERT INTO TaiKhoan (TenDangNhap, MatKhau, QuyenHan, TrangThai) VALUES
-('admin',      'admin@123',  N'Admin',     1), -- MaTK: 1
-('quanly01',   'ql01@123',   N'Nhân viên', 1), -- MaTK: 2
-('quanly02',   'ql02@123',   N'Nhân viên', 1), -- MaTK: 3
-('kythuat01',  'kt01@123',   N'Nhân viên', 1), -- MaTK: 4
-('kythuat02',  'kt02@123',   N'Nhân viên', 1), -- MaTK: 5
-('nhanvien01', 'nv01@123',   N'Nhân viên', 1), -- MaTK: 6
-('nhanvien02', 'nv02@123',   N'Nhân viên', 1), -- MaTK: 7
-('nhanvien03', 'nv03@123',   N'Nhân viên', 1), -- MaTK: 8
-('nhanvien04', 'nv04@123',   N'Nhân viên', 1), -- MaTK: 9
-('nhanvien05', 'nv05@123',   N'Nhân viên', 1), -- MaTK: 10
-('khach01',    'kh01@123',   N'Khách hàng', 1), -- MaTK: 11
-('khach02',    'kh02@123',   N'Khách hàng', 1), -- MaTK: 12
-('khach03',    'kh03@123',   N'Khách hàng', 1), -- MaTK: 13
-('khach04',    'kh04@123',   N'Khách hàng', 1), -- MaTK: 14
-('khach05',    'kh05@123',   N'Khách hàng', 1), -- MaTK: 15
-('guest01',    'guest01@123', N'Khách hàng', 0), -- MaTK: 16
-('guest02',    'guest02@123', N'Khách hàng', 0), -- MaTK: 17
-('guest03',    'guest03@123', N'Khách hàng', 0), -- MaTK: 18
-('guest04',    'guest04@123', N'Khách hàng', 0), -- MaTK: 19
-('guest05',    'guest05@123', N'Khách hàng', 0); -- MaTK: 20
+INSERT INTO TaiKhoan (TenDangNhap, MatKhau, QuyenHan,Email, TrangThai) VALUES
+('admin',      'admin@123',  N'Admin',	'admin1@gmail.com',		 1), -- MaTK: 1
+('quanly01',   'ql01@123',   N'Nhân viên','nv1@gmail.com', 1), -- MaTK: 2
+('quanly02',   'ql02@123',   N'Nhân viên','nv2@gmail.com', 1), -- MaTK: 3
+('kythuat01',  'kt01@123',   N'Nhân viên','nv3@gmail.com', 1), -- MaTK: 4
+('kythuat02',  'kt02@123',   N'Nhân viên','nv4@gmail.com', 1), -- MaTK: 5
+('nhanvien01', 'nv01@123',   N'Nhân viên','nv5@gmail.com', 1), -- MaTK: 6
+('nhanvien02', 'nv02@123',   N'Nhân viên','nv6@gmail.com', 1), -- MaTK: 7
+('nhanvien03', 'nv03@123',   N'Nhân viên','nv7@gmail.com', 1), -- MaTK: 8
+('nhanvien04', 'nv04@123',   N'Nhân viên','nv8@gmail.com', 1), -- MaTK: 9
+('nhanvien05', 'nv05@123',   N'Nhân viên','nv9@gmail.com', 1), -- MaTK: 10
+('khach01',    'kh01@123',   N'Khách hàng','kh1@gmail.com', 1), -- MaTK: 11
+('khach02',    'kh02@123',   N'Khách hàng','kh2@gmail.com', 1), -- MaTK: 12
+('khach03',    'kh03@123',   N'Khách hàng','kh3@gmail.com', 1), -- MaTK: 13
+('khach04',    'kh04@123',   N'Khách hàng','kh4@gmail.com', 1), -- MaTK: 14
+('khach05',    'kh05@123',   N'Khách hàng','kh5@gmail.com', 1), -- MaTK: 15
+('guest01',    'guest01@123', N'Khách hàng','kh6@gmail.com', 0), -- MaTK: 16
+('guest02',    'guest02@123', N'Khách hàng','kh7@gmail.com', 0), -- MaTK: 17
+('guest03',    'guest03@123', N'Khách hàng','kh8@gmail.com', 0), -- MaTK: 18
+('guest04',    'guest04@123', N'Khách hàng','kh9@gmail.com', 0), -- MaTK: 19
+('guest05',    'guest05@123', N'Khách hàng','kh@10gmail.com', 0); -- MaTK: 20
 GO
 
 ----------------------------------------------------------
@@ -112,11 +112,11 @@ GO
 ----------------------------------------------------------
 -- 5. LOẠI XE
 ----------------------------------------------------------
-INSERT INTO LoaiXe (TenLoaiXe, MoTa) VALUES
-(N'Xe máy', N'Xe máy, xe tay ga'),
-(N'Ô tô 4 chỗ', N'Xe ô tô con 4–5 chỗ'),
-(N'Ô tô 7 chỗ', N'Xe ô tô gia đình 7 chỗ'),
-(N'Xe tải', N'Xe tải nhỏ và trung bình');
+INSERT INTO LoaiXe (TenLoaiXe, MoTa, GiaThang) VALUES
+(N'Xe máy', N'Xe máy, xe tay ga', 100000),
+(N'Ô tô 4 chỗ', N'Xe ô tô con 4–5 chỗ', 1000000),
+(N'Ô tô 7 chỗ', N'Xe ô tô gia đình 7 chỗ', 1500000),
+(N'Xe tải', N'Xe tải nhỏ và trung bình', 1000000);
 GO
 
 ----------------------------------------------------------
@@ -174,7 +174,7 @@ INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai) VALUES
 ('THE-VL-001', 1, 0, 1), ('THE-VL-002', 2, 0, 1);
 GO
 
-INSERT INTO VeThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai) VALUES
+INSERT INTO TheThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai) VALUES
 (1, 'THE-XM-001', '2025-01-01', '2025-01-31', 150000, 1),
 (2, 'THE-XM-002', '2025-01-05', '2025-02-04', 150000, 1),
 (1, 'THE-OTO4-001', '2025-01-01', '2025-01-31', 800000, 1),
@@ -182,7 +182,7 @@ INSERT INTO VeThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, Tra
 (2, 'THE-TAI-001', '2025-01-15', '2025-02-14', 1200000, 1);
 GO
 
-INSERT INTO LichSuGiaHanVe (MaVeThang, NgayGiaHan, ThoiHanCu, ThoiHanMoi, SoTien, MaNhanVienThucHien) VALUES
+INSERT INTO LichSuGiaHanThe (MaTheThang, NgayGiaHan, ThoiHanCu, ThoiHanMoi, SoTien, MaNhanVienThucHien) VALUES
 (2, GETDATE(), '2025-01-31', '2025-02-28', 150000, 1),
 (3, GETDATE(), '2025-01-31', '2025-02-28', 800000, 2),
 (4, GETDATE(), '2025-02-09', '2025-03-10', 1000000, 1);

@@ -1,4 +1,5 @@
-﻿@{
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.DashboardViewModel
+@{
     ViewData["Title"] = "Tổng quan";
 }
 
@@ -13,9 +14,9 @@
         </div>
     </div>
     <div>
-        <button class="btn-primary-admin">
-            <i class="fas fa-plus"></i>
-            Thêm mới
+        <button class="btn-secondary-admin" onclick="Dashboard.refresh()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
         </button>
     </div>
 </div>
@@ -27,12 +28,12 @@
             <i class="fas fa-car"></i>
         </div>
         <div class="stat-card-info">
-            <h3>156</h3>
+            <h3 id="statXeTrongBai">@Model.XeTrongBai</h3>
             <p>Xe trong bãi</p>
         </div>
-        <div class="stat-card-trend up">
-            <i class="fas fa-arrow-up"></i>
-            12.5%
+        <div class="stat-card-trend @(Model.TyLeXeTrongBai >= 0 ? "up" : "down")">
+            <i class="fas fa-arrow-@(Model.TyLeXeTrongBai >= 0 ? "up" : "down")"></i>
+            @Math.Abs(Model.TyLeXeTrongBai)%
         </div>
     </div>
     <div class="stat-card">
@@ -40,12 +41,12 @@
             <i class="fas fa-sign-in-alt"></i>
         </div>
         <div class="stat-card-info">
-            <h3>324</h3>
+            <h3 id="statXeVao">@Model.XeVaoHomNay</h3>
             <p>Xe vào hôm nay</p>
         </div>
-        <div class="stat-card-trend up">
-            <i class="fas fa-arrow-up"></i>
-            8.2%
+        <div class="stat-card-trend @(Model.TyLeXeVao >= 0 ? "up" : "down")">
+            <i class="fas fa-arrow-@(Model.TyLeXeVao >= 0 ? "up" : "down")"></i>
+            @Math.Abs(Model.TyLeXeVao)%
         </div>
     </div>
     <div class="stat-card">
@@ -53,12 +54,12 @@
             <i class="fas fa-sign-out-alt"></i>
         </div>
         <div class="stat-card-info">
-            <h3>298</h3>
+            <h3 id="statXeRa">@Model.XeRaHomNay</h3>
             <p>Xe ra hôm nay</p>
         </div>
-        <div class="stat-card-trend down">
-            <i class="fas fa-arrow-down"></i>
-            3.1%
+        <div class="stat-card-trend @(Model.TyLeXeRa >= 0 ? "up" : "down")">
+            <i class="fas fa-arrow-@(Model.TyLeXeRa >= 0 ? "up" : "down")"></i>
+            @Math.Abs(Model.TyLeXeRa)%
         </div>
     </div>
     <div class="stat-card">
@@ -66,12 +67,12 @@
             <i class="fas fa-money-bill-wave"></i>
         </div>
         <div class="stat-card-info">
-            <h3>15.2M</h3>
+            <h3 id="statDoanhThu">@(Model.DoanhThuHomNay >= 1000000 ? $"{Model.DoanhThuHomNay / 1000000:N1}M" : $"{Model.DoanhThuHomNay:N0}")</h3>
             <p>Doanh thu hôm nay</p>
         </div>
-        <div class="stat-card-trend up">
-            <i class="fas fa-arrow-up"></i>
-            18.7%
+        <div class="stat-card-trend @(Model.TyLeDoanhThu >= 0 ? "up" : "down")">
+            <i class="fas fa-arrow-@(Model.TyLeDoanhThu >= 0 ? "up" : "down")"></i>
+            @Math.Abs(Model.TyLeDoanhThu)%
         </div>
     </div>
 </div>
@@ -83,12 +84,12 @@
             <div class="admin-card-header">
                 <h3 class="admin-card-title">Thống kê doanh thu</h3>
                 <div>
-                    <button class="btn-secondary-admin btn-sm">Tháng</button>
-                    <button class="btn-primary-admin btn-sm">Tuần</button>
+                    <button class="btn-secondary-admin btn-sm" id="btnMonth" onclick="Dashboard.showMonthChart()">Tháng</button>
+                    <button class="btn-primary-admin btn-sm" id="btnWeek" onclick="Dashboard.showWeekChart()">Tuần</button>
                 </div>
             </div>
-            <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(33, 166, 145, 0.1) 0%, rgba(33, 166, 145, 0) 100%); border-radius: 8px;">
-                <p style="color: var(--light-gray);">Biểu đồ doanh thu sẽ hiển thị ở đây</p>
+            <div style="height: 300px; padding: 20px;">
+                <canvas id="revenueChart"></canvas>
             </div>
         </div>
     </div>
@@ -99,79 +100,56 @@
             <div class="admin-card-header">
                 <h3 class="admin-card-title">Tình trạng bãi đỗ</h3>
             </div>
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span>Xe máy</span>
-                    <span>85/120</span>
+            @if (Model.TinhTrangBaiDo.Any())
+            {
+                @foreach (var item in Model.TinhTrangBaiDo)
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>@item.TenLoaiXe</span>
+                            <span>@item.SoLuongDangGui/@item.TongSoViTri</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" style="width: @item.PhanTramSuDung%; background-color: @item.MauSac;"></div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-info-circle"></i> Chưa có dữ liệu
                 </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar" style="width: 70%; background-color: #21A691;"></div>
-                </div>
-            </div>
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span>Ô tô 4 chỗ</span>
-                    <span>42/60</span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar" style="width: 70%; background-color: #87DF2C;"></div>
-                </div>
-            </div>
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span>Ô tô 7 chỗ</span>
-                    <span>18/25</span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar" style="width: 72%; background-color: #ff9800;"></div>
-                </div>
-            </div>
-            <div>
-                <div class="d-flex justify-content-between mb-1">
-                    <span>Xe tải</span>
-                    <span>11/15</span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar" style="width: 73%; background-color: #e74c3c;"></div>
-                </div>
-            </div>
+            }
         </div>
 
         <div class="admin-card">
             <div class="admin-card-header">
                 <h3 class="admin-card-title">Vé tháng sắp hết hạn</h3>
-                <a href="#" style="color: #21A691; font-size: 13px; text-decoration: none;">Xem tất cả</a>
+                <a href="@Url.Action("Index", "MonthlyTicket", new { area = "Admin" })" style="color: #21A691; font-size: 13px; text-decoration: none;">Xem tất cả</a>
             </div>
-            <div class="d-flex align-items-center mb-3">
-                <div style="width: 40px; height: 40px; background-color: rgba(231, 76, 60, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                    <i class="fas fa-motorcycle" style="color: #e74c3c;"></i>
+            @if (Model.VeThangSapHetHan.Any())
+            {
+                @foreach (var ve in Model.VeThangSapHetHan)
+                {
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 40px; height: 40px; background-color: rgba(@(ve.TrangThaiClass == "danger" ? "231, 76, 60" : ve.TrangThaiClass == "warning" ? "255, 152, 0" : "33, 166, 145"), 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <i class="fas fa-@(ve.TenLoaiXe?.Contains("Ô tô") == true ? "car" : "motorcycle")" style="color: @(ve.TrangThaiClass == "danger" ? "#e74c3c" : ve.TrangThaiClass == "warning" ? "#ff9800" : "#21A691");"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">@(ve.BienSo ?? "Chưa có biển số")</div>
+                            <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: @ve.NgayHetHan?.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <span class="status-badge @ve.TrangThaiClass">@ve.SoNgayConLai ngày</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-check-circle text-success"></i> Không có vé sắp hết hạn
                 </div>
-                <div style="flex: 1;">
-                    <div style="font-weight: 500;">59A1-12345</div>
-                    <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: 25/01/2025</div>
-                </div>
-                <span class="status-badge danger">2 ngày</span>
-            </div>
-            <div class="d-flex align-items-center mb-3">
-                <div style="width: 40px; height: 40px; background-color: rgba(255, 152, 0, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                    <i class="fas fa-car" style="color: #ff9800;"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="font-weight: 500;">30A-56789</div>
-                    <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: 28/01/2025</div>
-                </div>
-                <span class="status-badge warning">5 ngày</span>
-            </div>
-            <div class="d-flex align-items-center">
-                <div style="width: 40px; height: 40px; background-color: rgba(33, 166, 145, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                    <i class="fas fa-motorcycle" style="color: #21A691;"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="font-weight: 500;">29B1-98765</div>
-                    <div style="font-size: 12px; color: var(--light-gray);">Hết hạn: 30/01/2025</div>
-                </div>
-                <span class="status-badge info">7 ngày</span>
-            </div>
+            }
         </div>
     </div>
 </div>
@@ -181,18 +159,18 @@
     <div class="admin-card-header">
         <h3 class="admin-card-title">Hoạt động gần đây</h3>
         <div>
-            <button class="btn-secondary-admin">
-                <i class="fas fa-filter"></i>
-                Lọc
+            <button class="btn-secondary-admin" onclick="Dashboard.refreshActivities()">
+                <i class="fas fa-sync-alt"></i>
+                Làm mới
             </button>
-            <button class="btn-secondary-admin">
-                <i class="fas fa-download"></i>
-                Xuất Excel
-            </button>
+            <a href="@Url.Action("Index", "VehicleHistory", new { area = "Admin" })" class="btn-secondary-admin">
+                <i class="fas fa-list"></i>
+                Xem tất cả
+            </a>
         </div>
     </div>
     <div class="table-responsive">
-        <table class="admin-table">
+        <table class="admin-table" id="recentActivityTable">
             <thead>
                 <tr>
                     <th>Biển số</th>
@@ -205,62 +183,179 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><strong>59A1-12345</strong></td>
-                    <td><i class="fas fa-motorcycle me-2"></i>Xe máy</td>
-                    <td>23/01/2025 08:30</td>
-                    <td>23/01/2025 17:45</td>
-                    <td>15,000 đ</td>
-                    <td><span class="status-badge success">Đã thanh toán</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>30A-56789</strong></td>
-                    <td><i class="fas fa-car me-2"></i>Ô tô 4 chỗ</td>
-                    <td>23/01/2025 09:15</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td><span class="status-badge info">Đang gửi</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>29B1-98765</strong></td>
-                    <td><i class="fas fa-motorcycle me-2"></i>Xe máy</td>
-                    <td>23/01/2025 07:00</td>
-                    <td>23/01/2025 12:30</td>
-                    <td>10,000 đ</td>
-                    <td><span class="status-badge success">Đã thanh toán</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>51G-11111</strong></td>
-                    <td><i class="fas fa-truck me-2"></i>Xe tải</td>
-                    <td>23/01/2025 06:45</td>
-                    <td>23/01/2025 18:00</td>
-                    <td>50,000 đ</td>
-                    <td><span class="status-badge warning">Vé tháng</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>30E-22222</strong></td>
-                    <td><i class="fas fa-car me-2"></i>Ô tô 7 chỗ</td>
-                    <td>23/01/2025 10:00</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td><span class="status-badge info">Đang gửi</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
+                @if (Model.HoatDongGanDay.Any())
+                {
+                    @foreach (var item in Model.HoatDongGanDay.Take(10))
+                    {
+                        <tr>
+                            <td><strong>@(item.BienSoVao ?? item.BienSoRa ?? "N/A")</strong></td>
+                            <td>
+                                <i class="fas fa-@(item.TenLoaiXe?.Contains("Ô tô") == true ? "car" : item.TenLoaiXe?.Contains("tải") == true ? "truck" : "motorcycle") me-2"></i>
+                                @(item.TenLoaiXe ?? "Không xác định")
+                            </td>
+                            <td>@item.ThoiGianVao.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(item.ThoiGianRa.HasValue ? item.ThoiGianRa.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+                            <td>@(item.TongTien.HasValue ? $"{item.TongTien:N0} đ" : "-")</td>
+                            <td><span class="status-badge @item.TrangThaiClass">@item.TrangThaiText</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="Dashboard.viewDetail(@item.MaLuotGui)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Chưa có hoạt động nào</td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const Dashboard = {
+            revenueChart: null,
+            weeklyData: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoNgay.Select(d => new { label = d.TenNgay, value = d.DoanhThu }))),
+            monthlyData: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoThang.Select(d => new { label = d.TenThang, value = d.DoanhThu }))),
+
+            init: function() {
+                this.initChart();
+                this.showWeekChart();
+            },
+
+            initChart: function() {
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                this.revenueChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Doanh thu (VNĐ)',
+                            data: [],
+                            backgroundColor: 'rgba(33, 166, 145, 0.7)',
+                            borderColor: '#21A691',
+                            borderWidth: 1,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return new Intl.NumberFormat('vi-VN').format(context.raw) + ' đ';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        if (value >= 1000000) {
+                                            return (value / 1000000).toFixed(1) + 'M';
+                                        }
+                                        return value.toLocaleString('vi-VN');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            showWeekChart: function() {
+                document.getElementById('btnWeek').classList.remove('btn-secondary-admin');
+                document.getElementById('btnWeek').classList.add('btn-primary-admin');
+                document.getElementById('btnMonth').classList.remove('btn-primary-admin');
+                document.getElementById('btnMonth').classList.add('btn-secondary-admin');
+
+                this.revenueChart.data.labels = this.weeklyData.map(d => d.label);
+                this.revenueChart.data.datasets[0].data = this.weeklyData.map(d => d.value);
+                this.revenueChart.update();
+            },
+
+            showMonthChart: function() {
+                document.getElementById('btnMonth').classList.remove('btn-secondary-admin');
+                document.getElementById('btnMonth').classList.add('btn-primary-admin');
+                document.getElementById('btnWeek').classList.remove('btn-primary-admin');
+                document.getElementById('btnWeek').classList.add('btn-secondary-admin');
+
+                this.revenueChart.data.labels = this.monthlyData.map(d => d.label);
+                this.revenueChart.data.datasets[0].data = this.monthlyData.map(d => d.value);
+                this.revenueChart.update();
+            },
+
+            refresh: function() {
+                location.reload();
+            },
+
+            refreshActivities: async function() {
+                try {
+                    const response = await fetch('/Admin/Dashboard/GetRecentActivities?count=10');
+                    const result = await response.json();
+                    
+                    if (result.data) {
+                        this.updateActivityTable(result.data);
+                    }
+                } catch (error) {
+                    console.error('Error refreshing activities:', error);
+                }
+            },
+
+            updateActivityTable: function(activities) {
+                const tbody = document.querySelector('#recentActivityTable tbody');
+                if (activities.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Chưa có hoạt động nào</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = activities.map(item => {
+                    const bienSo = item.bienSoVao || item.bienSoRa || 'N/A';
+                    const icon = item.tenLoaiXe?.includes('Ô tô') ? 'car' : item.tenLoaiXe?.includes('tải') ? 'truck' : 'motorcycle';
+                    const thoiGianVao = new Date(item.thoiGianVao).toLocaleString('vi-VN');
+                    const thoiGianRa = item.thoiGianRa ? new Date(item.thoiGianRa).toLocaleString('vi-VN') : '-';
+                    const tongTien = item.tongTien ? new Intl.NumberFormat('vi-VN').format(item.tongTien) + ' đ' : '-';
+                    const trangThaiClass = item.trangThai === 0 ? 'info' : item.trangThai === 1 ? 'success' : 'warning';
+                    const trangThaiText = item.trangThai === 0 ? 'Đang gửi' : item.trangThai === 1 ? 'Đã thanh toán' : 'Vé tháng';
+
+                    return `
+                        <tr>
+                            <td><strong>${bienSo}</strong></td>
+                            <td><i class="fas fa-${icon} me-2"></i>${item.tenLoaiXe || 'Không xác định'}</td>
+                            <td>${thoiGianVao}</td>
+                            <td>${thoiGianRa}</td>
+                            <td>${tongTien}</td>
+                            <td><span class="status-badge ${trangThaiClass}">${trangThaiText}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="Dashboard.viewDetail(${item.maLuotGui})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            },
+
+            viewDetail: function(id) {
+                window.location.href = `/Admin/VehicleHistory/Detail/${id}`;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            Dashboard.init();
+        });
+    </script>
+}

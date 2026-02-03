@@ -23,6 +23,7 @@ CREATE TABLE TaiKhoan (
     TenDangNhap VARCHAR(50) UNIQUE NOT NULL,
     MatKhau VARCHAR(255) NOT NULL, -- Khuyến nghị Hash mật khẩu ở Backend
     QuyenHan NVARCHAR(50) NOT NULL DEFAULT N'Khách hàng' CHECK (QuyenHan IN (N'Admin', N'Khách hàng', N'Nhân viên')),
+    Email VARCHAR(100) UNIQUE,
     TrangThai BIT DEFAULT 1
 );
 
@@ -116,7 +117,8 @@ CREATE TABLE DangKyLich (
 CREATE TABLE LoaiXe (
     MaLoaiXe INT PRIMARY KEY IDENTITY(1,1),
     TenLoaiXe NVARCHAR(50), 
-    MoTa NVARCHAR(100)
+    MoTa NVARCHAR(100),
+    GiaThang DECIMAL(18,0) CHECK (GiaThang >= 0)
 );
 
 CREATE TABLE CauHinhGia (
@@ -174,8 +176,8 @@ CREATE TABLE TheXe (
     TrangThai INT DEFAULT 1 
 );
 
-CREATE TABLE VeThang (
-    MaVeThang INT PRIMARY KEY IDENTITY(1,1),
+CREATE TABLE TheThang (
+    MaTheThang INT PRIMARY KEY IDENTITY(1,1),
     MaKhachHang INT REFERENCES KhachHang(MaKhachHang),
     MaThe VARCHAR(50) REFERENCES TheXe(MaThe),
     NgayBatDau DATE DEFAULT GETDATE(),
@@ -184,9 +186,9 @@ CREATE TABLE VeThang (
     TrangThai BIT DEFAULT 1
 );
 
-CREATE TABLE LichSuGiaHanVe (
+CREATE TABLE LichSuGiaHanThe (
     MaGiaHan INT PRIMARY KEY IDENTITY(1,1),
-    MaVeThang INT REFERENCES VeThang(MaVeThang),
+    MaTheThang INT REFERENCES TheThang(MaTheThang),
     NgayGiaHan DATETIME DEFAULT GETDATE(),
     ThoiHanCu DATE,
     ThoiHanMoi DATE,
@@ -233,12 +235,12 @@ GO
 ----------------------------------------------------------
 
 -- 1. Function kiểm tra hiệu lực vé tháng
-CREATE FUNCTION dbo.fn_KiemTraVeThangHieuLuc (@MaThe VARCHAR(50))
+CREATE FUNCTION dbo.fn_KiemTraTheThangHieuLuc (@MaThe VARCHAR(50))
 RETURNS BIT
 AS
 BEGIN
     DECLARE @HopLe BIT = 0;
-    IF EXISTS (SELECT 1 FROM VeThang WHERE MaThe = @MaThe AND NgayHetHan >= CAST(GETDATE() AS DATE) AND TrangThai = 1)
+    IF EXISTS (SELECT 1 FROM TheThang WHERE MaThe = @MaThe AND NgayHetHan >= CAST(GETDATE() AS DATE) AND TrangThai = 1)
         SET @HopLe = 1;
     RETURN @HopLe;
 END;
@@ -291,7 +293,7 @@ GO
 ----------------------------------------------------------
 -- Xóa sạch theo thứ tự để tránh lỗi khóa ngoại
 DELETE FROM LuotGui; DELETE FROM SuCo; DELETE FROM DatCho; 
-DELETE FROM VeThang; DELETE FROM LichSuGiaHanVe;
+DELETE FROM TheThang; DELETE FROM LichSuGiaHanThe;
 DELETE FROM NhanVien; DELETE FROM KhachHang; DELETE FROM TaiKhoan;
 DELETE FROM ViTriDo; DELETE FROM KhuVuc; 
 DELETE FROM ChiTietGia; DELETE FROM CauHinhGia; DELETE FROM LoaiXe;
@@ -368,7 +370,7 @@ INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai) VALUES
 
 -- 6. ĐĂNG KÝ VÉ THÁNG (Liên kết Khách - Thẻ - Hạn dùng)
 -- Đăng ký cho khách hàng 'Lê Thị Khách' (@IdKhachHangA) dùng thẻ 'MONTH_OTO_01'
-INSERT INTO VeThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai)
+INSERT INTO TheThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai)
 VALUES (
     @IdKhachHangA, 
     'MONTH_OTO_01', 

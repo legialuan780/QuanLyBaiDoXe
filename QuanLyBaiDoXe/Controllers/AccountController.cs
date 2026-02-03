@@ -25,7 +25,7 @@ namespace QuanLyBaiDoXe.Controllers
             // Nếu đã đăng nhập, redirect về trang chủ
             if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Admin");
             }
 
             ViewBag.ReturnUrl = returnUrl;

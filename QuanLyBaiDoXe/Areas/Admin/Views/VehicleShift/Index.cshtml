@@ -7,6 +7,57 @@
 @section Styles {
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    
+    <!-- Quick Filter Buttons Style -->
+    <style>
+        .quick-filter-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            margin: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .quick-filter-btn i {
+            font-size: 14px;
+        }
+        
+        .quick-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+        
+        .btn-outline-success:hover {
+            background-color: #198754;
+            border-color: #198754;
+            color: white;
+        }
+        
+        .btn-outline-info:hover {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: white;
+        }
+        
+        
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .quick-filter-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
 }
 
 <!-- Page Header -->
@@ -212,22 +263,163 @@
 </div>
 
 <!-- Filters & Actions -->
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">
+            <i class="fas fa-filter"></i>
+            Bộ lọc tìm kiếm
+        </h3>
+        <button class="btn-secondary-admin btn-sm" onclick="resetFilters()">
+            <i class="fas fa-redo"></i>
+            Đặt lại
+        </button>
+    </div>
+    <div class="admin-card-body">
+        <form id="filterForm" method="get" asp-action="Index">
+            <div class="row g-3">
+                <!-- Khoảng thời gian -->
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        Từ ngày
+                    </label>
+                    <input type="date" 
+                           class="form-control" 
+                           name="fromDate" 
+                           id="fromDate"
+                           value="@ViewBag.FromDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="fas fa-calendar-check"></i>
+                        Đến ngày
+                    </label>
+                    <input type="date" 
+                           class="form-control" 
+                           name="toDate" 
+                           id="toDate"
+                           value="@ViewBag.ToDate">
+                </div>
+
+                <!-- Nhân viên -->
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="fas fa-user"></i>
+                        Nhân viên
+                    </label>
+                    <select class="form-select" name="employeeId" id="employeeId">
+                        <option value="">Tất cả nhân viên</option>
+                        @foreach (var emp in (dynamic)ViewBag.Employees)
+                        {
+                            var isSelected = ViewBag.EmployeeId != null && ViewBag.EmployeeId == emp.MaNhanVien;
+                            <option value="@emp.MaNhanVien" selected="@isSelected">
+                                @emp.HoTen
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="fas fa-info-circle"></i>
+                        Trạng thái
+                    </label>
+                    <select class="form-select" name="shiftStatus" id="shiftStatus">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="0" selected="@(ViewBag.ShiftStatus != null && ViewBag.ShiftStatus == 0)">
+                            Đang trực
+                        </option>
+                        <option value="1" selected="@(ViewBag.ShiftStatus != null && ViewBag.ShiftStatus == 1)">
+                            Đã chốt
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Tìm kiếm -->
+                <div class="col-md-9">
+                    <label class="form-label">
+                        <i class="fas fa-search"></i>
+                        Tìm kiếm (Mã ca hoặc tên nhân viên)
+                    </label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="searchTerm" 
+                           id="searchTerm"
+                           value="@ViewBag.SearchTerm"
+                           placeholder="Nhập mã ca hoặc tên nhân viên...">
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn-primary-admin w-100">
+                        <i class="fas fa-search"></i>
+                        Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Quick Filter Buttons - NGOÀI FORM -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm quick-filter-btn" onclick="setQuickFilter('today')">
+                        <i class="fas fa-sun"></i>
+                        Hôm nay
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm quick-filter-btn" onclick="setQuickFilter('month')">
+                        <i class="fas fa-calendar-alt"></i>
+                        Tháng này
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm quick-filter-btn" onclick="setQuickFilter('active')">
+                        <i class="fas fa-play-circle"></i>
+                        Đang trực
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm quick-filter-btn" onclick="setQuickFilter('completed')">
+                        <i class="fas fa-check-circle"></i>
+                        Đã chốt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Summary -->
+<div class="admin-card mb-3">
+    <div class="admin-card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i>
+                    Kết quả: <strong class="text-primary">@Model.Count ca làm việc</strong>
+                </h5>
+                @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
+                {
+                    <small class="text-muted">
+                        Tìm kiếm: "@ViewBag.SearchTerm"
+                    </small>
+                }
+            </div>
+            <div>
+                <button class="btn btn-success btn-sm" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    Xuất Excel
+                </button>
+                <button class="btn btn-info btn-sm" onclick="printReport()">
+                    <i class="fas fa-print"></i>
+                    In báo cáo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Actions -->
 <div class="admin-card">
     <div class="admin-card-header">
         <h3 class="admin-card-title">Danh sách ca làm việc</h3>
-        <div class="admin-card-actions">
-            <div class="input-group" style="width: 200px;">
-                <input type="date" class="form-control" id="filterDate" value="@DateTime.Today.ToString("yyyy-MM-dd")">
-                <button class="btn-primary-admin" onclick="filterByDate()">
-                    <i class="fas fa-filter"></i>
-                </button>
-            </div>
-            <select class="form-select" id="filterStatus" onchange="filterByStatus()" style="width: 150px;">
-                <option value="">Tất cả trạng thái</option>
-                <option value="0">Đang trực</option>
-                <option value="1">Đã chốt</option>
-            </select>
-        </div>
     </div>
 
     <!-- Shifts Table -->
@@ -451,32 +643,40 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     
 <script>
-    // ===== DATATABLES INITIALIZATION =====
-    let shiftsDataTable;
+// ===== DATATABLES INITIALIZATION =====
+let shiftsDataTable;
     
-    $(document).ready(function() {
-        // Khởi tạo DataTables cho bảng danh sách ca
-        shiftsDataTable = $('#shiftsTable').DataTable({
-            "language": {
-                "lengthMenu": "Hiển thị _MENU_ ca mỗi trang",
-                "zeroRecords": "Không tìm thấy ca làm việc nào",
-                "info": "Trang _PAGE_ / _PAGES_",
-                "infoEmpty": "Không có ca làm việc",
-                "infoFiltered": "(lọc từ _MAX_ ca)",
-                "search": "Tìm kiếm:",
-                "paginate": {
-                    "first": "Đầu",
-                    "last": "Cuối",
-                    "next": "Sau",
-                    "previous": "Trước"
-                }
-            },
-            "pageLength": 10,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+$(document).ready(function() {
+    // Destroy existing DataTable nếu có
+    if ($.fn.DataTable.isDataTable('#shiftsTable')) {
+        $('#shiftsTable').DataTable().destroy();
+    }
+        
+    // Khởi tạo DataTables cho bảng danh sách ca
+    shiftsDataTable = $('#shiftsTable').DataTable({
+        "language": {
+            "lengthMenu": "Hiển thị _MENU_ ca mỗi trang",
+            "zeroRecords": "Không tìm thấy ca làm việc nào",
+            "info": "Trang _PAGE_ / _PAGES_",
+            "infoEmpty": "Không có ca làm việc",
+            "infoFiltered": "(lọc từ _MAX_ ca)",
+            "search": "Tìm kiếm:",
+            "paginate": {
+                "first": "Đầu",
+                "last": "Cuối",
+                "next": "Sau",
+                "previous": "Trước"
+            }
+        },
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
             "order": [[0, "desc"]],
             "columnDefs": [
-                { "orderable": false, "targets": 10 }
-            ]
+                { "orderable": false, "targets": [10] }, // Cột "Thao tác" không sort
+                { "searchable": false, "targets": [10] }  // Cột "Thao tác" không search
+            ],
+            "autoWidth": false,
+            "responsive": true
         });
         
         // Load counter status
@@ -485,13 +685,6 @@
     });
     
     // ===== COUNTER STATUS MANAGEMENT =====
-        
-    // Load trạng thái quầy khi trang load
-    $(document).ready(function() {
-        loadCountersStatus();
-        // Auto-refresh mỗi 10 giây
-        setInterval(loadCountersStatus, 10000);
-    });
 
     // Load trạng thái tất cả các quầy
     function loadCountersStatus() {
@@ -850,5 +1043,185 @@
         function printShiftReport(shiftId) {
             window.open('@Url.Action("PrintShiftReport", "VehicleShift", new { area = "Admin" })?id=' + shiftId, '_blank');
         }
+
+        // ========== NEW FILTER FUNCTIONS ==========
+
+        // Reset tất cả bộ lọc
+        function resetFilters() {
+            $('#fromDate').val('');
+            $('#toDate').val('');
+            $('#employeeId').val('');
+            $('#shiftStatus').val('');
+            $('#searchTerm').val('');
+            $('#filterForm').submit();
+        }
+
+        // Quick filter theo preset
+        function setQuickFilter(type) {
+            // Prevent default action
+            event.preventDefault();
+            
+            const today = new Date();
+            const fromInput = $('#fromDate');
+            const toInput = $('#toDate');
+            const statusInput = $('#shiftStatus');
+            
+            // Reset status filter trước
+            statusInput.val('');
+            
+            switch(type) {
+                case 'today':
+                    fromInput.val(formatDate(today));
+                    toInput.val(formatDate(today));
+                    break;
+                    
+                case 'month':
+                    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                    fromInput.val(formatDate(monthStart));
+                    toInput.val(formatDate(today));
+                    break;
+                    
+                case 'active':
+                    statusInput.val('0');
+                    fromInput.val('');
+                    toInput.val('');
+                    break;
+                    
+                case 'completed':
+                    statusInput.val('1');
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    fromInput.val(formatDate(weekAgo));
+                    toInput.val(formatDate(today));
+                    break;
+            }
+            
+            // Submit form
+            $('#filterForm').submit();
+        }
+
+        // Format date to YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            // Lấy dữ liệu từ DataTable
+            const table = $('#shiftsTable').DataTable();
+            const data = table.rows({ search: 'applied' }).data();
+            
+            if (data.length === 0) {
+                alert('Không có dữ liệu để xuất');
+                return;
+            }
+            
+            // Tạo worksheet data
+            const wsData = [];
+            
+            // Header
+            wsData.push([
+                'Mã ca',
+                'Nhân viên',
+                'Giờ nhận ca',
+                'Giờ giao ca',
+                'Số giờ làm',
+                'Tiền đầu ca',
+                'Tiền HT',
+                'Tiền bàn giao',
+                'Chênh lệch',
+                'Trạng thái'
+            ]);
+            
+            // Data rows từ DOM
+            $('#shiftsTable tbody tr').each(function() {
+                const row = $(this);
+                if (row.find('td').length > 1) {
+                    const rowData = [];
+                    row.find('td').each(function(index) {
+                        if (index < 10) { // Chỉ lấy 10 cột đầu (bỏ cột thao tác)
+                            let text = $(this).text().trim();
+                            // Clean up text
+                            text = text.replace(/\s+/g, ' ');
+                            rowData.push(text);
+                        }
+                    });
+                    wsData.push(rowData);
+                }
+            });
+            
+            // Tạo workbook và worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 10 },  // Mã ca
+                { wch: 25 },  // Nhân viên
+                { wch: 18 },  // Giờ nhận ca
+                { wch: 18 },  // Giờ giao ca
+                { wch: 12 },  // Số giờ làm
+                { wch: 15 },  // Tiền đầu ca
+                { wch: 15 },  // Tiền HT
+                { wch: 15 },  // Tiền bàn giao
+                { wch: 15 },  // Chênh lệch
+                { wch: 12 }   // Trạng thái
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Danh sách ca');
+            
+            // Tạo filename
+            const today = new Date();
+            const filename = `DanhSachCa_${formatDate(today)}.xlsx`;
+            
+            // Download
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Print report
+        function printReport() {
+            window.print();
+        }
+
+        // Auto-submit form when pressing Enter in search box
+        $('#searchTerm').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $('#filterForm').submit();
+            }
+        });
     </script>
+    
+    <!-- Include SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- Print styles -->
+    <style media="print">
+        .page-header,
+        .admin-card-header button,
+        .action-buttons,
+        .btn-group,
+        .counter-status-grid,
+        .stat-cards {
+            display: none !important;
+        }
+        
+        .admin-table {
+            font-size: 12px;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: 5px !important;
+        }
+    </style>
+    <style media="print">
+        @@page {
+            size: landscape;
+            margin: 15mm;
+        }
+    </style>
 }

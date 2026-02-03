@@ -17,13 +17,60 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             _context = context;
         }
 
-        // Danh sách ca làm việc hiện tại
-        public async Task<IActionResult> Index()
+        // Danh sách ca làm việc với bộ lọc
+        public async Task<IActionResult> Index(
+            DateTime? fromDate,
+            DateTime? toDate,
+            int? employeeId,
+            int? shiftStatus,
+            string? searchTerm)
         {
-            var shifts = await _context.CaLamViecs
+            // Mặc định lấy 7 ngày gần nhất nếu không có filter
+            if (!fromDate.HasValue && !toDate.HasValue)
+            {
+                fromDate = DateTime.Today.AddDays(-7);
+                toDate = DateTime.Today.AddDays(1);
+            }
+
+            var query = _context.CaLamViecs
                 .Include(c => c.MaNhanVienNavigation)
+                .AsQueryable();
+
+            // Filter theo khoảng thời gian
+            if (fromDate.HasValue)
+            {
+                query = query.Where(c => c.ThoiGianNhanCa >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(c => c.ThoiGianNhanCa <= toDate.Value);
+            }
+
+            // Filter theo nhân viên
+            if (employeeId.HasValue && employeeId.Value > 0)
+            {
+                query = query.Where(c => c.MaNhanVien == employeeId.Value);
+            }
+
+            // Filter theo trạng thái ca
+            if (shiftStatus.HasValue)
+            {
+                query = query.Where(c => c.TrangThaiCa == shiftStatus.Value);
+            }
+
+            // Tìm kiếm theo từ khóa (mã ca hoặc tên nhân viên)
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(c => 
+                    c.MaCa.ToString().Contains(searchTerm) ||
+                    (c.MaNhanVienNavigation != null && c.MaNhanVienNavigation.HoTen.Contains(searchTerm))
+                );
+            }
+
+            var shifts = await query
                 .OrderByDescending(c => c.ThoiGianNhanCa)
-                .Take(50)
+                .Take(200) // Tăng limit lên 200
                 .Select(c => new ShiftViewModel
                 {
                     MaCa = c.MaCa,
@@ -37,6 +84,20 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     GhiChuBanGiao = c.GhiChuBanGiao,
                     TrangThaiCa = c.TrangThaiCa ?? 0
                 })
+                .ToListAsync();
+
+            // Truyền filter parameters về view để giữ state
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+            ViewBag.EmployeeId = employeeId;
+            ViewBag.ShiftStatus = shiftStatus;
+            ViewBag.SearchTerm = searchTerm;
+
+            // Lấy danh sách nhân viên cho dropdown filter
+            ViewBag.Employees = await _context.NhanViens
+                .Where(nv => nv.TrangThaiLamViec == true)
+                .OrderBy(nv => nv.HoTen)
+                .Select(nv => new { nv.MaNhanVien, nv.HoTen })
                 .ToListAsync();
 
             return View(shifts);
@@ -124,11 +185,18 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 var now = DateTime.Now;
                 if (currentDate.Date == now.Date)
                 {
-                    // Ca hiện tại: ca đang diễn ra (đã bắt đầu nhưng chưa kết thúc và đang trực)
+                    // Ca hiện tại: ca đang trực (TrangThaiCa = 0) và chưa có ThoiGianGiaoCa
                     dailyShift.CurrentShift = dayShifts
-                        .FirstOrDefault(s => s.ThoiGianNhanCa.HasValue 
-                                          && s.ThoiGianNhanCa.Value <= now
-                                          && s.TrangThaiCa == 0); // Đang trực
+                        .FirstOrDefault(s => s.TrangThaiCa == 0 && !s.ThoiGianGiaoCa.HasValue);
+                    
+                    // Nếu không tìm thấy trong ngày này, kiểm tra ca đêm hôm trước
+                    if (dailyShift.CurrentShift == null)
+                    {
+                        dailyShift.CurrentShift = shifts
+                            .Where(s => s.TrangThaiCa == 0 && !s.ThoiGianGiaoCa.HasValue)
+                            .OrderByDescending(s => s.ThoiGianNhanCa)
+                            .FirstOrDefault();
+                    }
 
                     // Ca tiếp theo: ca chưa bắt đầu (thời gian nhận ca > hiện tại)
                     dailyShift.NextShift = dayShifts
@@ -411,13 +479,10 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 .ToListAsync();
 
             // Lấy các ca đang trực (CaLamViec table)
-            var startOfDay = selectedDate.Date;
-            var endOfDay = startOfDay.AddDays(1);
+            // Chỉ dựa vào TrangThaiCa = 0 để hỗ trợ ca đêm qua ngày mới
             var activeShifts = await _context.CaLamViecs
                 .Include(c => c.MaNhanVienNavigation)
-                .Where(c => c.ThoiGianNhanCa >= startOfDay 
-                         && c.ThoiGianNhanCa < endOfDay
-                         && c.TrangThaiCa == 0) // Đang trực
+                .Where(c => c.TrangThaiCa == 0 && !c.ThoiGianGiaoCa.HasValue) // Đang trực và chưa chốt ca
                 .Select(c => new ShiftViewModel
                 {
                     MaCa = c.MaCa,
@@ -429,6 +494,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     TongTienHeThong = c.TongTienHeThong ?? 0,
                     TrangThaiCa = c.TrangThaiCa ?? 0
                 })
+                .OrderByDescending(c => c.ThoiGianNhanCa)
                 .ToListAsync();
 
             var viewModel = new DailyScheduleViewModel

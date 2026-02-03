@@ -73,6 +73,7 @@
                     <th style="width: 50px;">STT</th>
                     <th>Tên loại xe</th>
                     <th>Mô tả</th>
+                    <th style="width: 120px;">Giá tháng</th>
                     <th style="width: 100px;">Số lượng thẻ</th>
                     <th style="width: 120px;">Thẻ hoạt động</th>
                     <th style="width: 120px;">Cấu hình giá</th>
@@ -103,6 +104,10 @@
                     <label>Mô tả</label>
                     <textarea id="addMoTa" name="moTa" rows="3" placeholder="Nhập mô tả cho loại xe..."></textarea>
                 </div>
+                <div class="form-group">
+                    <label>Giá tháng (đồng)</label>
+                    <input type="number" id="addGiaThang" name="giaThang" min="0" step="1000" placeholder="VD: 150000" />
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="VehicleType.closeModal('addModal')">Hủy</button>
@@ -129,6 +134,10 @@
                 <div class="form-group">
                     <label>Mô tả</label>
                     <textarea id="editMoTa" name="moTa" rows="3" placeholder="Nhập mô tả cho loại xe..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Giá tháng (đồng)</label>
+                    <input type="number" id="editGiaThang" name="giaThang" min="0" step="1000" placeholder="VD: 150000" />
                 </div>
             </div>
             <div class="modal-footer">
@@ -159,6 +168,10 @@
                 <div class="detail-item">
                     <span class="detail-label">Mô tả:</span>
                     <span class="detail-value" id="detailMoTa">--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Giá tháng:</span>
+                    <span class="detail-value" id="detailGiaThang">--</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Số lượng thẻ:</span>

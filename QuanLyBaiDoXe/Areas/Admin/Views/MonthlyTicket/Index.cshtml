@@ -145,7 +145,7 @@
                                 <option value="">-- Chọn thẻ --</option>
                                 @foreach (var c in Model.AvailableCards)
                                 {
-                                    <option value="@c.MaThe" data-type="@c.TenLoaiXe">
+                                    <option value="@c.MaThe" data-type="@c.TenLoaiXe" data-price="@(c.GiaThang ?? 0)">
                                         @c.MaThe (@(c.TenLoaiXe ?? "Chưa phân loại"))
                                     </option>
                                 }

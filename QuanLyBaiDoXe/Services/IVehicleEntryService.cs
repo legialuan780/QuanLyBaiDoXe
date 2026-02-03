@@ -13,8 +13,8 @@ namespace QuanLyBaiDoXe.Services
         // Lấy vị trí đỗ trống
         Task<List<ViTriDo>> GetAvailableViTriDoAsync();
         
-        // Xử lý xe vào
-        Task<LuotGui> XuLyXeVaoAsync(string maThe, string bienSoVao, string? hinhAnhVao, int? maViTri);
+        // Xử lý xe vào (tự động gán vị trí từ khu vực)
+        Task<LuotGui> XuLyXeVaoAsync(string maThe, string bienSoVao, string? hinhAnhVao, int? maKhuVuc);
         
         // Xử lý xe ra
         Task<LuotGui?> XuLyXeRaAsync(string maThe, string bienSoRa, string? hinhAnhRa);
@@ -30,6 +30,9 @@ namespace QuanLyBaiDoXe.Services
         
         // Tính tiền gửi xe
         Task<decimal> TinhTienGuiXeAsync(LuotGui luotGui);
+
+        // Tính tiền gửi xe preview (không lưu database)
+        Task<decimal> TinhTienGuiXePreviewAsync(LuotGui luotGui, DateTime thoiGianRa);
         
         // Kiểm tra thẻ có vé tháng còn hiệu lực không
         Task<bool> KiemTraVeThangHopLeAsync(string maThe);

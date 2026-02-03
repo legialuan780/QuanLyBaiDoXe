@@ -13,38 +13,66 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         private readonly IVehicleEntryService _vehicleEntryService;
         private readonly QuanLyBaiDoXeContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILicensePlateRecognitionService _plateRecognitionService;
 
         public VehicleEntryController(
             IVehicleEntryService vehicleEntryService,
             QuanLyBaiDoXeContext context,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ILicensePlateRecognitionService plateRecognitionService)
         {
             _vehicleEntryService = vehicleEntryService;
             _context = context;
             _webHostEnvironment = webHostEnvironment;
-        }
+            _plateRecognitionService = plateRecognitionService;
+            }
 
-        public async Task<IActionResult> Index()
-        {
-            var viewModel = new VehicleEntryViewModel
+                public async Task<IActionResult> Index()
             {
-                XeDangTrongBai = await _vehicleEntryService.GetXeDangTrongBaiAsync(),
-                ViTriTrong = await _vehicleEntryService.GetAvailableViTriDoAsync(),
-                LoaiXeList = await _vehicleEntryService.GetLoaiXeListAsync(),
-                TongXeDangGui = await _context.LuotGuis.CountAsync(l => l.TrangThai == 0),
-                TongViTriTrong = await _context.ViTriDos.CountAsync(v => v.TrangThai == 0),
-                TongViTri = await _context.ViTriDos.CountAsync(),
-                TongThuHomNay = await _context.LuotGuis
-                    .Where(l => l.ThoiGianRa != null && l.ThoiGianRa.Value.Date == DateTime.Today)
-                    .SumAsync(l => l.TongTien ?? 0)
-            };
+                // Lấy danh sách vị trí trống
+                var viTriTrong = await _vehicleEntryService.GetAvailableViTriDoAsync();
 
-            return View(viewModel);
-        }
+                // Nhóm theo khu vực và đếm số chỗ trống
+                var khuVucList = await _context.KhuVucs
+                    .Select(kv => new KhuVucChoTrongDto
+                    {
+                        MaKhuVuc = kv.MaKhuVuc,
+                        TenKhuVuc = kv.TenKhuVuc,
+                        SoChoTrong = kv.ViTriDos.Count(v => v.TrangThai == 0),
+                        TongSoCho = kv.ViTriDos.Count(),
+                        ViTriTrong = kv.ViTriDos
+                            .Where(v => v.TrangThai == 0)
+                            .Select(v => new ViTriDoDto
+                            {
+                                MaViTri = v.MaViTri,
+                                TenViTri = v.TenViTri ?? ""
+                            })
+                            .ToList()
+                    })
+                    .Where(kv => kv.SoChoTrong > 0) // Chỉ hiện khu vực còn chỗ trống
+                    .OrderBy(kv => kv.TenKhuVuc)
+                    .ToListAsync();
 
-        [HttpPost]
-        public async Task<IActionResult> QuetThe([FromBody] QuetTheRequest request)
-        {
+                var viewModel = new VehicleEntryViewModel
+                {
+                    XeDangTrongBai = await _vehicleEntryService.GetXeDangTrongBaiAsync(),
+                    ViTriTrong = viTriTrong,
+                    KhuVucList = khuVucList,
+                    LoaiXeList = await _vehicleEntryService.GetLoaiXeListAsync(),
+                    TongXeDangGui = await _context.LuotGuis.CountAsync(l => l.TrangThai == 0),
+                    TongViTriTrong = await _context.ViTriDos.CountAsync(v => v.TrangThai == 0),
+                    TongViTri = await _context.ViTriDos.CountAsync(),
+                    TongThuHomNay = await _context.LuotGuis
+                        .Where(l => l.ThoiGianRa != null && l.ThoiGianRa.Value.Date == DateTime.Today)
+                        .SumAsync(l => l.TongTien ?? 0)
+                };
+
+                return View(viewModel);
+            }
+
+            [HttpPost]
+            public async Task<IActionResult> QuetThe([FromBody] QuetTheRequest request)
+            {
             try
             {
                 if (string.IsNullOrEmpty(request.MaThe))
@@ -145,33 +173,40 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     if (!string.IsNullOrEmpty(request.HinhAnh))
                     {
                         savedImagePath = await SaveImage(request.HinhAnh, "vao");
+                            }
+
+                            var luotGuiVao = await _vehicleEntryService.XuLyXeVaoAsync(
+                                request.MaThe,
+                                request.BienSo,
+                                savedImagePath,
+                                request.MaKhuVuc); // Truyền mã khu vực thay vì mã vị trí
+
+                            return Json(new QuetTheResponse
+                            {
+                                Success = true,
+                                Message = "Xe vào thành công!",
+                                Action = "VAO",
+                                LuotGui = MapToLuotGuiDto(luotGuiVao),
+                                TheXe = MapToTheXeDto(theXe, true)
+                            });
+                        }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log chi tiết lỗi để debug
+                                var errorMessage = ex.Message;
+                                if (ex.InnerException != null)
+                                {
+                                    errorMessage = ex.InnerException.Message;
+                        }
+                
+                        return Json(new QuetTheResponse
+                        {
+                            Success = false,
+                            Message = errorMessage
+                        });
                     }
-
-                    var luotGuiVao = await _vehicleEntryService.XuLyXeVaoAsync(
-                        request.MaThe,
-                        request.BienSo,
-                        savedImagePath,
-                        request.MaViTri);
-
-                    return Json(new QuetTheResponse
-                    {
-                        Success = true,
-                        Message = "Xe vào thành công!",
-                        Action = "VAO",
-                        LuotGui = MapToLuotGuiDto(luotGuiVao),
-                        TheXe = MapToTheXeDto(theXe, true)
-                    });
                 }
-            }
-            catch (Exception ex)
-            {
-                return Json(new QuetTheResponse
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
-        }
 
         [HttpGet]
         public async Task<IActionResult> KiemTraThe(string maThe)
@@ -206,6 +241,114 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             return Json(result);
         }
 
+        /// <summary>
+        /// Preview tính tiền xe ra - KHÔNG lưu database
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> PreviewXeRa([FromBody] QuetTheRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.MaThe))
+                {
+                    return Json(new { success = false, message = "Vui lòng nhập mã thẻ!" });
+                }
+
+                var luotGui = await _vehicleEntryService.GetLuotGuiDangGuiByMaTheAsync(request.MaThe);
+                if (luotGui == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy lượt gửi của thẻ này!" });
+                }
+
+                // Kiểm tra biển số
+                if (!string.IsNullOrEmpty(request.BienSo) && !string.IsNullOrEmpty(luotGui.BienSoVao))
+                {
+                    var bienSoVao = luotGui.BienSoVao.Trim().ToUpper();
+                    var bienSoRa = request.BienSo.Trim().ToUpper();
+                    
+                    if (bienSoVao != bienSoRa)
+                    {
+                        return Json(new { 
+                            success = false, 
+                            message = $"Biển số xe ra ({request.BienSo}) không khớp với biển số xe vào ({luotGui.BienSoVao})!" 
+                        });
+                    }
+                }
+
+                // Tính tiền preview (không lưu)
+                var thoiGianRa = DateTime.Now;
+                var tongTien = await _vehicleEntryService.TinhTienGuiXePreviewAsync(luotGui, thoiGianRa);
+
+                // Tính thời gian gửi
+                var thoiGianGui = thoiGianRa - luotGui.ThoiGianVao;
+                var soGio = (int)thoiGianGui.TotalHours;
+                var soPhut = thoiGianGui.Minutes;
+
+                return Json(new
+                {
+                    success = true,
+                    maThe = luotGui.MaThe,
+                    bienSo = request.BienSo ?? luotGui.BienSoVao,
+                    tenLoaiXe = luotGui.MaTheNavigation?.MaLoaiXeNavigation?.TenLoaiXe ?? "Chưa phân loại",
+                    thoiGianVao = luotGui.ThoiGianVao,
+                    thoiGianRa = thoiGianRa,
+                    thoiGianGui = $"{soGio} giờ {soPhut} phút",
+                    tongTien = tongTien
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xác nhận xe ra sau khi thanh toán
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ConfirmXeRa([FromBody] ConfirmXeRaRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.MaThe))
+                {
+                    return Json(new { success = false, message = "Mã thẻ không hợp lệ!" });
+                }
+
+                var luotGui = await _vehicleEntryService.GetLuotGuiDangGuiByMaTheAsync(request.MaThe);
+                if (luotGui == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy lượt gửi của thẻ này!" });
+                }
+
+                // Lưu hình ảnh nếu có
+                string? savedImagePath = null;
+                if (!string.IsNullOrEmpty(request.HinhAnh))
+                {
+                    savedImagePath = await SaveImage(request.HinhAnh, "ra");
+                }
+
+                // Xử lý xe ra thực sự
+                var luotGuiRa = await _vehicleEntryService.XuLyXeRaAsync(
+                    request.MaThe,
+                    request.BienSo ?? luotGui.BienSoVao ?? "",
+                    savedImagePath);
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Xe ra thành công! Tổng tiền: {luotGuiRa?.TongTien:N0} VNĐ",
+                    phuongThucThanhToan = request.PhuongThucThanhToan,
+                    tongTien = luotGuiRa?.TongTien
+                });
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                return Json(new { success = false, message = errorMessage });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetThongKe()
         {
@@ -220,6 +363,56 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             };
 
             return Json(thongKe);
+        }
+
+        /// <summary>
+        /// API nhận dạng biển số xe từ ảnh
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> RecognizePlate([FromBody] RecognizePlateRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.ImageBase64))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Vui lòng cung cấp ảnh để nhận dạng biển số"
+                    });
+                }
+
+                var result = await _plateRecognitionService.RecognizePlateAsync(request.ImageBase64);
+
+                if (result.Success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        plateNumber = result.PlateNumber,
+                        rawPlate = result.RawPlateNumber,
+                        confidence = Math.Round(result.Confidence, 1),
+                        vehicleType = result.VehicleType,
+                        message = $"Nhận dạng thành công: {result.PlateNumber} (độ tin cậy: {result.Confidence:F1}%)"
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = result.ErrorMessage ?? "Không thể nhận dạng biển số từ ảnh"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = $"Lỗi nhận dạng: {ex.Message}"
+                });
+            }
         }
 
         private async Task<string?> SaveImage(string base64Image, string prefix)

@@ -72,7 +72,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 {
                     MaThe = t.MaThe,
                     TenLoaiXe = t.MaLoaiXeNavigation != null ? t.MaLoaiXeNavigation.TenLoaiXe : null,
-                    MaLoaiXe = t.MaLoaiXe
+                    MaLoaiXe = t.MaLoaiXe,
+                    GiaThang = t.MaLoaiXeNavigation != null ? t.MaLoaiXeNavigation.GiaThang : null
                 })
                 .ToListAsync();
 
@@ -156,6 +157,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaThe = v.MaThe,
                     TenLoaiXe = v.MaTheNavigation != null && v.MaTheNavigation.MaLoaiXeNavigation != null
                         ? v.MaTheNavigation.MaLoaiXeNavigation.TenLoaiXe : null,
+                    GiaThang = v.MaTheNavigation != null && v.MaTheNavigation.MaLoaiXeNavigation != null
+                        ? v.MaTheNavigation.MaLoaiXeNavigation.GiaThang : null,
                     NgayBatDau = v.NgayBatDau,
                     NgayHetHan = v.NgayHetHan,
                     SoTienDong = v.SoTienDong,

@@ -18,6 +18,7 @@
         public string? BienSoXe { get; set; }
         public string? MaThe { get; set; }
         public string? TenLoaiXe { get; set; }
+        public decimal? GiaThang { get; set; }
         public DateOnly? NgayBatDau { get; set; }
         public DateOnly? NgayHetHan { get; set; }
         public decimal? SoTienDong { get; set; }
@@ -43,6 +44,7 @@
         public string MaThe { get; set; } = string.Empty;
         public string? TenLoaiXe { get; set; }
         public int? MaLoaiXe { get; set; }
+        public decimal? GiaThang { get; set; }
         public string DisplayText => $"{MaThe} ({TenLoaiXe ?? "Chưa phân loại"})";
     }
 

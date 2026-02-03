@@ -62,7 +62,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaNhanVien = l.MaNhanVien,
                     TenNhanVien = l.MaNhanVienNavigation != null ? l.MaNhanVienNavigation.HoTen : "N/A",
                     NgayLamViec = l.NgayLamViec,
-                    CaLamViec = l.LoaiCa ?? 0,
+                    CaLamViec = l.LoaiCa,
                     GhiChu = l.GhiChu
                 })
                 .ToListAsync();
@@ -2254,8 +2254,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         ngayLamViec = l.NgayLamViec,
                         gioBatDau = l.GioBatDau.ToString("HH:mm"),
                         gioKetThuc = l.GioKetThuc.ToString("HH:mm"),
-                        loaiCa = l.LoaiCa ?? 0,
-                        trangThai = l.TrangThai ?? 1,
+                        loaiCa = l.LoaiCa,
+                        trangThai = l.TrangThai,
                         ghiChu = l.GhiChu
                     })
                     .ToListAsync();
@@ -2424,8 +2424,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         ngayLamViec = l.NgayLamViec,
                         gioBatDau = l.GioBatDau.ToString("HH:mm"),
                         gioKetThuc = l.GioKetThuc.ToString("HH:mm"),
-                        loaiCa = l.LoaiCa ?? 0,
-                        trangThai = l.TrangThai ?? 1,
+                        loaiCa = l.LoaiCa,
+                        trangThai = l.TrangThai,
                         ghiChu = l.GhiChu
                     })
                     .ToListAsync();

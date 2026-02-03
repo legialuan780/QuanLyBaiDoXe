@@ -20,7 +20,7 @@ namespace QuanLyBaiDoXe.Services
         {
             try
             {
-                // Tìm tài kho?n theo tên ??ng nh?p
+                // Tìm tài khoản theo tên đăng nhập
                 var account = await _context.TaiKhoans
                     .Include(t => t.NhanVien)
                     .Include(t => t.KhachHang)
@@ -31,41 +31,44 @@ namespace QuanLyBaiDoXe.Services
                     return (false, "Tên đăng nhập hoặc mật khẩu không đúng!", null, null);
                 }
 
-                // Ki?m tra tr?ng thái tài kho?n
+                // Kiểm tra trạng thái tài khoản
                 if (account.TrangThai == false)
                 {
                     return (false, "Tài khoản đã bị khóa!", null, null);
                 }
 
-                // Ki?m tra m?t kh?u - so sánh tr?c ti?p (plain text)
+                // Kiểm tra mật khẩu - so sánh trực tiếp (plain text)
                 if (account.MatKhau != password)
                 {
                     return (false, "Tên đăng nhập hoặc mật khẩu không đúng!", null, null);
                 }
 
-                // Xác ??nh role
-                string role = "Customer";
-                if (account.NhanVien != null)
+                // Xác định role dựa trên QuyenHan trong database
+                string role = account.QuyenHan; // "Admin", "Nhân viên", hoặc "Khách hàng"
+
+                // Kiểm tra trạng thái nhân viên nếu là Admin hoặc Nhân viên
+                if ((role == "Admin" || role == "Nhân viên") && account.NhanVien != null)
                 {
                     if (account.NhanVien.TrangThaiLamViec == false)
                     {
                         return (false, "Nhân viên đã nghỉ việc!", null, null);
                     }
-
-                    // Xác ??nh role d?a trên ch?c v?
-                    // 0: Admin, 1: Nhân viên
-                    role = account.NhanVien.ChucVu == 0 ? "Admin" : "Employee";
                 }
-                else if (account.KhachHang != null)
+
+                // Map role to English for consistency in the application
+                string mappedRole = role switch
                 {
-                    role = "Customer";
-                }
+                    "Admin" => "Admin",
+                    "Nhân viên" => "Employee",
+                    "Khách hàng" => "Customer",
+                    _ => "Customer"
+                };
 
-                return (true, null, account, role);
+                return (true, null, account, mappedRole);
             }
             catch (Exception ex)
             {
-                return (false, $"L?i h? th?ng: {ex.Message}", null, null);
+                return (false, $"Lỗi hệ thống: {ex.Message}", null, null);
             }
         }
 
@@ -74,39 +77,40 @@ namespace QuanLyBaiDoXe.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Ki?m tra tên ??ng nh?p ?ã t?n t?i
+                // Kiểm tra tên đăng nhập đã tồn tại
                 if (await UsernameExistsAsync(model.Username))
                 {
-                    return (false, "Tên ??ng nh?p ?ã t?n t?i!", null);
+                    return (false, "Tên đăng nhập đã tồn tại!", null);
                 }
 
-                // Ki?m tra s? ?i?n tho?i ?ã t?n t?i
+                // Kiểm tra số điện thoại đã tồn tại
                 if (await PhoneNumberExistsAsync(model.PhoneNumber))
                 {
-                    return (false, "S? ?i?n tho?i ?ã ???c ??ng ký!", null);
+                    return (false, "Số điện thoại đã được đăng ký!", null);
                 }
 
-                // Ki?m tra CCCD n?u có
+                // Kiểm tra CCCD nếu có
                 if (!string.IsNullOrEmpty(model.CCCD))
                 {
                     if (await CCCDExistsAsync(model.CCCD))
                     {
-                        return (false, "CCCD/CMND ?ã ???c ??ng ký!", null);
+                        return (false, "CCCD/CMND đã được đăng ký!", null);
                     }
                 }
 
-                // T?o tài kho?n - L?u m?t kh?u plain text
+                // Tạo tài khoản với quyền "Khách hàng"
                 var taiKhoan = new TaiKhoan
                 {
                     TenDangNhap = model.Username.Trim(),
                     MatKhau = model.Password, // Plain text password
+                    QuyenHan = "Khách hàng", // Chỉ cho phép đăng ký quyền Khách hàng
                     TrangThai = true
                 };
 
                 _context.TaiKhoans.Add(taiKhoan);
                 await _context.SaveChangesAsync();
 
-                // T?o khách hàng
+                // Tạo khách hàng
                 var khachHang = new KhachHang
                 {
                     MaTaiKhoan = taiKhoan.MaTaiKhoan,
@@ -127,69 +131,7 @@ namespace QuanLyBaiDoXe.Services
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return (false, $"L?i h? th?ng: {ex.Message}", null);
-            }
-        }
-
-        public async Task<(bool Success, string? ErrorMessage, int? EmployeeId)> RegisterEmployeeAsync(RegisterViewModel model)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                // Ki?m tra tên ??ng nh?p ?ã t?n t?i
-                if (await UsernameExistsAsync(model.Username))
-                {
-                    return (false, "Tên ??ng nh?p ?ã t?n t?i!", null);
-                }
-
-                // Ki?m tra CCCD ?ã t?n t?i (b?t bu?c cho nhân viên)
-                if (string.IsNullOrEmpty(model.CCCD))
-                {
-                    return (false, "CCCD/CMND là b?t bu?c ??i v?i nhân viên!", null);
-                }
-
-                if (await CCCDExistsAsync(model.CCCD))
-                {
-                    return (false, "CCCD/CMND ?ã ???c ??ng ký!", null);
-                }
-
-                // T?o tài kho?n - L?u m?t kh?u plain text
-                var taiKhoan = new TaiKhoan
-                {
-                    TenDangNhap = model.Username.Trim(),
-                    MatKhau = model.Password, // Plain text password
-                    TrangThai = true
-                };
-
-                _context.TaiKhoans.Add(taiKhoan);
-                await _context.SaveChangesAsync();
-
-                // T?o nhân viên
-                var nhanVien = new NhanVien
-                {
-                    MaTaiKhoan = taiKhoan.MaTaiKhoan,
-                    HoTen = model.FullName.Trim(),
-                    GioiTinh = model.Gender?.Trim(),
-                    NgaySinh = model.DateOfBirth,
-                    Cccd = model.CCCD.Trim(),
-                    SoDienThoai = model.PhoneNumber.Trim(),
-                    DiaChi = model.Address?.Trim(),
-                    ChucVu = model.Position ?? 1, // M?c ??nh là nhân viên (1)
-                    NgayVaoLam = model.StartDate ?? DateOnly.FromDateTime(DateTime.Now),
-                    TrangThaiLamViec = true
-                };
-
-                _context.NhanViens.Add(nhanVien);
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                return (true, null, nhanVien.MaNhanVien);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return (false, $"L?i h? th?ng: {ex.Message}", null);
+                return (false, $"Lỗi hệ thống: {ex.Message}", null);
             }
         }
 
@@ -229,7 +171,7 @@ namespace QuanLyBaiDoXe.Services
                 return false;
             }
 
-            // Verify old password - so sánh tr?c ti?p plain text
+            // Verify old password - so sánh trực tiếp plain text
             if (account.MatKhau != oldPassword)
             {
                 return false;
@@ -244,13 +186,13 @@ namespace QuanLyBaiDoXe.Services
 
         public string HashPassword(string password)
         {
-            // Không mã hóa, tr? v? plain text
+            // Không mã hóa, trả về plain text
             return password;
         }
 
         public bool VerifyPassword(string hashedPassword, string password)
         {
-            // So sánh tr?c ti?p plain text
+            // So sánh trực tiếp plain text
             return hashedPassword == password;
         }
     }

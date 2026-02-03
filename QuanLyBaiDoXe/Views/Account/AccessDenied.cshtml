@@ -1,5 +1,5 @@
-@{
-    ViewData["Title"] = "Truy c?p b? t? ch?i";
+﻿@{
+    ViewData["Title"] = "Truy cập thất bại";
     Layout = "_Layout";
 }
 
@@ -9,16 +9,16 @@
             <div class="card shadow">
                 <div class="card-body p-5">
                     <i class="bi bi-shield-exclamation text-danger" style="font-size: 4rem;"></i>
-                    <h2 class="mt-3 text-danger">Truy c?p b? t? ch?i</h2>
+                    <h2 class="mt-3 text-danger">Truy cập thất bại</h2>
                     <p class="text-muted mt-3">
-                        B?n kh�ng c� quy?n truy c?p v�o trang n�y.
+                       Bạn không có quyền truy cập vào trang này.
                     </p>
                     <div class="mt-4">
                         <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
-                            <i class="bi bi-house-door"></i> V? trang ch?
+                            <i class="bi bi-house-door"></i> Về trang chủ
                         </a>
                         <a href="@Url.Action("Login", "Account")" class="btn btn-outline-secondary">
-                            <i class="bi bi-box-arrow-in-right"></i> ??ng nh?p l?i
+                            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập lại
                         </a>
                     </div>
                 </div>

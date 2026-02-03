@@ -129,40 +129,17 @@ namespace QuanLyBaiDoXe.Controllers
                 return View("~/Views/Account/Register.cshtml", model);
             }
 
-            // Đăng ký theo loại tài khoản
-            if (model.AccountType == "Employee")
+            // Đăng ký tài khoản khách hàng (chỉ cho phép đăng ký quyền khách)
+            var (success, errorMessage, customerId) = await _authService.RegisterCustomerAsync(model);
+
+            if (!success)
             {
-                // Kiểm tra các trường bắt buộc cho nhân viên
-                if (string.IsNullOrEmpty(model.CCCD))
-                {
-                    ModelState.AddModelError("CCCD", "CCCD/CMND là bắt buộc đối với nhân viên!");
-                    return View("~/Views/Account/Register.cshtml", model);
-                }
-
-                var (success, errorMessage, employeeId) = await _authService.RegisterEmployeeAsync(model);
-
-                if (!success)
-                {
-                    ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng ký thất bại!");
-                    return View("~/Views/Account/Register.cshtml", model);
-                }
-
-                TempData["RegisterSuccess"] =
-                    "Đăng ký tài khoản nhân viên thành công! Vui lòng đăng nhập để tiếp tục.";
+                ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng ký thất bại!");
+                return View("~/Views/Account/Register.cshtml", model);
             }
-            else // Customer
-            {
-                var (success, errorMessage, customerId) = await _authService.RegisterCustomerAsync(model);
 
-                if (!success)
-                {
-                    ModelState.AddModelError(string.Empty, errorMessage ?? "Đăng ký thất bại!");
-                    return View("~/Views/Account/Register.cshtml", model);
-                }
-
-                TempData["RegisterSuccess"] =
-                    "Đăng ký tài khoản khách hàng thành công! Vui lòng đăng nhập để tiếp tục.";
-            }
+            TempData["RegisterSuccess"] =
+                "Đăng ký tài khoản khách hàng thành công! Vui lòng đăng nhập để tiếp tục.";
 
             return RedirectToAction("Login");
         }

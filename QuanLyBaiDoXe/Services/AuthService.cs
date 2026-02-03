@@ -83,6 +83,12 @@ namespace QuanLyBaiDoXe.Services
                     return (false, "Tên đăng nhập đã tồn tại!", null);
                 }
 
+                // Kiểm tra email đã tồn tại
+                if (await EmailExistsAsync(model.Email))
+                {
+                    return (false, "Email đã được đăng ký!", null);
+                }
+
                 // Kiểm tra số điện thoại đã tồn tại
                 if (await PhoneNumberExistsAsync(model.PhoneNumber))
                 {
@@ -104,6 +110,7 @@ namespace QuanLyBaiDoXe.Services
                     TenDangNhap = model.Username.Trim(),
                     MatKhau = model.Password, // Plain text password
                     QuyenHan = "Khách hàng", // Chỉ cho phép đăng ký quyền Khách hàng
+                    Email = model.Email.Trim(),
                     TrangThai = true
                 };
 
@@ -139,6 +146,12 @@ namespace QuanLyBaiDoXe.Services
         {
             return await _context.TaiKhoans
                 .AnyAsync(t => t.TenDangNhap == username.Trim());
+        }
+
+        public async Task<bool> EmailExistsAsync(string email)
+        {
+            return await _context.TaiKhoans
+                .AnyAsync(t => t.Email == email.Trim());
         }
 
         public async Task<bool> PhoneNumberExistsAsync(string phoneNumber)

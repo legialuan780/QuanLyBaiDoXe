@@ -31,6 +31,9 @@ namespace QuanLyBaiDoXe.Services
         // Tính tiền gửi xe
         Task<decimal> TinhTienGuiXeAsync(LuotGui luotGui);
         
+        // Kiểm tra thẻ có vé tháng còn hiệu lực không
+        Task<bool> KiemTraVeThangHopLeAsync(string maThe);
+        
         // Lấy danh sách loại xe
         Task<List<LoaiXe>> GetLoaiXeListAsync();
     }

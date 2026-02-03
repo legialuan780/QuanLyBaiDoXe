@@ -163,6 +163,14 @@ namespace QuanLyBaiDoXe.Services
                 return 0;
             }
 
+            // Kiểm tra thẻ có vé tháng còn hiệu lực không
+            var veThangHopLe = await KiemTraVeThangHopLeAsync(luotGui.MaThe!);
+            if (veThangHopLe)
+            {
+                // Khách có vé tháng hợp lệ -> Miễn phí
+                return 0;
+            }
+
             var thoiGianGui = luotGui.ThoiGianRa.Value - luotGui.ThoiGianVao;
             var soPhut = (int)Math.Ceiling(thoiGianGui.TotalMinutes);
 
@@ -173,10 +181,8 @@ namespace QuanLyBaiDoXe.Services
                 return 0;
             }
 
-            // Lấy cấu hình giá
-            var cauHinh = await _context.CauHinhGia
-                .Include(c => c.ChiTietGia)
-                .FirstOrDefaultAsync(c => c.MaLoaiXe == theXe.MaLoaiXe);
+            // Lấy cấu hình giá phù hợp (ưu tiên cấu hình có IsUuTien = true và trong khung giờ)
+            var cauHinh = await GetCauHinhGiaPhùHopAsync(theXe.MaLoaiXe.Value, luotGui.ThoiGianVao);
 
             if (cauHinh == null || !cauHinh.ChiTietGia.Any())
             {
@@ -221,6 +227,73 @@ namespace QuanLyBaiDoXe.Services
             }
 
             return tongTien > 0 ? tongTien : (decimal)Math.Ceiling(thoiGianGui.TotalHours) * 5000;
+        }
+
+        /// <summary>
+        /// Kiểm tra thẻ có vé tháng còn hiệu lực không
+        /// </summary>
+        public async Task<bool> KiemTraVeThangHopLeAsync(string maThe)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            var veThang = await _context.TheThangs
+                .FirstOrDefaultAsync(v => v.MaThe == maThe 
+                    && v.TrangThai == true 
+                    && v.NgayBatDau <= today 
+                    && v.NgayHetHan >= today);
+
+            return veThang != null;
+        }
+
+        /// <summary>
+        /// Lấy cấu hình giá phù hợp theo loại xe và thời gian
+        /// Ưu tiên: 1. Cấu hình có IsUuTien = true trong khung giờ
+        ///          2. Cấu hình trong khung giờ
+        ///          3. Cấu hình mặc định của loại xe
+        /// </summary>
+        private async Task<CauHinhGium?> GetCauHinhGiaPhùHopAsync(int maLoaiXe, DateTime thoiGianVao)
+        {
+            var gioVao = TimeOnly.FromDateTime(thoiGianVao);
+
+            // Tìm cấu hình ưu tiên trong khung giờ
+            var cauHinhUuTien = await _context.CauHinhGia
+                .Include(c => c.ChiTietGia)
+                .Where(c => c.MaLoaiXe == maLoaiXe 
+                    && c.IsUuTien == true
+                    && c.GioBatDau != null 
+                    && c.GioKetThuc != null
+                    && c.GioBatDau <= gioVao 
+                    && c.GioKetThuc >= gioVao)
+                .FirstOrDefaultAsync();
+
+            if (cauHinhUuTien != null)
+            {
+                return cauHinhUuTien;
+            }
+
+            // Tìm cấu hình trong khung giờ (không ưu tiên)
+            var cauHinhTrongGio = await _context.CauHinhGia
+                .Include(c => c.ChiTietGia)
+                .Where(c => c.MaLoaiXe == maLoaiXe
+                    && c.GioBatDau != null
+                    && c.GioKetThuc != null
+                    && c.GioBatDau <= gioVao
+                    && c.GioKetThuc >= gioVao)
+                .FirstOrDefaultAsync();
+
+            if (cauHinhTrongGio != null)
+            {
+                return cauHinhTrongGio;
+            }
+
+            // Tìm cấu hình mặc định (không có khung giờ hoặc ưu tiên nhất)
+            var cauHinhMacDinh = await _context.CauHinhGia
+                .Include(c => c.ChiTietGia)
+                .Where(c => c.MaLoaiXe == maLoaiXe)
+                .OrderByDescending(c => c.IsUuTien)
+                .FirstOrDefaultAsync();
+
+            return cauHinhMacDinh;
         }
 
         public async Task<List<LoaiXe>> GetLoaiXeListAsync()

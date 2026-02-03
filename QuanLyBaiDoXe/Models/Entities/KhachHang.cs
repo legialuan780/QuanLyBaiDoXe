@@ -23,5 +23,5 @@ public partial class KhachHang
 
     public virtual TaiKhoan? MaTaiKhoanNavigation { get; set; }
 
-    public virtual ICollection<VeThang> VeThangs { get; set; } = new List<VeThang>();
+    public virtual ICollection<TheThang> TheThangs { get; set; } = new List<TheThang>();
 }

@@ -1,0 +1,362 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.MonthlyTicketViewModel
+@{
+    ViewData["Title"] = "Quản lý vé tháng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="~/css/monthly-ticket.css" asp-append-version="true" />
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý vé tháng</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Quản lý vé tháng</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-primary-admin" onclick="MonthlyTicket.openRegisterModal()">
+            <i class="fas fa-plus"></i> Đăng ký vé tháng
+        </button>
+    </div>
+</div>
+
+<!-- Thống kê -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statTotal">@Model.Statistics.TotalTickets</h3>
+            <p>Tổng vé tháng</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statActive">@Model.Statistics.ActiveTickets</h3>
+            <p>Đang hoạt động</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statExpiring">@Model.Statistics.ExpiringTickets</h3>
+            <p>Sắp hết hạn</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statRevenue">@(Model.Statistics.TotalRevenue >= 1000000 ? $"{Model.Statistics.TotalRevenue / 1000000:N1}M" : $"{Model.Statistics.TotalRevenue:N0}")</h3>
+            <p>Tổng doanh thu</p>
+        </div>
+    </div>
+</div>
+
+<!-- Danh sách vé tháng -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">
+            <i class="fas fa-list"></i> Danh sách vé tháng
+        </h3>
+        <div class="filter-group">
+            <select id="filterStatus" class="form-select form-select-sm" onchange="MonthlyTicket.filterTable()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="expiring">Sắp hết hạn</option>
+                <option value="expired">Đã hết hạn</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="admin-card-body">
+        <table id="monthlyTicketTable" class="table table-hover" style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th>Khách hàng</th>
+                    <th>SĐT</th>
+                    <th>Biển số xe</th>
+                    <th>Mã thẻ</th>
+                    <th>Loại xe</th>
+                    <th>Ngày bắt đầu</th>
+                    <th>Ngày hết hạn</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th style="width: 150px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Đăng ký vé tháng -->
+<div class="modal-overlay" id="registerModal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-plus-circle"></i> Đăng ký vé tháng mới</h3>
+            <button class="modal-close" onclick="MonthlyTicket.closeModal('registerModal')">&times;</button>
+        </div>
+        <form id="registerForm">
+            <div class="modal-body">
+                <div class="form-section">
+                    <h4><i class="fas fa-user"></i> Thông tin khách hàng</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Khách hàng <span class="required">*</span></label>
+                            <select id="regCustomer" name="maKhachHang" class="select2-customer" required>
+                                <option value="">-- Chọn khách hàng --</option>
+                                @foreach (var c in Model.Customers)
+                                {
+                                    <option value="@c.MaKhachHang" data-phone="@c.SoDienThoai" data-plate="@c.BienSoXeMacDinh">
+                                        @c.HoTen - @c.SoDienThoai
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Biển số xe <span class="required">*</span></label>
+                            <input type="text" id="regBienSo" name="bienSoXe" placeholder="VD: 59A1-12345" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4><i class="fas fa-id-card"></i> Thông tin thẻ</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Thẻ tháng <span class="required">*</span></label>
+                            <select id="regCard" name="maThe" class="select2-card" required>
+                                <option value="">-- Chọn thẻ --</option>
+                                @foreach (var c in Model.AvailableCards)
+                                {
+                                    <option value="@c.MaThe" data-type="@c.TenLoaiXe">
+                                        @c.MaThe (@(c.TenLoaiXe ?? "Chưa phân loại"))
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại xe</label>
+                            <input type="text" id="regLoaiXe" readonly placeholder="Tự động hiển thị" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4><i class="fas fa-calendar-alt"></i> Thời hạn & Thanh toán</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Số tháng đăng ký <span class="required">*</span></label>
+                            <select id="regSoThang" name="soThang" required>
+                                <option value="1">1 tháng</option>
+                                <option value="3">3 tháng</option>
+                                <option value="6">6 tháng</option>
+                                <option value="12">12 tháng</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Số tiền (VNĐ) <span class="required">*</span></label>
+                            <input type="number" id="regSoTien" name="soTienDong" placeholder="VD: 200000" min="0" required />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày bắt đầu</label>
+                            <input type="text" id="regNgayBatDau" readonly value="@DateTime.Today.ToString("dd/MM/yyyy")" />
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày hết hạn (dự kiến)</label>
+                            <input type="text" id="regNgayHetHan" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="MonthlyTicket.closeModal('registerModal')">Hủy</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Đăng ký</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Gia hạn vé tháng -->
+<div class="modal-overlay" id="renewModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-sync-alt"></i> Gia hạn vé tháng</h3>
+            <button class="modal-close" onclick="MonthlyTicket.closeModal('renewModal')">&times;</button>
+        </div>
+        <form id="renewForm">
+            <input type="hidden" id="renewMaVeThang" />
+            <div class="modal-body">
+                <div class="ticket-info-card">
+                    <div class="info-row">
+                        <span class="info-label">Khách hàng:</span>
+                        <span class="info-value" id="renewCustomerName"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Biển số:</span>
+                        <span class="info-value" id="renewBienSo"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mã thẻ:</span>
+                        <span class="info-value" id="renewMaThe"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Hạn hiện tại:</span>
+                        <span class="info-value" id="renewCurrentExpiry"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Số tháng gia hạn <span class="required">*</span></label>
+                    <select id="renewSoThang" name="soThang" required>
+                        <option value="1">1 tháng</option>
+                        <option value="3">3 tháng</option>
+                        <option value="6">6 tháng</option>
+                        <option value="12">12 tháng</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Số tiền (VNĐ) <span class="required">*</span></label>
+                    <input type="number" id="renewSoTien" name="soTienDong" placeholder="VD: 200000" min="0" required />
+                </div>
+                <div class="form-group">
+                    <label>Hạn mới (dự kiến)</label>
+                    <input type="text" id="renewNewExpiry" readonly />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="MonthlyTicket.closeModal('renewModal')">Hủy</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-sync-alt"></i> Gia hạn</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Chi tiết vé tháng -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-info-circle"></i> Chi tiết vé tháng</h3>
+            <button class="modal-close" onclick="MonthlyTicket.closeModal('detailModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-grid">
+                <div class="detail-section">
+                    <h4><i class="fas fa-user"></i> Thông tin khách hàng</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Họ tên:</span>
+                        <span class="detail-value" id="detailCustomerName"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Số điện thoại:</span>
+                        <span class="detail-value" id="detailPhone"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Biển số xe:</span>
+                        <span class="detail-value" id="detailBienSo"></span>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4><i class="fas fa-id-card"></i> Thông tin vé</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Mã thẻ:</span>
+                        <span class="detail-value" id="detailMaThe"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Loại xe:</span>
+                        <span class="detail-value" id="detailLoaiXe"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Trạng thái:</span>
+                        <span class="detail-value" id="detailStatus"></span>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4><i class="fas fa-calendar-alt"></i> Thời hạn</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Ngày bắt đầu:</span>
+                        <span class="detail-value" id="detailStartDate"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ngày hết hạn:</span>
+                        <span class="detail-value" id="detailEndDate"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Còn lại:</span>
+                        <span class="detail-value" id="detailRemaining"></span>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4><i class="fas fa-money-bill-wave"></i> Thanh toán</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Tổng tiền:</span>
+                        <span class="detail-value" id="detailAmount"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="renewal-history-section">
+                <h4><i class="fas fa-history"></i> Lịch sử gia hạn</h4>
+                <table class="detail-table" id="renewalHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Ngày gia hạn</th>
+                            <th>Hạn cũ</th>
+                            <th>Hạn mới</th>
+                            <th>Số tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dữ liệu sẽ được load động -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="MonthlyTicket.closeModal('detailModal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận hủy -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">Xác nhận hủy vé</h3>
+            <button class="modal-close" onclick="MonthlyTicket.closeModal('cancelModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Bạn có chắc chắn muốn hủy vé tháng của khách hàng "<span id="cancelCustomerName"></span>"?</p>
+            <p class="warning-text"><i class="fas fa-exclamation-triangle"></i> Thẻ sẽ được giải phóng và có thể đăng ký cho khách hàng khác.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="MonthlyTicket.closeModal('cancelModal')">Hủy</button>
+            <button type="button" class="btn-danger" id="confirmCancelBtn">Xác nhận hủy</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="~/js/monthly-ticket.js" asp-append-version="true"></script>
+}

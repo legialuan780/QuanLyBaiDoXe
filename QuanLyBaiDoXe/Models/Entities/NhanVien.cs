@@ -35,7 +35,7 @@ public partial class NhanVien
 
     public virtual ICollection<LichLamViec> LichLamViecs { get; set; } = new List<LichLamViec>();
 
-    public virtual ICollection<LichSuGiaHanVe> LichSuGiaHanVes { get; set; } = new List<LichSuGiaHanVe>();
+    public virtual ICollection<LichSuGiaHanThe> LichSuGiaHanThes { get; set; } = new List<LichSuGiaHanThe>();
 
     public virtual TaiKhoan? MaTaiKhoanNavigation { get; set; }
 

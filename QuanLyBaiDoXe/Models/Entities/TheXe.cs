@@ -17,5 +17,5 @@ public partial class TheXe
 
     public virtual LoaiXe? MaLoaiXeNavigation { get; set; }
 
-    public virtual ICollection<VeThang> VeThangs { get; set; } = new List<VeThang>();
+    public virtual ICollection<TheThang> TheThangs { get; set; } = new List<TheThang>();
 }

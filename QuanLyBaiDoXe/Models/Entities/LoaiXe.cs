@@ -11,6 +11,8 @@ public partial class LoaiXe
 
     public string? MoTa { get; set; }
 
+    public decimal? GiaThang { get; set; }
+
     public virtual ICollection<CauHinhGium> CauHinhGia { get; set; } = new List<CauHinhGium>();
 
     public virtual ICollection<TheXe> TheXes { get; set; } = new List<TheXe>();

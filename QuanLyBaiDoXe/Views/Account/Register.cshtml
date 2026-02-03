@@ -76,6 +76,19 @@
                             <span asp-validation-for="Username" class="text-danger small"></span>
                         </div>
 
+                        <!-- Email -->
+                        <div class="col-12 mb-3">
+                            <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input d-flex align-items-center">
+                                    <span class="icon">📧</span>
+                                    <input asp-for="Email" class="form-control border-0" type="email" placeholder="example@email.com" />
+                                    <span class="validation-icon" id="emailIcon"></span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
                         <!-- Mật khẩu -->
                         <div class="col-md-6 mb-3">
                             <label asp-for="Password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
@@ -183,6 +196,7 @@
     <script>
         $(document).ready(function () {
             let usernameTimeout;
+            let emailTimeout;
             let phoneTimeout;
             let cccdTimeout;
 
@@ -211,6 +225,41 @@
                             } else {
                                 icon.html('<span class="text-danger">✗</span>');
                                 $('#Username').removeClass('is-valid').addClass('is-invalid');
+                            }
+                        },
+                        error: function () {
+                            icon.hide();
+                        }
+                    });
+                }, 500);
+            });
+
+            // Kiểm tra email
+            $('#Email').on('input', function () {
+                clearTimeout(emailTimeout);
+                const email = $(this).val().trim();
+                const icon = $('#emailIcon');
+
+                // Check if email field is valid using HTML5 validation
+                if (!this.validity.valid || email.length < 5) {
+                    icon.hide();
+                    return;
+                }
+
+                icon.html('<span class="spinner-border spinner-border-sm text-primary"></span>').show();
+
+                emailTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("CheckEmail", "Account")',
+                        type: 'GET',
+                        data: { email: email },
+                        success: function (response) {
+                            if (response.available) {
+                                icon.html('<span class="text-success">✓</span>');
+                                $('#Email').removeClass('is-invalid').addClass('is-valid');
+                            } else {
+                                icon.html('<span class="text-danger">✗</span>');
+                                $('#Email').removeClass('is-valid').addClass('is-invalid');
                             }
                         },
                         error: function () {

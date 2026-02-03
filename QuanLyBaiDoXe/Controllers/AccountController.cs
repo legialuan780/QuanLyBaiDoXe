@@ -179,6 +179,19 @@ namespace QuanLyBaiDoXe.Controllers
             return Json(new { available = !exists });
         }
 
+        // API để kiểm tra email
+        [HttpGet]
+        public async Task<IActionResult> CheckEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Json(new { available = false });
+            }
+
+            var exists = await _authService.EmailExistsAsync(email);
+            return Json(new { available = !exists });
+        }
+
         // API để kiểm tra số điện thoại
         [HttpGet]
         public async Task<IActionResult> CheckPhoneNumber(string phoneNumber)

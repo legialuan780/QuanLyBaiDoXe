@@ -9,6 +9,7 @@ namespace QuanLyBaiDoXe.Services
         Task<(bool Success, string? ErrorMessage, int? CustomerId)> RegisterCustomerAsync(RegisterViewModel model);
         Task<bool> ChangePasswordAsync(int accountId, string oldPassword, string newPassword);
         Task<bool> UsernameExistsAsync(string username);
+        Task<bool> EmailExistsAsync(string email);
         Task<bool> PhoneNumberExistsAsync(string phoneNumber);
         Task<bool> CCCDExistsAsync(string cccd);
         string HashPassword(string password);

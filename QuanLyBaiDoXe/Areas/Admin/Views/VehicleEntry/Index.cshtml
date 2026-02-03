@@ -790,6 +790,51 @@
 
         // Update buttons state
         updateButtonsState();
+
+        // Tự động nhận dạng biển số
+        recognizePlate(capturedImageData);
+    }
+
+    // Nhận dạng biển số xe tự động
+    async function recognizePlate(imageBase64) {
+        const plateInput = document.getElementById('plateInput');
+        const cameraStatus = document.getElementById('cameraStatus');
+        
+        // Hiển thị trạng thái đang nhận dạng
+        cameraStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang nhận dạng biển số...';
+        cameraStatus.className = 'camera-status captured';
+
+        try {
+            const response = await fetch('/Admin/VehicleEntry/RecognizePlate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: imageBase64 })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Tự động điền biển số
+                plateInput.value = data.plateNumber;
+                
+                // Cập nhật trạng thái
+                cameraStatus.innerHTML = `<i class="fas fa-check-circle"></i> ${data.plateNumber} (${data.confidence}%)`;
+                cameraStatus.className = 'camera-status captured';
+                
+                showNotification(`Nhận dạng thành công: ${data.plateNumber}`, 'success');
+            } else {
+                // Không nhận dạng được - hiển thị thông báo nhưng không block
+                cameraStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Không nhận dạng được BS';
+                cameraStatus.className = 'camera-status captured';
+                
+                console.warn('Plate recognition failed:', data.message);
+                // Không hiện notification lỗi vì user có thể nhập thủ công
+            }
+        } catch (err) {
+            console.error('Plate recognition error:', err);
+            cameraStatus.innerHTML = '<i class="fas fa-check-circle"></i> Đã chụp (nhập BS thủ công)';
+            cameraStatus.className = 'camera-status captured';
+        }
     }
 
     // Retake photo

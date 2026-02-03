@@ -1,4 +1,4 @@
-﻿// Monthly Ticket Management JavaScript
+// Monthly Ticket Management JavaScript
 const MonthlyTicket = {
     table: null,
     cancelId: null,
@@ -84,16 +84,16 @@ const MonthlyTicket = {
                     render: function (data) {
                         let buttons = `
                             <div class="action-buttons">
-                                <button class="btn-icon view" onclick="MonthlyTicket.viewDetail(${data.maVeThang})" title="Xem chi tiết">
+                                <button class="btn-icon view" onclick="MonthlyTicket.viewDetail(${data.maTheThang})" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </button>`;
                         
                         if (data.trangThai) {
                             buttons += `
-                                <button class="btn-icon renew" onclick="MonthlyTicket.openRenewModal(${data.maVeThang})" title="Gia hạn">
+                                <button class="btn-icon renew" onclick="MonthlyTicket.openRenewModal(${data.maTheThang})" title="Gia hạn">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
-                                <button class="btn-icon cancel" onclick="MonthlyTicket.confirmCancel(${data.maVeThang}, '${data.tenKhachHang}')" title="Hủy vé">
+                                <button class="btn-icon cancel" onclick="MonthlyTicket.confirmCancel(${data.maTheThang}, '${data.tenKhachHang}')" title="Hủy vé">
                                     <i class="fas fa-ban"></i>
                                 </button>`;
                         }
@@ -166,17 +166,21 @@ const MonthlyTicket = {
         $('#regCard').on('change', function () {
             const selected = $(this).find(':selected');
             const type = selected.data('type');
+            const price = selected.data('price');
             $('#regLoaiXe').val(type || 'Chưa phân loại');
+            MonthlyTicket.updatePrice();
         });
 
         // Months selection change - Register
         $('#regSoThang').on('change', () => {
             this.updateExpiryDate();
+            this.updatePrice();
         });
 
         // Months selection change - Renew
         $('#renewSoThang').on('change', () => {
             this.updateRenewExpiryDate();
+            this.updateRenewPrice();
         });
 
         // Close modal on overlay click
@@ -205,8 +209,17 @@ const MonthlyTicket = {
         $('#regCustomer').val('').trigger('change');
         $('#regCard').val('').trigger('change');
         $('#regLoaiXe').val('');
+        $('#regSoTien').val('');
         this.updateExpiryDate();
         this.openModal('registerModal');
+    },
+
+    updatePrice: function () {
+        const selected = $('#regCard').find(':selected');
+        const price = parseFloat(selected.data('price')) || 0;
+        const months = parseInt($('#regSoThang').val()) || 1;
+        const total = price * months;
+        $('#regSoTien').val(total > 0 ? total : '');
     },
 
     updateExpiryDate: function () {
@@ -226,15 +239,15 @@ const MonthlyTicket = {
                 const data = result.data;
                 this.currentTicket = data;
 
-                $('#renewMaVeThang').val(data.maVeThang);
+                $('#renewMaVeThang').val(data.maTheThang);
                 $('#renewCustomerName').text(data.tenKhachHang || 'N/A');
                 $('#renewBienSo').text(data.bienSoXe || 'Chưa có');
                 $('#renewMaThe').text(data.maThe);
                 $('#renewCurrentExpiry').text(data.ngayHetHan ? this.formatDate(data.ngayHetHan) : 'N/A');
                 $('#renewSoThang').val('1');
-                $('#renewSoTien').val('');
                 
                 this.updateRenewExpiryDate();
+                this.updateRenewPrice();
                 this.openModal('renewModal');
             } else {
                 this.showNotification(result.message, 'error');
@@ -263,6 +276,15 @@ const MonthlyTicket = {
         const expiry = new Date(startDate);
         expiry.setMonth(expiry.getMonth() + months);
         $('#renewNewExpiry').val(this.formatDateVN(expiry));
+    },
+
+    updateRenewPrice: function () {
+        if (!this.currentTicket) return;
+        
+        const price = parseFloat(this.currentTicket.giaThang) || 0;
+        const months = parseInt($('#renewSoThang').val()) || 1;
+        const total = price * months;
+        $('#renewSoTien').val(total > 0 ? total : '');
     },
 
     viewDetail: async function (id) {

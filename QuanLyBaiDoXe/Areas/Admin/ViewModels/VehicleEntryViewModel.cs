@@ -70,12 +70,36 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
     }
 
     public class TheXeDto
-    {
-        public string MaThe { get; set; } = string.Empty;
-        public string? TenLoaiXe { get; set; }
-        public int? LoaiThe { get; set; }
-        public string TenLoaiThe => LoaiThe == 0 ? "Vé lượt" : "Vé tháng";
-        public int? TrangThai { get; set; }
-        public bool DangGui { get; set; }
+        {
+            public string MaThe { get; set; } = string.Empty;
+            public string? TenLoaiXe { get; set; }
+            public int? LoaiThe { get; set; }
+            public string TenLoaiThe => LoaiThe == 0 ? "Vé lượt" : "Vé tháng";
+            public int? TrangThai { get; set; }
+            public bool DangGui { get; set; }
+        }
+
+        /// <summary>
+        /// Request model cho API nhận dạng biển số
+        /// </summary>
+        public class RecognizePlateRequest
+        {
+            /// <summary>
+            /// Ảnh dạng base64 (có hoặc không có prefix data:image/...)
+            /// </summary>
+            public string ImageBase64 { get; set; } = string.Empty;
+        }
+
+        /// <summary>
+        /// Response model cho API nhận dạng biển số
+        /// </summary>
+        public class RecognizePlateResponse
+        {
+            public bool Success { get; set; }
+            public string? PlateNumber { get; set; }
+            public string? RawPlate { get; set; }
+            public double Confidence { get; set; }
+            public string? VehicleType { get; set; }
+            public string? Message { get; set; }
+        }
     }
-}

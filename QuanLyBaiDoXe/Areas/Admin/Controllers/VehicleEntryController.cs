@@ -13,18 +13,21 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         private readonly IVehicleEntryService _vehicleEntryService;
         private readonly QuanLyBaiDoXeContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILicensePlateRecognitionService _plateRecognitionService;
 
         public VehicleEntryController(
             IVehicleEntryService vehicleEntryService,
             QuanLyBaiDoXeContext context,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ILicensePlateRecognitionService plateRecognitionService)
         {
             _vehicleEntryService = vehicleEntryService;
             _context = context;
             _webHostEnvironment = webHostEnvironment;
-        }
+            _plateRecognitionService = plateRecognitionService;
+            }
 
-        public async Task<IActionResult> Index()
+            public async Task<IActionResult> Index()
         {
             var viewModel = new VehicleEntryViewModel
             {
@@ -220,6 +223,56 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             };
 
             return Json(thongKe);
+        }
+
+        /// <summary>
+        /// API nhận dạng biển số xe từ ảnh
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> RecognizePlate([FromBody] RecognizePlateRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.ImageBase64))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Vui lòng cung cấp ảnh để nhận dạng biển số"
+                    });
+                }
+
+                var result = await _plateRecognitionService.RecognizePlateAsync(request.ImageBase64);
+
+                if (result.Success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        plateNumber = result.PlateNumber,
+                        rawPlate = result.RawPlateNumber,
+                        confidence = Math.Round(result.Confidence, 1),
+                        vehicleType = result.VehicleType,
+                        message = $"Nhận dạng thành công: {result.PlateNumber} (độ tin cậy: {result.Confidence:F1}%)"
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = result.ErrorMessage ?? "Không thể nhận dạng biển số từ ảnh"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = $"Lỗi nhận dạng: {ex.Message}"
+                });
+            }
         }
 
         private async Task<string?> SaveImage(string base64Image, string prefix)

@@ -27,6 +27,9 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Register License Plate Recognition service
+builder.Services.AddHttpClient<ILicensePlateRecognitionService, PlateRecognizerService>();
+
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

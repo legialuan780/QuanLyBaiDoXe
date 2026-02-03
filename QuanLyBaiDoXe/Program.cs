@@ -2,11 +2,20 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Models.EF;
 using QuanLyBaiDoXe.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Text;
+
+// Set console encoding to UTF-8 for Vietnamese characters
+Console.OutputEncoding = Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        // Ensure JSON responses use UTF-8 encoding for Vietnamese characters
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+    });
 
 //add connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

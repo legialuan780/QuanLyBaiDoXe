@@ -1,0 +1,580 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.CustomerViewModel
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý khách hàng</h1>
+        <div class="breadcrumb">
+            <a asp-action="Index" asp-controller="Dashboard">Trang chủ</a>
+            <span>/</span>
+            <span>Khách hàng</span>
+        </div>
+    </div>
+    <div>
+        <button class="btn-primary-admin" onclick="showCreateModal()">
+            <i class="fas fa-plus"></i>
+            Thêm khách hàng
+        </button>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.TotalCustomers</h3>
+            <p>Tổng khách hàng</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.CustomersWithAccount</h3>
+            <p>Có tài khoản</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-id-card"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.CustomersWithMonthlyTicket</h3>
+            <p>Có vé tháng</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@(Model.TotalCustomers - Model.CustomersWithAccount)</h3>
+            <p>Vãng lai</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Search -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Danh sách khách hàng</h3>
+        <div class="d-flex gap-2">
+            <button class="btn-secondary-admin" onclick="exportToExcel()">
+                <i class="fas fa-download"></i>
+                Xuất Excel
+            </button>
+        </div>
+    </div>
+    
+    <div class="p-3 border-bottom">
+        <form asp-action="Index" method="get" class="row g-3">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" 
+                           name="keyword" 
+                           class="form-control border-start-0" 
+                           placeholder="Tìm theo tên, SĐT, CCCD, biển số xe..."
+                           value="@Model.SearchKeyword">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã KH</th>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th>CCCD</th>
+                    <th>Biển số xe</th>
+                    <th>Địa chỉ</th>
+                    <th>Tài khoản</th>
+                    <th>Vé tháng</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Customers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Không tìm thấy khách hàng nào</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var customer in Model.Customers)
+                    {
+                        var hasAccount = customer.MaTaiKhoan != null;
+                        var activeTickets = customer.VeThangs.Count(v => v.TrangThai == true && v.NgayHetHan >= DateOnly.FromDateTime(DateTime.Now));
+                        
+                        <tr>
+                            <td><strong>#@customer.MaKhachHang</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">
+                                        @customer.HoTen.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <span>@customer.HoTen</span>
+                                </div>
+                            </td>
+                            <td>
+                                <i class="fas fa-phone me-1 text-muted" style="font-size: 12px;"></i>
+                                @customer.SoDienThoai
+                            </td>
+                            <td>@(customer.Cccd ?? "-")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(customer.BienSoXeMacDinh))
+                                {
+                                    <span class="badge bg-primary">@customer.BienSoXeMacDinh</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 150px;" title="@customer.DiaChi">
+                                    @(customer.DiaChi ?? "-")
+                                </span>
+                            </td>
+                            <td>
+                                @if (hasAccount)
+                                {
+                                    <span class="status-badge success">
+                                        <i class="fas fa-check-circle"></i> Có
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge secondary">
+                                        <i class="fas fa-times-circle"></i> Không
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (activeTickets > 0)
+                                {
+                                    <span class="status-badge warning">
+                                        <i class="fas fa-id-card"></i> @activeTickets vé
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="viewCustomer(@customer.MaKhachHang)"
+                                            title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning" 
+                                            onclick="editCustomer(@customer.MaKhachHang)"
+                                            title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteCustomer(@customer.MaKhachHang, '@customer.HoTen')"
+                                            title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+            <div class="text-muted">
+                Hiển thị @((Model.CurrentPage - 1) * Model.PageSize + 1) - @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalCount) 
+                trong tổng số @Model.TotalCount khách hàng
+            </div>
+            <nav>
+                <ul class="pagination mb-0">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="?page=@(Model.CurrentPage - 1)&keyword=@Model.SearchKeyword">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    }
+                    
+                    @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="?page=@i&keyword=@Model.SearchKeyword">@i</a>
+                        </li>
+                    }
+                    
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="?page=@(Model.CurrentPage + 1)&keyword=@Model.SearchKeyword">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerModalTitle">Thêm khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <input type="hidden" id="maKhachHang" name="maKhachHang">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Họ tên <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="hoTen" name="hoTen" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Số điện thoại <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel" class="form-control" id="soDienThoai" name="soDienThoai" 
+                                   pattern="[0-9]{10,11}" required>
+                            <small class="text-muted">Nhập 10-11 chữ số</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CCCD/CMND</label>
+                            <input type="text" class="form-control" id="cccd" name="cccd">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Biển số xe mặc định</label>
+                            <input type="text" class="form-control" id="bienSoXeMacDinh" 
+                                   name="bienSoXeMacDinh" style="text-transform: uppercase;">
+                            <small class="text-muted">VD: 59A-12345</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Địa chỉ</label>
+                            <textarea class="form-control" id="diaChi" name="diaChi" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveCustomer()">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Details Modal -->
+<div class="modal fade" id="viewCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewCustomerContent">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let customerModal;
+    let viewModal;
+
+    $(document).ready(function() {
+        customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
+        viewModal = new bootstrap.Modal(document.getElementById('viewCustomerModal'));
+    });
+
+    function showCreateModal() {
+        document.getElementById('customerModalTitle').textContent = 'Thêm khách hàng';
+        document.getElementById('customerForm').reset();
+        document.getElementById('maKhachHang').value = '';
+        customerModal.show();
+    }
+
+    async function viewCustomer(id) {
+        try {
+            const response = await fetch(`/Admin/Customer/GetCustomer?id=${id}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const customer = data.customer;
+                let html = `
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong>Mã khách hàng:</strong>
+                            <p>#${customer.maKhachHang}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Họ tên:</strong>
+                            <p>${customer.hoTen}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Số điện thoại:</strong>
+                            <p><i class="fas fa-phone me-1"></i> ${customer.soDienThoai}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>CCCD/CMND:</strong>
+                            <p>${customer.cccd || '-'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Biển số xe mặc định:</strong>
+                            <p>${customer.bienSoXeMacDinh ? `<span class="badge bg-primary">${customer.bienSoXeMacDinh}</span>` : '-'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Tài khoản:</strong>
+                            <p>${customer.tenDangNhap ? `<span class="badge bg-success">${customer.tenDangNhap}</span>` : '<span class="text-muted">Chưa có</span>'}</p>
+                        </div>
+                        <div class="col-12">
+                            <strong>Địa chỉ:</strong>
+                            <p>${customer.diaChi || '-'}</p>
+                        </div>
+                `;
+
+                if (customer.veThangs && customer.veThangs.length > 0) {
+                    html += `
+                        <div class="col-12">
+                            <strong>Vé tháng:</strong>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã thẻ</th>
+                                            <th>Loại xe</th>
+                                            <th>Ngày bắt đầu</th>
+                                            <th>Ngày hết hạn</th>
+                                            <th>Số tiền</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    customer.veThangs.forEach(ve => {
+                        const isActive = ve.trangThai && new Date(ve.ngayHetHan) >= new Date();
+                        html += `
+                            <tr>
+                                <td>${ve.maThe}</td>
+                                <td>${ve.tenLoaiXe || '-'}</td>
+                                <td>${new Date(ve.ngayBatDau).toLocaleDateString('vi-VN')}</td>
+                                <td>${new Date(ve.ngayHetHan).toLocaleDateString('vi-VN')}</td>
+                                <td>${ve.soTienDong.toLocaleString('vi-VN')} đ</td>
+                                <td>
+                                    ${isActive 
+                                        ? '<span class="badge bg-success">Còn hạn</span>' 
+                                        : '<span class="badge bg-secondary">Hết hạn</span>'}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+                
+                document.getElementById('viewCustomerContent').innerHTML = html;
+                viewModal.show();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Có lỗi xảy ra khi tải thông tin khách hàng', 'error');
+        }
+    }
+
+    async function editCustomer(id) {
+        try {
+            const response = await fetch(`/Admin/Customer/GetCustomer?id=${id}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const customer = data.customer;
+                document.getElementById('customerModalTitle').textContent = 'Chỉnh sửa khách hàng';
+                document.getElementById('maKhachHang').value = customer.maKhachHang;
+                document.getElementById('hoTen').value = customer.hoTen;
+                document.getElementById('soDienThoai').value = customer.soDienThoai;
+                document.getElementById('cccd').value = customer.cccd || '';
+                document.getElementById('bienSoXeMacDinh').value = customer.bienSoXeMacDinh || '';
+                document.getElementById('diaChi').value = customer.diaChi || '';
+                customerModal.show();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Có lỗi xảy ra khi tải thông tin khách hàng', 'error');
+        }
+    }
+
+    async function saveCustomer() {
+        const form = document.getElementById('customerForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const maKhachHang = document.getElementById('maKhachHang').value;
+        const isEdit = maKhachHang !== '';
+        const url = isEdit ? '/Admin/Customer/Update' : '/Admin/Customer/Create';
+
+        const data = {
+            hoTen: document.getElementById('hoTen').value,
+            soDienThoai: document.getElementById('soDienThoai').value,
+            cccd: document.getElementById('cccd').value || null,
+            diaChi: document.getElementById('diaChi').value || null,
+            bienSoXeMacDinh: document.getElementById('bienSoXeMacDinh').value || null
+        };
+
+        if (isEdit) {
+            data.maKhachHang = parseInt(maKhachHang);
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification(result.message, 'success');
+                customerModal.hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Có lỗi xảy ra khi lưu thông tin khách hàng', 'error');
+        }
+    }
+
+    async function deleteCustomer(id, name) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa khách hàng "${name}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Admin/Customer/Delete?id=${id}`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification(result.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Có lỗi xảy ra khi xóa khách hàng', 'error');
+        }
+    }
+
+    function exportToExcel() {
+        showNotification('Chức năng xuất Excel đang được phát triển', 'info');
+    }
+
+    function showNotification(message, type = 'success') {
+        const bgColors = {
+            'success': '#87DF2C',
+            'error': '#e74c3c',
+            'info': '#21A691'
+        };
+        
+        const icons = {
+            'success': 'fa-check-circle',
+            'error': 'fa-exclamation-circle',
+            'info': 'fa-info-circle'
+        };
+        
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 9999;
+            min-width: 300px;
+            border-left: 4px solid ${bgColors[type] || '#21A691'};
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 12px;">
+                <i class="fas ${icons[type]}" style="color: ${bgColors[type]}; font-size: 20px; margin-top: 2px;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">${type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : 'Thông báo'}</div>
+                    <div style="font-size: 13px; color: #6c757d;">${message}</div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.transition = 'opacity 0.3s ease';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+</script>
+}

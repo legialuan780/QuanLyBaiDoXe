@@ -18,20 +18,9 @@ namespace QuanLyBaiDoXe.Areas.User.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var customerId = int.Parse(User.FindFirst("CustomerId")?.Value ?? "0");
-            var customer = await _context.KhachHangs
-                .FirstOrDefaultAsync(k => k.MaKhachHang == customerId);
-
-            // Lấy các sự cố liên quan đến xe của khách hàng
-            var incidents = await _context.SuCos
-                .Include(sc => sc.MaNhanVienNavigation)
-                .Where(sc => sc.MaThe == customer!.BienSoXeMacDinh || sc.LoaiSuCo!.Contains(customer.HoTen))
-                .OrderByDescending(sc => sc.ThoiGianGhiNhan)
-                .ToListAsync();
-
-            return View(incidents);
+            return View();
         }
 
         [HttpPost]
@@ -48,14 +37,16 @@ namespace QuanLyBaiDoXe.Areas.User.Controllers
                     return Json(new { success = false, message = "Không tìm thấy khách hàng!" });
                 }
 
+                // Tạo sự cố với prefix khách hàng trong MoTaChiTiet
                 var suCo = new SuCo
                 {
                     ThoiGianGhiNhan = DateTime.Now,
                     LoaiSuCo = request.LoaiSuCo,
                     MaThe = request.MaThe,
                     MaViTri = request.MaViTri,
-                    MoTaChiTiet = $"[Khách hàng: {customer.HoTen}] {request.MoTaChiTiet}",
-                    TrangThaiXuLy = 0 // Chưa xử lý
+                    MoTaChiTiet = $"[KH#{customerId} - {customer.HoTen} - {customer.SoDienThoai}] {request.MoTaChiTiet}",
+                    TrangThaiXuLy = 0, // Chưa xử lý
+                    MaNhanVien = null
                 };
 
                 _context.SuCos.Add(suCo);
@@ -72,26 +63,37 @@ namespace QuanLyBaiDoXe.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMyIncidents()
         {
-            var customerId = int.Parse(User.FindFirst("CustomerId")?.Value ?? "0");
-            var customer = await _context.KhachHangs
-                .FirstOrDefaultAsync(k => k.MaKhachHang == customerId);
+            try
+            {
+                var customerId = int.Parse(User.FindFirst("CustomerId")?.Value ?? "0");
+                
+                // Tìm tất cả sự cố có chứa mã khách hàng trong MoTaChiTiet
+                var incidents = await _context.SuCos
+                    .Include(sc => sc.MaNhanVienNavigation)
+                    .Where(sc => sc.MoTaChiTiet!.Contains($"[KH#{customerId}"))
+                    .OrderByDescending(sc => sc.ThoiGianGhiNhan)
+                    .Select(sc => new
+                    {
+                        maSuCo = sc.MaSuCo,
+                        thoiGianGhiNhan = sc.ThoiGianGhiNhan,
+                        loaiSuCo = sc.LoaiSuCo,
+                        maThe = sc.MaThe,
+                        maViTri = sc.MaViTri,
+                        // Remove customer prefix from description
+                        moTaChiTiet = sc.MoTaChiTiet != null && sc.MoTaChiTiet.Contains("]") 
+                            ? sc.MoTaChiTiet.Substring(sc.MoTaChiTiet.IndexOf("]") + 2)
+                            : sc.MoTaChiTiet,
+                        trangThaiXuLy = sc.TrangThaiXuLy,
+                        nguoiXuLy = sc.MaNhanVienNavigation != null ? sc.MaNhanVienNavigation.HoTen : "Chưa phân công"
+                    })
+                    .ToListAsync();
 
-            var incidents = await _context.SuCos
-                .Include(sc => sc.MaNhanVienNavigation)
-                .Where(sc => sc.MoTaChiTiet!.Contains(customer!.HoTen))
-                .OrderByDescending(sc => sc.ThoiGianGhiNhan)
-                .Select(sc => new
-                {
-                    maSuCo = sc.MaSuCo,
-                    thoiGianGhiNhan = sc.ThoiGianGhiNhan,
-                    loaiSuCo = sc.LoaiSuCo,
-                    moTaChiTiet = sc.MoTaChiTiet,
-                    trangThaiXuLy = sc.TrangThaiXuLy,
-                    nguoiXuLy = sc.MaNhanVienNavigation != null ? sc.MaNhanVienNavigation.HoTen : "Chưa có"
-                })
-                .ToListAsync();
-
-            return Json(new { success = true, data = incidents });
+                return Json(new { success = true, data = incidents });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi: {ex.Message}" });
+            }
         }
     }
 

@@ -22,9 +22,18 @@ namespace QuanLyBaiDoXe.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl)
         {
-            // Nếu đã đăng nhập, redirect về trang chủ
+            // Nếu đã đăng nhập, redirect về Admin Dashboard hoặc Home tùy role
             if (User.Identity?.IsAuthenticated == true)
             {
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // Admin và Employee redirect về Dashboard
+                if (role == "Admin" || role == "Employee")
+                {
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+                }
+                
+                // Customer redirect về Home
                 return RedirectToAction("Index", "Home");
             }
 
@@ -96,11 +105,13 @@ namespace QuanLyBaiDoXe.Controllers
                 return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
             }
 
+            // Nếu có returnUrl và là local URL, redirect về đó
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
             }
 
+            // Mặc định Customer redirect về Home
             return RedirectToAction("Index", "Home");
         }
 
@@ -111,9 +122,18 @@ namespace QuanLyBaiDoXe.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            // Nếu đã đăng nhập, redirect về trang chủ
+            // Nếu đã đăng nhập, redirect về trang tương ứng với role
             if (User.Identity?.IsAuthenticated == true)
             {
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                // Admin và Employee redirect về Dashboard
+                if (role == "Admin" || role == "Employee")
+                {
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+                }
+                
+                // Customer redirect về Home
                 return RedirectToAction("Index", "Home");
             }
 

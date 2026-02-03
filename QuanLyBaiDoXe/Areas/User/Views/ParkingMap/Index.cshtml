@@ -1,0 +1,255 @@
+﻿@{
+    ViewData["Title"] = "Sơ đồ bãi xe";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Sơ đồ bãi xe</h1>
+    <p class="page-subtitle">Xem tình trạng chỗ đỗ xe thời gian thực</p>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #28a745;">
+            <h6 class="text-muted mb-2">Chỗ trống</h6>
+            <h3 class="mb-0" id="availableSpots">-</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #dc3545;">
+            <h6 class="text-muted mb-2">Đã đỗ</h6>
+            <h3 class="mb-0" id="occupiedSpots">-</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #ffc107;">
+            <h6 class="text-muted mb-2">Đã đặt</h6>
+            <h3 class="mb-0" id="bookedSpots">-</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="border-left: 4px solid #17a2b8;">
+            <h6 class="text-muted mb-2">Tỷ lệ lấp đầy</h6>
+            <h3 class="mb-0" id="occupancyRate">-</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Parking Map -->
+<div class="card-custom">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">
+            <i class="fas fa-map text-primary me-2"></i>
+            Sơ đồ bãi xe
+        </h5>
+        <div>
+            <select class="form-select form-select-sm" id="khuVucFilter" style="width: 200px;">
+                <option value="">Tất cả khu vực</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mb-4" style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 40px; height: 40px; background: #28a745; border-radius: 6px;"></div>
+            <span>Trống</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 40px; height: 40px; background: #dc3545; border-radius: 6px;"></div>
+            <span>Đã đỗ</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 40px; height: 40px; background: #ffc107; border-radius: 6px;"></div>
+            <span>Đã đặt</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 40px; height: 40px; background: #6c757d; border-radius: 6px;"></div>
+            <span>Bảo trì</span>
+        </div>
+    </div>
+
+    <!-- Map Grid -->
+    <div id="parkingMap" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px;">
+        <!-- Parking spots will be loaded here -->
+    </div>
+</div>
+
+<!-- Spot Detail Modal -->
+<div class="modal fade" id="spotDetailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết vị trí</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Vị trí:</label>
+                    <p id="spotName" class="mb-0"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Khu vực:</label>
+                    <p id="spotArea" class="mb-0"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Trạng thái:</label>
+                    <p id="spotStatus" class="mb-0"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="bookSpotBtn">
+                    <i class="fas fa-calendar-check me-2"></i>Đặt chỗ này
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let parkingSpots = [];
+        let selectedSpot = null;
+
+        $(document).ready(function() {
+            loadParkingMap();
+            
+            // Refresh every 30 seconds
+            setInterval(loadParkingMap, 30000);
+
+            // Filter by area
+            $('#khuVucFilter').on('change', function() {
+                renderParkingMap();
+            });
+
+            // Book spot
+            $('#bookSpotBtn').on('click', function() {
+                if (selectedSpot && selectedSpot.trangThai === 0) {
+                    window.location.href = '@Url.Action("Index", "Booking")?spot=' + selectedSpot.maViTri;
+                }
+            });
+        });
+
+        function loadParkingMap() {
+            $.ajax({
+                url: '@Url.Action("GetParkingSpots", "ParkingMap", new { area = "User" })',
+                type: 'GET',
+                success: function(result) {
+                    if (result.success) {
+                        parkingSpots = result.spots;
+                        
+                        // Populate area filter
+                        const khuVucs = result.khuVucs;
+                        const filterSelect = $('#khuVucFilter');
+                        filterSelect.find('option:not(:first)').remove();
+                        khuVucs.forEach(kv => {
+                            filterSelect.append(`<option value="${kv.maKhuVuc}">${kv.tenKhuVuc}</option>`);
+                        });
+                        
+                        renderParkingMap();
+                        loadStatistics();
+                    }
+                }
+            });
+        }
+
+        function renderParkingMap() {
+            const filterArea = $('#khuVucFilter').val();
+            const filteredSpots = filterArea 
+                ? parkingSpots.filter(s => s.maKhuVuc == filterArea)
+                : parkingSpots;
+
+            const mapContainer = $('#parkingMap');
+            mapContainer.empty();
+
+            filteredSpots.forEach(spot => {
+                const statusColors = {
+                    0: '#28a745', // Trống
+                    1: '#dc3545', // Đã đỗ
+                    2: '#ffc107', // Đã đặt
+                    3: '#6c757d'  // Bảo trì
+                };
+
+                const statusTexts = {
+                    0: 'Trống',
+                    1: 'Đã đỗ',
+                    2: 'Đã đặt',
+                    3: 'Bảo trì'
+                };
+
+                const spotElement = $(`
+                    <div class="parking-spot" data-spot-id="${spot.maViTri}" style="
+                        background: ${statusColors[spot.trangThai]};
+                        color: white;
+                        padding: 20px 10px;
+                        border-radius: 8px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                        font-weight: 600;
+                    ">
+                        <div style="font-size: 16px; margin-bottom: 4px;">${spot.tenViTri}</div>
+                        <div style="font-size: 11px; opacity: 0.9;">${statusTexts[spot.trangThai]}</div>
+                    </div>
+                `);
+
+                spotElement.on('click', function() {
+                    showSpotDetail(spot);
+                });
+
+                spotElement.hover(
+                    function() {
+                        $(this).css('transform', 'translateY(-5px)');
+                        $(this).css('box-shadow', '0 5px 15px rgba(0,0,0,0.3)');
+                    },
+                    function() {
+                        $(this).css('transform', 'translateY(0)');
+                        $(this).css('box-shadow', 'none');
+                    }
+                );
+
+                mapContainer.append(spotElement);
+            });
+        }
+
+        function showSpotDetail(spot) {
+            selectedSpot = spot;
+            
+            $('#spotName').text(spot.tenViTri);
+            $('#spotArea').text(spot.tenKhuVuc);
+            
+            const statusTexts = {
+                0: '<span class="badge bg-success">Trống</span>',
+                1: '<span class="badge bg-danger">Đã đỗ</span>',
+                2: '<span class="badge bg-warning">Đã đặt</span>',
+                3: '<span class="badge bg-secondary">Bảo trì</span>'
+            };
+            $('#spotStatus').html(statusTexts[spot.trangThai]);
+            
+            // Show/hide book button
+            if (spot.trangThai === 0) {
+                $('#bookSpotBtn').show();
+            } else {
+                $('#bookSpotBtn').hide();
+            }
+            
+            new bootstrap.Modal($('#spotDetailModal')).show();
+        }
+
+        function loadStatistics() {
+            $.ajax({
+                url: '@Url.Action("GetStatistics", "ParkingMap", new { area = "User" })',
+                type: 'GET',
+                success: function(result) {
+                    if (result.success) {
+                        $('#availableSpots').text(result.availableSpots);
+                        $('#occupiedSpots').text(result.occupiedSpots);
+                        $('#bookedSpots').text(result.bookedSpots);
+                        $('#occupancyRate').text(result.occupancyRate + '%');
+                    }
+                }
+            });
+        }
+    </script>
+}

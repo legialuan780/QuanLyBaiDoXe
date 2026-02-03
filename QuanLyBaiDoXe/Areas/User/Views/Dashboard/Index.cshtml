@@ -1,0 +1,178 @@
+﻿@using QuanLyBaiDoXe.Models.Entities
+@{
+    ViewData["Title"] = "Tổng quan";
+    var customer = ViewBag.Customer as KhachHang;
+    var activeMonthlyTickets = ViewBag.ActiveMonthlyTickets ?? 0;
+    var pendingBookings = ViewBag.PendingBookings ?? 0;
+}
+
+<div class="page-header">
+    <h1 class="page-title">Xin chào, @customer?.HoTen</h1>
+    <p class="page-subtitle">Chào mừng bạn đến với hệ thống quản lý bãi đỗ xe thông minh</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-custom" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Thẻ tháng</div>
+                    <div style="font-size: 32px; font-weight: 700;">@activeMonthlyTickets</div>
+                </div>
+                <div style="font-size: 48px; opacity: 0.3;">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Đặt chỗ</div>
+                    <div style="font-size: 32px; font-weight: 700;">@pendingBookings</div>
+                </div>
+                <div style="font-size: 48px; opacity: 0.3;">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Biển số xe</div>
+                    <div style="font-size: 18px; font-weight: 700;">@(customer?.BienSoXeMacDinh ?? "Chưa có")</div>
+                </div>
+                <div style="font-size: 48px; opacity: 0.3;">
+                    <i class="fas fa-car"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">CCCD</div>
+                    <div style="font-size: 18px; font-weight: 700;">@(customer?.Cccd ?? "Chưa xác thực")</div>
+                </div>
+                <div style="font-size: 48px; opacity: 0.3;">
+                    <i class="fas fa-id-card"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">
+                    <i class="fas fa-bolt text-warning me-2"></i>
+                    Thao tác nhanh
+                </h5>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <a href="@Url.Action("Index", "Booking")" class="btn btn-outline-primary w-100 p-3" style="text-decoration: none;">
+                        <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                        <div>Đặt chỗ mới</div>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="@Url.Action("Index", "ParkingMap")" class="btn btn-outline-success w-100 p-3" style="text-decoration: none;">
+                        <i class="fas fa-map-marked-alt fa-2x mb-2"></i>
+                        <div>Xem sơ đồ bãi</div>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="@Url.Action("Index", "MonthlyTicket")" class="btn btn-outline-info w-100 p-3" style="text-decoration: none;">
+                        <i class="fas fa-ticket-alt fa-2x mb-2"></i>
+                        <div>Đăng ký thẻ tháng</div>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="@Url.Action("Index", "Incident")" class="btn btn-outline-danger w-100 p-3" style="text-decoration: none;">
+                        <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                        <div>Báo cáo sự cố</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Activity -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">
+                    <i class="fas fa-clock text-primary me-2"></i>
+                    Hoạt động gần đây
+                </h5>
+            </div>
+            <div id="recentActivity">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-history fa-3x mb-3"></i>
+                    <p>Chưa có hoạt động nào</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">
+                    <i class="fas fa-bell text-warning me-2"></i>
+                    Thông báo
+                </h5>
+            </div>
+            <div id="notifications">
+                <div class="notification-item" style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                    <div style="display: flex; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #667eea; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="fas fa-info"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Chào mừng đến hệ thống</div>
+                            <div style="font-size: 13px; color: #718096;">Bạn có thể bắt đầu sử dụng các dịch vụ ngay bây giờ</div>
+                            <div style="font-size: 12px; color: #a0aec0; margin-top: 4px;">Hôm nay</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-item" style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                    <div style="display: flex; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #f5576c; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Đăng ký thẻ tháng</div>
+                            <div style="font-size: 13px; color: #718096;">Tiết kiệm chi phí với thẻ tháng</div>
+                            <div style="font-size: 12px; color: #a0aec0; margin-top: 4px;">Hôm nay</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Load recent activity
+            loadRecentActivity();
+        });
+
+        function loadRecentActivity() {
+            // Placeholder for loading recent activity
+            console.log('Loading recent activity...');
+        }
+    </script>
+}

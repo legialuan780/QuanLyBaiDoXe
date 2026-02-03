@@ -375,6 +375,11 @@
                 e.stopPropagation();
             });
 
+            // Load pending booking count for sidebar badge
+            loadPendingBookingCount();
+            // Refresh every 30 seconds
+            setInterval(loadPendingBookingCount, 30000);
+
             // Dark Mode Toggle
             const toggleThemeBtn = document.getElementById('toggleThemeBtn');
             const themeIcon = document.getElementById('themeIcon');
@@ -457,6 +462,24 @@
                 }, 3000);
             }
         });
+
+        // Function to load pending booking count
+        function loadPendingBookingCount() {
+            $.ajax({
+                url: '@Url.Action("GetStatistics", "Booking", new { area = "Admin" })',
+                type: 'GET',
+                success: function(result) {
+                    if (result.success && result.pending > 0) {
+                        $('#pendingBookingBadge').text(result.pending).show();
+                    } else {
+                        $('#pendingBookingBadge').hide();
+                    }
+                },
+                error: function() {
+                    // Silently fail - don't show error for background task
+                }
+            });
+        }
     </script>
     
     @await RenderSectionAsync("Scripts", required: false)

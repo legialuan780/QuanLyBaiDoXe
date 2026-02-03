@@ -1,0 +1,986 @@
+﻿@model List<QuanLyBaiDoXe.Models.Entities.DatCho>
+@{
+    ViewData["Title"] = "Quản lý đặt chỗ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .booking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px;
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+    }
+
+    .booking-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .booking-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .stat-card-modern {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card-modern:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .stat-card-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--card-color);
+    }
+
+    .stat-card-modern .stat-icon-modern {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 16px;
+        background: var(--card-bg);
+        color: var(--card-color);
+    }
+
+    .stat-card-modern .stat-value-modern {
+        font-size: 32px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 4px;
+    }
+
+    .stat-card-modern .stat-label-modern {
+        font-size: 14px;
+        color: #718096;
+        font-weight: 500;
+    }
+
+    .booking-table-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .booking-table-header {
+        padding: 24px 30px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+    }
+
+    .booking-table-header h5 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .filter-select {
+        min-width: 200px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 8px 16px;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .filter-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table thead {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .modern-table thead th {
+        padding: 16px 20px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5568;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .modern-table tbody tr {
+        transition: all 0.2s;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .modern-table tbody td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: #2d3748;
+        vertical-align: middle;
+    }
+
+    .modern-table tbody tr.expired-row {
+        background: #fff5f5;
+        border-left: 3px solid #e53e3e;
+    }
+
+    .booking-id {
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .customer-name {
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .customer-phone {
+        font-size: 13px;
+        color: #718096;
+    }
+
+    .location-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .time-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .time-value {
+        font-size: 14px;
+        color: #2d3748;
+    }
+
+    .time-label {
+        font-size: 12px;
+        color: #718096;
+    }
+
+    .status-badge-modern {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-badge-modern i {
+        font-size: 10px;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-expired {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .action-buttons-modern {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon-modern {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+
+    .btn-icon-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-view {
+        background: #e0e7ff;
+        color: #4c51bf;
+    }
+
+    .btn-approve {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .btn-reject {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn-delete {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .action-button-modern {
+        padding: 12px 24px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary-modern {
+        background: #f1f3f5;
+        color: #495057;
+    }
+
+    .btn-secondary-modern:hover {
+        background: #e9ecef;
+    }
+
+    .pagination-modern {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        padding: 24px;
+    }
+
+    .pagination-modern .page-link {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .pagination-modern .page-link:hover {
+        background: #f8f9fa;
+        border-color: #cbd5e0;
+    }
+
+    .pagination-modern .page-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .expired-alert {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #fee2e2;
+        color: #991b1b;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        color: #cbd5e0;
+        margin-bottom: 16px;
+    }
+
+    .empty-state-text {
+        font-size: 16px;
+        color: #718096;
+        margin-bottom: 8px;
+    }
+
+    /* Modal Styles */
+    .modal-modern {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-modern.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content-modern {
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+
+    @@keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header-modern {
+        padding: 24px 30px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .modal-header-modern h5 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .modal-close-modern {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .modal-close-modern:hover {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .modal-body-modern {
+        padding: 30px;
+    }
+
+    .info-section {
+        margin-bottom: 24px;
+    }
+
+    .info-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+    }
+
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        width: 180px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 14px;
+    }
+
+    .info-value {
+        flex: 1;
+        color: #2d3748;
+        font-size: 14px;
+    }
+</style>
+
+<!-- Header -->
+<div class="booking-header">
+    <h1><i class="fas fa-calendar-check me-2"></i>Quản lý đặt chỗ</h1>
+    <div class="subtitle">Duyệt và quản lý các yêu cầu đặt chỗ từ khách hàng</div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="--card-color: #f59e0b; --card-bg: #fef3c7;">
+            <div class="stat-icon-modern">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value-modern" id="pendingCount">0</div>
+            <div class="stat-label-modern">Chờ duyệt</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="--card-color: #10b981; --card-bg: #d1fae5;">
+            <div class="stat-icon-modern">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value-modern" id="approvedCount">0</div>
+            <div class="stat-label-modern">Đã duyệt</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="--card-color: #ef4444; --card-bg: #fee2e2;">
+            <div class="stat-icon-modern">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-value-modern" id="cancelledCount">0</div>
+            <div class="stat-label-modern">Đã hủy</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="--card-color: #6b7280; --card-bg: #e5e7eb;">
+            <div class="stat-icon-modern">
+                <i class="fas fa-history"></i>
+            </div>
+            <div class="stat-value-modern" id="expiredCount">0</div>
+            <div class="stat-label-modern">Hết hạn</div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; gap: 12px;">
+        <button class="action-button-modern btn-secondary-modern" onclick="releaseExpired()">
+            <i class="fas fa-clock"></i>
+            Giải phóng hết hạn
+        </button>
+        <button class="action-button-modern btn-secondary-modern" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
+        </button>
+    </div>
+</div>
+
+<!-- Booking Table -->
+<div class="booking-table-card">
+    <div class="booking-table-header">
+        <h5><i class="fas fa-list me-2"></i>Danh sách đặt chỗ</h5>
+        <div class="filter-group">
+            <select class="filter-select" id="statusFilter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="0" selected="@(ViewBag.StatusFilter == 0 ? "selected" : null)">Chờ duyệt</option>
+                <option value="1" selected="@(ViewBag.StatusFilter == 1 ? "selected" : null)">Đã duyệt</option>
+                <option value="2" selected="@(ViewBag.StatusFilter == 2 ? "selected" : null)">Đã hủy</option>
+                <option value="3" selected="@(ViewBag.StatusFilter == 3 ? "selected" : null)">Hết hạn</option>
+            </select>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Khách hàng</th>
+                    <th>Vị trí</th>
+                    <th>Thời gian đặt</th>
+                    <th>Thời gian đến</th>
+                    <th>Hết hạn</th>
+                    <th>Trạng thái</th>
+                    <th style="text-align: center;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var booking in Model)
+                {
+                    var statusClass = booking.TrangThaiDatCho switch
+                    {
+                        0 => "status-pending",
+                        1 => "status-approved",
+                        2 => "status-cancelled",
+                        3 => "status-expired",
+                        _ => "status-expired"
+                    };
+                    var statusText = booking.TrangThaiDatCho switch
+                    {
+                        0 => "Chờ duyệt",
+                        1 => "Đã duyệt",
+                        2 => "Đã hủy",
+                        3 => "Hết hạn",
+                        _ => "Không xác định"
+                    };
+                    var statusIcon = booking.TrangThaiDatCho switch
+                    {
+                        0 => "fa-clock",
+                        1 => "fa-check-circle",
+                        2 => "fa-times-circle",
+                        3 => "fa-history",
+                        _ => "fa-question-circle"
+                    };
+                    var isExpired = booking.ThoiGianHetHan < DateTime.Now && booking.TrangThaiDatCho == 0;
+                    
+                    <tr class="@(isExpired ? "expired-row" : "")">
+                        <td>
+                            <span class="booking-id">#@booking.MaDatCho</span>
+                        </td>
+                        <td>
+                            <div class="customer-info">
+                                <span class="customer-name">@booking.MaKhachHangNavigation?.HoTen</span>
+                                <span class="customer-phone">@booking.MaKhachHangNavigation?.SoDienThoai</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="location-badge">@booking.MaViTriNavigation?.TenViTri</span>
+                            <div style="font-size: 12px; color: #718096; margin-top: 4px;">
+                                @booking.MaViTriNavigation?.MaKhuVucNavigation?.TenKhuVuc
+                            </div>
+                        </td>
+                        <td>
+                            <div class="time-info">
+                                <span class="time-value">@booking.ThoiGianDat?.ToString("dd/MM/yyyy")</span>
+                                <span class="time-label">@booking.ThoiGianDat?.ToString("HH:mm")</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="time-info">
+                                <span class="time-value">@booking.ThoiGianDenDuKien?.ToString("dd/MM/yyyy")</span>
+                                <span class="time-label">@booking.ThoiGianDenDuKien?.ToString("HH:mm")</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="time-info">
+                                <span class="time-value">@booking.ThoiGianHetHan?.ToString("dd/MM/yyyy")</span>
+                                <span class="time-label">@booking.ThoiGianHetHan?.ToString("HH:mm")</span>
+                            </div>
+                            @if (isExpired)
+                            {
+                                <span class="expired-alert">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Quá hạn
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <span class="status-badge-modern @statusClass">
+                                <i class="fas @statusIcon"></i>
+                                @statusText
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons-modern">
+                                <button class="btn-icon-modern btn-view" onclick="viewDetail(@booking.MaDatCho)" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                @if (booking.TrangThaiDatCho == 0)
+                                {
+                                    <button class="btn-icon-modern btn-approve" onclick="approve(@booking.MaDatCho)" title="Duyệt">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn-icon-modern btn-reject" onclick="reject(@booking.MaDatCho)" title="Từ chối">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                }
+                                <button class="btn-icon-modern btn-delete" onclick="deleteBooking(@booking.MaDatCho)" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-modern">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&status=@ViewBag.StatusFilter">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                }
+                
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <a class="page-link @(i == ViewBag.CurrentPage ? "active" : "")" href="?page=@i&status=@ViewBag.StatusFilter">
+                        @i
+                    </a>
+                }
+                
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&status=@ViewBag.StatusFilter">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-calendar-times"></i>
+            </div>
+            <div class="empty-state-text">Không có đặt chỗ nào</div>
+            <div style="font-size: 14px; color: #a0aec0;">
+                Chưa có yêu cầu đặt chỗ nào từ khách hàng
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-modern" id="detailModal">
+    <div class="modal-content-modern">
+        <div class="modal-header-modern">
+            <h5><i class="fas fa-info-circle me-2"></i>Chi tiết đặt chỗ</h5>
+            <button class="modal-close-modern" onclick="closeModal('detailModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body-modern">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-section">
+                        <div class="info-section-title">Thông tin khách hàng</div>
+                        <div class="info-row">
+                            <div class="info-label">Họ tên:</div>
+                            <div class="info-value" id="detailTenKH">-</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Số điện thoại:</div>
+                            <div class="info-value" id="detailSDT">-</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">CCCD:</div>
+                            <div class="info-value" id="detailCCCD">-</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Biển số xe:</div>
+                            <div class="info-value" id="detailBienSo">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-section">
+                        <div class="info-section-title">Thông tin đặt chỗ</div>
+                        <div class="info-row">
+                            <div class="info-label">Mã đặt chỗ:</div>
+                            <div class="info-value" id="detailMaDC">-</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Vị trí:</div>
+                            <div class="info-value" id="detailViTri">-</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Khu vực:</div>
+                            <div class="info-value" id="detailKhuVuc">-</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Trạng thái:</div>
+                            <div class="info-value" id="detailTrangThai">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="info-section">
+                <div class="info-section-title">Timeline</div>
+                <div class="info-row">
+                    <div class="info-label">Thời gian đặt:</div>
+                    <div class="info-value" id="detailTGDat">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Thời gian đến dự kiến:</div>
+                    <div class="info-value" id="detailTGDen">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Thời gian hết hạn:</div>
+                    <div class="info-value" id="detailTGHetHan">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadStatistics();
+
+            // Filter change
+            $('#statusFilter').on('change', function() {
+                const status = $(this).val();
+                window.location.href = `?status=${status}`;
+            });
+
+            // Auto-refresh statistics every 30 seconds
+            setInterval(loadStatistics, 30000);
+        });
+
+        function loadStatistics() {
+            $.ajax({
+                url: '@Url.Action("GetStatistics", "Booking", new { area = "Admin" })',
+                type: 'GET',
+                success: function(result) {
+                    if (result.success) {
+                        $('#pendingCount').text(result.pending);
+                        $('#approvedCount').text(result.approved);
+                        $('#cancelledCount').text(result.cancelled);
+                        $('#expiredCount').text(result.expired);
+                    }
+                }
+            });
+        }
+
+        function viewDetail(id) {
+            $.ajax({
+                url: '@Url.Action("GetBookingDetail", "Booking", new { area = "Admin" })',
+                type: 'GET',
+                data: { id: id },
+                success: function(result) {
+                    if (result.success) {
+                        const data = result.data;
+                        $('#detailMaDC').text('#' + data.maDatCho);
+                        $('#detailTenKH').text(data.tenKhachHang || '-');
+                        $('#detailSDT').text(data.soDienThoai || '-');
+                        $('#detailCCCD').text(data.cccd || 'Chưa xác thực');
+                        $('#detailBienSo').text(data.bienSoXe || 'Chưa có');
+                        $('#detailViTri').text(data.tenViTri || '-');
+                        $('#detailKhuVuc').text(data.tenKhuVuc || '-');
+                        $('#detailTGDat').text(formatDateTime(data.thoiGianDat));
+                        $('#detailTGDen').text(formatDateTime(data.thoiGianDenDuKien));
+                        $('#detailTGHetHan').text(formatDateTime(data.thoiGianHetHan));
+
+                        const statusMap = {
+                            0: '<span class="status-badge-modern status-pending"><i class="fas fa-clock"></i> Chờ duyệt</span>',
+                            1: '<span class="status-badge-modern status-approved"><i class="fas fa-check-circle"></i> Đã duyệt</span>',
+                            2: '<span class="status-badge-modern status-cancelled"><i class="fas fa-times-circle"></i> Đã hủy</span>',
+                            3: '<span class="status-badge-modern status-expired"><i class="fas fa-history"></i> Hết hạn</span>'
+                        };
+                        $('#detailTrangThai').html(statusMap[data.trangThaiDatCho] || '-');
+
+                        openModal('detailModal');
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                }
+            });
+        }
+
+        function approve(id) {
+            if (!confirm('Xác nhận duyệt đặt chỗ này?')) return;
+
+            $.ajax({
+                url: '@Url.Action("Approve", "Booking", new { area = "Admin" })',
+                type: 'POST',
+                data: { id: id },
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                }
+            });
+        }
+
+        function reject(id) {
+            const reason = prompt('Lý do từ chối (tùy chọn):');
+            if (reason === null) return;
+
+            $.ajax({
+                url: '@Url.Action("Reject", "Booking", new { area = "Admin" })',
+                type: 'POST',
+                data: { id: id, reason: reason },
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                }
+            });
+        }
+
+        function deleteBooking(id) {
+            if (!confirm('Xác nhận xóa đặt chỗ này?')) return;
+
+            $.ajax({
+                url: '@Url.Action("Delete", "Booking", new { area = "Admin" })',
+                type: 'POST',
+                data: { id: id },
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                }
+            });
+        }
+
+        function releaseExpired() {
+            if (!confirm('Giải phóng tất cả các đặt chỗ đã hết hạn?')) return;
+
+            $.ajax({
+                url: '@Url.Action("ReleaseExpired", "Booking", new { area = "Admin" })',
+                type: 'POST',
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                }
+            });
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showNotification(message, type) {
+            const bgColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const notification = $(`
+                <div style="position: fixed; top: 20px; right: 20px; z-index: 99999; 
+                            background: white; padding: 16px 24px; border-radius: 12px; 
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                            display: flex; align-items: center; gap: 12px;
+                            border-left: 4px solid ${bgColor};
+                            min-width: 300px; animation: slideInRight 0.3s ease;">
+                    <i class="fas ${icon}" style="color: ${bgColor}; font-size: 20px;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #2d3748; margin-bottom: 2px;">
+                            ${type === 'success' ? 'Thành công' : 'Thông báo'}
+                        </div>
+                        <div style="font-size: 14px; color: #718096;">${message}</div>
+                    </div>
+                </div>
+            `);
+
+            $('body').append(notification);
+            setTimeout(() => notification.fadeOut(() => notification.remove()), 3000);
+        }
+    </script>
+}

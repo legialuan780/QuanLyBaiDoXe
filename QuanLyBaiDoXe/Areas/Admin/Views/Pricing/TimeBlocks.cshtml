@@ -1,0 +1,179 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.PricingViewModel
+@{
+    ViewData["Title"] = "Block thời gian";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="~/css/pricing.css" asp-append-version="true" />
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý Block thời gian</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <a href="@Url.Action("Index", "Pricing", new { area = "Admin" })">Bảng giá</a>
+            <span>/</span>
+            <span>Block thời gian</span>
+        </div>
+    </div>
+</div>
+
+<!-- Danh sách cấu hình theo loại xe -->
+<div class="pricing-cards-grid">
+    @foreach (var vehicleType in Model.VehicleTypes)
+    {
+        var configs = Model.PricingConfigs.Where(c => c.MaLoaiXe == vehicleType.MaLoaiXe).ToList();
+        <div class="pricing-vehicle-card">
+            <div class="pricing-vehicle-header">
+                <h3><i class="fas fa-car"></i> @vehicleType.TenLoaiXe</h3>
+                <span class="config-count">@configs.Count cấu hình</span>
+            </div>
+            <div class="pricing-vehicle-body">
+                @if (configs.Any())
+                {
+                    @foreach (var config in configs)
+                    {
+                        <div class="pricing-config-item @(config.IsUuTien ? "priority" : "")">
+                            <div class="config-header">
+                                <span class="config-name">@config.TenCauHinh</span>
+                                @if (config.IsUuTien)
+                                {
+                                    <span class="priority-badge"><i class="fas fa-star"></i> Ưu tiên</span>
+                                }
+                            </div>
+                            <div class="config-time">
+                                <i class="fas fa-clock"></i>
+                                @if (!string.IsNullOrEmpty(config.GioBatDau) && !string.IsNullOrEmpty(config.GioKetThuc))
+                                {
+                                    <span>@config.GioBatDau - @config.GioKetThuc</span>
+                                }
+                                else
+                                {
+                                    <span>Cả ngày</span>
+                                }
+                            </div>
+                            <div class="blocks-list">
+                                @foreach (var block in config.ChiTietGia.OrderBy(b => b.ThuTuBlock))
+                                {
+                                    <div class="block-item">
+                                        <span class="block-order">Block @block.ThuTuBlock</span>
+                                        <span class="block-time">@block.SoPhutCuaBlock phút</span>
+                                        <span class="block-price">@(block.GiaTien?.ToString("N0") ?? "0")đ</span>
+                                        @if (block.IsLuyTien)
+                                        {
+                                            <span class="block-progressive"><i class="fas fa-layer-group"></i> Lũy tiến</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="config-actions">
+                                <button class="btn-icon edit" onclick="Pricing.openEditModal(@config.MaCauHinh)" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="Pricing.confirmDelete(@config.MaCauHinh, '@config.TenCauHinh')" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="no-config">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Chưa có cấu hình giá</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal Sửa cấu hình giá -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title">Chỉnh sửa cấu hình giá</h3>
+            <button class="modal-close" onclick="Pricing.closeModal('editModal')">&times;</button>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="editMaCauHinh" name="maCauHinh" />
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tên cấu hình <span class="required">*</span></label>
+                        <input type="text" id="editTenCauHinh" name="tenCauHinh" required placeholder="VD: Giá ban ngày xe máy" />
+                    </div>
+                    <div class="form-group">
+                        <label>Loại xe <span class="required">*</span></label>
+                        <select id="editMaLoaiXe" name="maLoaiXe" required>
+                            <option value="">-- Chọn loại xe --</option>
+                            @foreach (var vt in Model.VehicleTypes)
+                            {
+                                <option value="@vt.MaLoaiXe">@vt.TenLoaiXe</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Giờ bắt đầu</label>
+                        <input type="time" id="editGioBatDau" name="gioBatDau" />
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ kết thúc</label>
+                        <input type="time" id="editGioKetThuc" name="gioKetThuc" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="editIsUuTien" name="isUuTien" />
+                        <span>Ưu tiên áp dụng</span>
+                    </label>
+                </div>
+
+                <div class="pricing-blocks-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-cubes"></i> Chi tiết block thời gian</h4>
+                        <button type="button" class="btn-add-block" onclick="Pricing.addBlock('edit')">
+                            <i class="fas fa-plus"></i> Thêm block
+                        </button>
+                    </div>
+                    <div id="editBlocksContainer" class="blocks-container">
+                        <!-- Blocks sẽ được thêm động ở đây -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="Pricing.closeModal('editModal')">Hủy</button>
+                <button type="submit" class="btn-submit">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Xác nhận xóa -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">Xác nhận xóa</h3>
+            <button class="modal-close" onclick="Pricing.closeModal('deleteModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Bạn có chắc chắn muốn xóa cấu hình giá "<span id="deleteConfigName"></span>"?</p>
+            <p class="warning-text"><i class="fas fa-exclamation-triangle"></i> Hành động này không thể hoàn tác!</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="Pricing.closeModal('deleteModal')">Hủy</button>
+            <button type="button" class="btn-danger" id="confirmDeleteBtn">Xóa</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pricing.js" asp-append-version="true"></script>
+}

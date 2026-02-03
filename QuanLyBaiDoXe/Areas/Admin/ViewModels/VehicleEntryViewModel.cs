@@ -22,6 +22,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
         // Danh sách vị trí đỗ trống
         public List<ViTriDo> ViTriTrong { get; set; } = new();
 
+        // Danh sách khu vực với số chỗ trống
+        public List<KhuVucChoTrongDto> KhuVucList { get; set; } = new();
+
         // Danh sách loại xe
         public List<LoaiXe> LoaiXeList { get; set; } = new();
 
@@ -32,16 +35,37 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
         public decimal TongThuHomNay { get; set; }
     }
 
-    public class QuetTheRequest
+    /// <summary>
+    /// DTO cho khu vực với số chỗ trống
+    /// </summary>
+    public class KhuVucChoTrongDto
     {
-        public string MaThe { get; set; } = string.Empty;
-        public string? BienSo { get; set; }
-        public string? HinhAnh { get; set; }
-        public int? MaViTri { get; set; }
+        public int MaKhuVuc { get; set; }
+        public string TenKhuVuc { get; set; } = string.Empty;
+        public int SoChoTrong { get; set; }
+        public int TongSoCho { get; set; }
+        public List<ViTriDoDto> ViTriTrong { get; set; } = new();
     }
 
-    public class QuetTheResponse
+    /// <summary>
+    /// DTO cho vị trí đỗ
+    /// </summary>
+    public class ViTriDoDto
     {
+        public int MaViTri { get; set; }
+            public string TenViTri { get; set; } = string.Empty;
+        }
+
+        public class QuetTheRequest
+        {
+            public string MaThe { get; set; } = string.Empty;
+            public string? BienSo { get; set; }
+            public string? HinhAnh { get; set; }
+            public int? MaKhuVuc { get; set; } // Chỉ chọn khu vực, hệ thống tự gán vị trí
+        }
+
+        public class QuetTheResponse
+        {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public string Action { get; set; } = string.Empty; // "VAO" hoặc "RA"
@@ -79,27 +103,38 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
             public bool DangGui { get; set; }
         }
 
-        /// <summary>
-        /// Request model cho API nhận dạng biển số
-        /// </summary>
-        public class RecognizePlateRequest
-        {
             /// <summary>
-            /// Ảnh dạng base64 (có hoặc không có prefix data:image/...)
+            /// Request model cho API nhận dạng biển số
             /// </summary>
-            public string ImageBase64 { get; set; } = string.Empty;
-        }
+            public class RecognizePlateRequest
+            {
+                /// <summary>
+                /// Ảnh dạng base64 (có hoặc không có prefix data:image/...)
+                /// </summary>
+                public string ImageBase64 { get; set; } = string.Empty;
+            }
 
-        /// <summary>
-        /// Response model cho API nhận dạng biển số
-        /// </summary>
-        public class RecognizePlateResponse
-        {
-            public bool Success { get; set; }
-            public string? PlateNumber { get; set; }
-            public string? RawPlate { get; set; }
-            public double Confidence { get; set; }
-            public string? VehicleType { get; set; }
-            public string? Message { get; set; }
+            /// <summary>
+            /// Response model cho API nhận dạng biển số
+            /// </summary>
+            public class RecognizePlateResponse
+            {
+                public bool Success { get; set; }
+                public string? PlateNumber { get; set; }
+                public string? RawPlate { get; set; }
+                public double Confidence { get; set; }
+                public string? VehicleType { get; set; }
+                public string? Message { get; set; }
+            }
+
+            /// <summary>
+            /// Request model cho xác nhận xe ra
+            /// </summary>
+            public class ConfirmXeRaRequest
+            {
+                public string MaThe { get; set; } = string.Empty;
+                public string? BienSo { get; set; }
+                public string? HinhAnh { get; set; }
+                public string PhuongThucThanhToan { get; set; } = "cash"; // "cash" hoặc "momo"
+            }
         }
-    }

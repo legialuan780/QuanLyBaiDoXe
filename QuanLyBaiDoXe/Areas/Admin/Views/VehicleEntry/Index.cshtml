@@ -234,6 +234,26 @@
         font-size: 14px;
         width: 100%;
         margin-bottom: 15px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .position-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+    }
+
+    .position-select optgroup {
+        font-weight: 600;
+        color: var(--primary-teal);
+        background: #f8f9fa;
+        padding: 8px 0;
+    }
+
+    .position-select option {
+        font-weight: 400;
+        color: var(--dark-bg);
+        padding: 8px 15px;
     }
 
     .capture-warning {
@@ -486,6 +506,351 @@
         font-size: 14px;
     }
 
+    /* Alert Modal - Thông báo lỗi giữa màn hình */
+    .alert-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .alert-modal.show {
+        display: flex;
+    }
+
+    .alert-modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 450px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: modalPop 0.3s ease;
+    }
+
+    .alert-modal-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 40px;
+    }
+
+    .alert-modal-icon.error {
+        background: rgba(231, 76, 60, 0.15);
+        color: #e74c3c;
+    }
+
+    .alert-modal-icon.warning {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+    }
+
+    .alert-modal-icon.success {
+        background: rgba(39, 174, 96, 0.15);
+        color: #27ae60;
+    }
+
+    .alert-modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .alert-modal-message {
+        color: #7f8c8d;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 25px;
+    }
+
+    .alert-modal-btn {
+        padding: 12px 40px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .alert-modal-btn.primary {
+        background: linear-gradient(135deg, #20a88a, #1a8a78);
+        color: white;
+    }
+
+    .alert-modal-btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(32, 168, 138, 0.4);
+    }
+
+    /* Payment Modal - Modal thanh toán */
+    .payment-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 100000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .payment-modal.show {
+        display: flex;
+    }
+
+    .payment-modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 500px;
+        width: 95%;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        animation: modalPop 0.3s ease;
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #20a88a, #1a8a78);
+        color: white;
+        padding: 25px;
+        text-align: center;
+    }
+
+    .payment-header h3 {
+        margin: 0 0 5px 0;
+        font-size: 22px;
+    }
+
+    .payment-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+    .payment-body {
+        padding: 25px;
+    }
+
+    .payment-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .payment-info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .payment-info-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .payment-info-label {
+        font-size: 12px;
+        color: #95a5a6;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .payment-info-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .payment-info-value.highlight {
+        color: #e74c3c;
+        font-size: 28px;
+    }
+
+    .payment-divider {
+        height: 1px;
+        background: #e5e9f2;
+        margin: 20px 0;
+    }
+
+    .payment-methods-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .payment-method-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border: 2px solid #e5e9f2;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        gap: 10px;
+    }
+
+    .payment-method-btn:hover {
+        border-color: #20a88a;
+        background: rgba(32, 168, 138, 0.05);
+    }
+
+    .payment-method-btn.momo {
+        border-color: #d82d8b;
+    }
+
+    .payment-method-btn.momo:hover {
+        background: rgba(216, 45, 139, 0.05);
+    }
+
+    .payment-method-btn i {
+        font-size: 32px;
+    }
+
+    .payment-method-btn.cash i {
+        color: #27ae60;
+    }
+
+    .payment-method-btn.momo i {
+        color: #d82d8b;
+    }
+
+    .payment-method-btn span {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .payment-footer {
+        padding: 15px 25px 25px;
+        text-align: center;
+    }
+
+    .payment-cancel-btn {
+        padding: 10px 30px;
+        border: none;
+        background: none;
+        color: #95a5a6;
+        font-size: 14px;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .payment-cancel-btn:hover {
+        color: #e74c3c;
+    }
+
+    /* MoMo QR Modal */
+    .momo-qr-section {
+        display: none;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .momo-qr-section.show {
+        display: block;
+    }
+
+    .momo-qr-code {
+        width: 200px;
+        height: 200px;
+        background: #f0f0f0;
+        border-radius: 12px;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: #95a5a6;
+    }
+
+    .momo-qr-code img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 12px;
+    }
+
+    .momo-phone {
+        font-size: 18px;
+        font-weight: 600;
+        color: #d82d8b;
+        margin-bottom: 10px;
+    }
+
+    .momo-note {
+        font-size: 13px;
+        color: #95a5a6;
+    }
+
+    .momo-confirm-btn {
+        margin-top: 20px;
+        padding: 12px 40px;
+        background: linear-gradient(135deg, #d82d8b, #a91d6e);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .momo-confirm-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(216, 45, 139, 0.4);
+    }
+
+    .back-to-methods {
+        display: block;
+        margin-top: 15px;
+        color: #95a5a6;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        background: none;
+    }
+
+    .back-to-methods:hover {
+        color: #2c3e50;
+    }
+
+    @@keyframes modalPop {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
     @@keyframes slideIn {
         from {
             transform: translateX(100%);
@@ -591,10 +956,10 @@
         <input type="text" id="plateInput" class="plate-input" placeholder="Biển số xe (VD: 59A-12345)" />
 
         <select id="positionSelect" class="position-select">
-            <option value="">-- Chọn vị trí đỗ (không bắt buộc) --</option>
-            @foreach (var viTri in Model.ViTriTrong)
+            <option value="">-- Chọn khu vực đỗ (không bắt buộc) --</option>
+            @foreach (var khuVuc in Model.KhuVucList)
             {
-                <option value="@viTri.MaViTri">@viTri.MaKhuVucNavigation?.TenKhuVuc - @viTri.TenViTri</option>
+                <option value="@khuVuc.MaKhuVuc">@khuVuc.TenKhuVuc (@khuVuc.SoChoTrong/@khuVuc.TongSoCho chỗ trống)</option>
             }
         </select>
 
@@ -739,6 +1104,105 @@
     </div>
 </div>
 
+<!-- Alert Modal - Thông báo lỗi giữa màn hình -->
+<div class="alert-modal" id="alertModal">
+    <div class="alert-modal-content">
+        <div class="alert-modal-icon error" id="alertIcon">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h3 class="alert-modal-title" id="alertTitle">Thông báo</h3>
+        <p class="alert-modal-message" id="alertMessage">Nội dung thông báo</p>
+        <button class="alert-modal-btn primary" onclick="closeAlertModal()">Đã hiểu</button>
+    </div>
+</div>
+
+<!-- Payment Modal - Modal thanh toán -->
+<div class="payment-modal" id="paymentModal">
+    <div class="payment-modal-content">
+        <div class="payment-header">
+            <h3><i class="fas fa-receipt"></i> Thanh toán phí gửi xe</h3>
+            <p>Vui lòng chọn hình thức thanh toán</p>
+        </div>
+        
+        <div class="payment-body" id="paymentMethodsSection">
+            <div class="payment-info-grid">
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Mã thẻ</div>
+                    <div class="payment-info-value" id="payMaThe">-</div>
+                </div>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Biển số xe</div>
+                    <div class="payment-info-value" id="payBienSo">-</div>
+                </div>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Loại xe</div>
+                    <div class="payment-info-value" id="payLoaiXe">-</div>
+                </div>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Thời gian gửi</div>
+                    <div class="payment-info-value" id="payThoiGian">-</div>
+                </div>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Giờ vào</div>
+                    <div class="payment-info-value" id="payGioVao">-</div>
+                </div>
+                <div class="payment-info-item">
+                    <div class="payment-info-label">Giờ ra</div>
+                    <div class="payment-info-value" id="payGioRa">-</div>
+                </div>
+                <div class="payment-info-item full-width">
+                    <div class="payment-info-label">Tổng tiền phải trả</div>
+                    <div class="payment-info-value highlight" id="payTongTien">0đ</div>
+                </div>
+            </div>
+            
+            <div class="payment-divider"></div>
+            
+            <div class="payment-methods-title">Chọn hình thức thanh toán</div>
+            <div class="payment-methods">
+                <button class="payment-method-btn cash" onclick="confirmPayment('cash')">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Tiền mặt</span>
+                </button>
+                <button class="payment-method-btn momo" onclick="showMomoQR()">
+                    <i class="fas fa-qrcode"></i>
+                    <span>MoMo</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- MoMo QR Section -->
+        <div class="momo-qr-section" id="momoQRSection">
+            <div class="payment-info-item full-width" style="margin-bottom: 20px;">
+                <div class="payment-info-label">Số tiền cần thanh toán</div>
+                <div class="payment-info-value highlight" id="momoAmount">0đ</div>
+            </div>
+            
+            <div class="momo-qr-code" id="momoQRCode">
+                <!-- QR Code sẽ được hiển thị ở đây -->
+                <span>Quét mã để thanh toán</span>
+            </div>
+            
+            <div class="momo-phone">Số điện thoại: 0xxxxxxxxx</div>
+            <div class="momo-note">Nội dung chuyển khoản: <strong id="momoContent">-</strong></div>
+            
+            <button class="momo-confirm-btn" onclick="confirmPayment('momo')">
+                <i class="fas fa-check-circle"></i> Xác nhận đã thanh toán
+            </button>
+            
+            <button class="back-to-methods" onclick="backToPaymentMethods()">
+                <i class="fas fa-arrow-left"></i> Quay lại chọn hình thức khác
+            </button>
+        </div>
+        
+        <div class="payment-footer">
+            <button class="payment-cancel-btn" onclick="closePaymentModal()">
+                <i class="fas fa-times"></i> Hủy giao dịch
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     let cameraStream = null;
@@ -791,8 +1255,29 @@
         // Update buttons state
         updateButtonsState();
 
+        // Nếu đang xử lý xe ra, hiển thị ảnh trong khung so sánh
+        if (currentAction === 'RA') {
+            updateExitImageBox(capturedImageData);
+        }
+
         // Tự động nhận dạng biển số
         recognizePlate(capturedImageData);
+    }
+
+    // Cập nhật khung ảnh xe ra với ảnh vừa chụp
+    function updateExitImageBox(imageData) {
+        const exitBox = document.getElementById('exitImageBox');
+        const section = document.getElementById('imagesSection');
+        
+        // Hiển thị section nếu chưa hiện
+        section.style.display = 'block';
+        
+        // Cập nhật khung ảnh xe ra
+        exitBox.innerHTML = `
+            <span class="image-box-label exit"><i class="fas fa-sign-out-alt"></i> XE RA</span>
+            <img src="${imageData}" alt="Hình xe ra" onclick="showImageModal('${imageData}', 'Xe ra (vừa chụp)')" />
+        `;
+        exitBox.classList.add('has-image');
     }
 
     // Nhận dạng biển số xe tự động
@@ -860,8 +1345,26 @@
             captureWarning.classList.remove('hidden');
         }
 
+        // Reset khung ảnh xe ra nếu đang xử lý xe ra
+        if (currentAction === 'RA') {
+            resetExitImageBox();
+        }
+
         // Update buttons state
         updateButtonsState();
+    }
+
+    // Reset khung ảnh xe ra về placeholder
+    function resetExitImageBox() {
+        const exitBox = document.getElementById('exitImageBox');
+        exitBox.innerHTML = `
+            <span class="image-box-label exit"><i class="fas fa-sign-out-alt"></i> XE RA</span>
+            <div class="image-box-placeholder">
+                <i class="fas fa-camera"></i>
+                <p>Chờ chụp hình xe ra</p>
+            </div>
+        `;
+        exitBox.classList.remove('has-image');
     }
 
     // Update buttons state based on capture status
@@ -887,7 +1390,7 @@
     async function checkCard() {
         const maThe = document.getElementById('cardInput').value.trim();
         if (!maThe) {
-            showNotification('Vui lòng nhập mã thẻ!', 'error');
+            showAlertModal('Vui lòng nhập mã thẻ!', 'warning', 'Thiếu thông tin');
             return;
         }
 
@@ -918,11 +1421,11 @@
 
                 updateButtonsState();
             } else {
-                showNotification(data.message, 'error');
+                showAlertModal(data.message, 'error', 'Lỗi thẻ xe');
                 resetForm();
             }
         } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
+            showAlertModal('Lỗi kết nối server! Vui lòng thử lại.', 'error', 'Lỗi kết nối');
         }
     }
 
@@ -995,74 +1498,96 @@
     async function processVehicle(action) {
         const maThe = document.getElementById('cardInput').value.trim();
         const bienSo = document.getElementById('plateInput').value.trim();
-        const maViTri = document.getElementById('positionSelect').value;
+        const maKhuVuc = document.getElementById('positionSelect').value;
 
         if (!maThe) {
-            showNotification('Vui lòng nhập mã thẻ!', 'error');
+            showAlertModal('Vui lòng nhập mã thẻ!', 'warning', 'Thiếu thông tin');
             return;
         }
 
         if (!bienSo) {
-            showNotification('Vui lòng nhập biển số xe!', 'error');
+            showAlertModal('Vui lòng nhập biển số xe!', 'error', 'Thiếu thông tin');
             return;
         }
 
         // Bắt buộc chụp hình
         if (!capturedImageData) {
-            showNotification('Vui lòng chụp hình xe trước khi xử lý!', 'error');
+            showAlertModal('Vui lòng chụp hình xe trước khi xử lý!', 'warning', 'Chưa chụp hình');
             document.getElementById('captureWarning').classList.remove('hidden');
             return;
         }
 
         try {
-            const response = await fetch('/Admin/VehicleEntry/QuetThe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    maThe: maThe,
-                    bienSo: bienSo,
-                    hinhAnh: capturedImageData,
-                    maViTri: maViTri ? parseInt(maViTri) : null
-                })
-            });
+            if (action === 'RA') {
+                // XE RA: Chỉ preview tính tiền, KHÔNG lưu database
+                const response = await fetch('/Admin/VehicleEntry/PreviewXeRa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        maThe: maThe,
+                        bienSo: bienSo
+                    })
+                });
 
-            const data = await response.json();
+                    const data = await response.json();
 
-            if (data.success) {
-                showNotification(data.message, 'success');
-                resetForm();
-                refreshVehiclesList();
-                refreshStats();
-            } else {
-                showNotification(data.message, 'error');
+                    if (data.success) {
+                        // Hiển thị modal thanh toán với thông tin preview
+                        showPaymentModalPreview(data);
+                    } else {
+                        showAlertModal(data.message, 'error', 'Lỗi xử lý');
+                    }
+                } else {
+                            // XE VÀO: Xử lý bình thường
+                            const response = await fetch('/Admin/VehicleEntry/QuetThe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    maThe: maThe,
+                                    bienSo: bienSo,
+                                    hinhAnh: capturedImageData,
+                                    maKhuVuc: maKhuVuc ? parseInt(maKhuVuc) : null
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                showNotification(data.message, 'success');
+                                resetForm();
+                                refreshVehiclesList();
+                                refreshStats();
+                            } else {
+                                showAlertModal(data.message, 'error', 'Lỗi xử lý');
+                            }
+                        }
+                    } catch (err) {
+                        showAlertModal('Lỗi kết nối server! Vui lòng thử lại.', 'error', 'Lỗi kết nối');
+                    }
+                }
+
+        // Quick exit - cần chụp hình từ modal
+        async function quickExit(maThe, bienSo, hinhVao) {
+            // Hiển thị hình vào để so sánh
+            if (hinhVao) {
+                showImagesSection(hinhVao);
             }
-        } catch (err) {
-            showNotification('Lỗi kết nối server!', 'error');
-        }
-    }
 
-    // Quick exit - cần chụp hình từ modal
-    async function quickExit(maThe, bienSo, hinhVao) {
-        // Hiển thị hình vào để so sánh
-        if (hinhVao) {
-            showImagesSection(hinhVao);
-        }
-
-        showNotification('Vui lòng chụp hình xe ra và nhấn nút XE RA!', 'error');
+            showAlertModal('Vui lòng chụp hình xe ra và nhấn nút XE RA để hoàn tất!', 'warning', 'Chờ xử lý xe ra');
         
-        // Điền thông tin vào form
-        document.getElementById('cardInput').value = maThe;
-        document.getElementById('plateInput').value = bienSo;
+            // Điền thông tin vào form
+            document.getElementById('cardInput').value = maThe;
+            document.getElementById('plateInput').value = bienSo;
         
-        // Kiểm tra thẻ
-        await checkCard();
-    }
+            // Kiểm tra thẻ
+            await checkCard();
+        }
 
-    // Refresh vehicles list
-    async function refreshVehiclesList() {
-        try {
-            const response = await fetch('/Admin/VehicleEntry/GetXeDangTrongBai');
-            const data = await response.json();
+            // Refresh vehicles list
+            async function refreshVehiclesList() {
+                try {
+                    const response = await fetch('/Admin/VehicleEntry/GetXeDangTrongBai');
+                    const data = await response.json();
 
             const tbody = document.getElementById('vehiclesTableBody');
             tbody.innerHTML = '';
@@ -1142,6 +1667,137 @@
         }, 3000);
     }
 
+    // ========== ALERT MODAL FUNCTIONS ==========
+    // Hiển thị modal thông báo lỗi giữa màn hình
+    function showAlertModal(message, type = 'error', title = null) {
+        const modal = document.getElementById('alertModal');
+        const icon = document.getElementById('alertIcon');
+        const titleEl = document.getElementById('alertTitle');
+        const messageEl = document.getElementById('alertMessage');
+
+        // Set icon và title dựa trên type
+        if (type === 'error') {
+            icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            icon.className = 'alert-modal-icon error';
+            titleEl.textContent = title || 'Lỗi';
+        } else if (type === 'warning') {
+            icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            icon.className = 'alert-modal-icon warning';
+            titleEl.textContent = title || 'Cảnh báo';
+        } else if (type === 'success') {
+            icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            icon.className = 'alert-modal-icon success';
+            titleEl.textContent = title || 'Thành công';
+        }
+
+        messageEl.textContent = message;
+        modal.classList.add('show');
+    }
+
+    function closeAlertModal() {
+        document.getElementById('alertModal').classList.remove('show');
+    }
+
+    // ========== PAYMENT MODAL FUNCTIONS ==========
+    let pendingPaymentData = null;
+
+    // Hiển thị modal thanh toán từ dữ liệu preview (CHƯA lưu database)
+    function showPaymentModalPreview(previewData) {
+        pendingPaymentData = {
+            maThe: previewData.maThe,
+            bienSo: previewData.bienSo,
+            tenLoaiXe: previewData.tenLoaiXe,
+            thoiGianVao: previewData.thoiGianVao,
+            thoiGianRa: previewData.thoiGianRa,
+            thoiGianGui: previewData.thoiGianGui,
+            tongTien: previewData.tongTien
+        };
+        
+        // Hiển thị thông tin
+        document.getElementById('payMaThe').textContent = previewData.maThe || '-';
+        document.getElementById('payBienSo').textContent = previewData.bienSo || '-';
+        document.getElementById('payLoaiXe').textContent = previewData.tenLoaiXe || 'Chưa phân loại';
+        document.getElementById('payThoiGian').textContent = previewData.thoiGianGui || '-';
+        
+        // Hiển thị giờ vào/ra
+        document.getElementById('payGioVao').textContent = previewData.thoiGianVao 
+            ? new Date(previewData.thoiGianVao).toLocaleString('vi-VN') 
+            : '-';
+        document.getElementById('payGioRa').textContent = previewData.thoiGianRa 
+            ? new Date(previewData.thoiGianRa).toLocaleString('vi-VN') 
+            : 'Vừa xong';
+        
+        // Hiển thị số tiền
+        const tongTien = previewData.tongTien || 0;
+        const formattedMoney = new Intl.NumberFormat('vi-VN').format(tongTien) + 'đ';
+        document.getElementById('payTongTien').textContent = formattedMoney;
+        document.getElementById('momoAmount').textContent = formattedMoney;
+        
+        // Nội dung chuyển khoản MoMo
+        document.getElementById('momoContent').textContent = `GUIXE ${previewData.maThe}`;
+        
+        // Reset về trang chọn phương thức
+        document.getElementById('paymentMethodsSection').style.display = 'block';
+        document.getElementById('momoQRSection').classList.remove('show');
+        
+        // Mở modal
+        document.getElementById('paymentModal').classList.add('show');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.remove('show');
+        // Không reset pendingPaymentData ở đây để có thể thử lại
+    }
+
+    function showMomoQR() {
+        document.getElementById('paymentMethodsSection').style.display = 'none';
+        document.getElementById('momoQRSection').classList.add('show');
+    }
+
+    function backToPaymentMethods() {
+        document.getElementById('momoQRSection').classList.remove('show');
+        document.getElementById('paymentMethodsSection').style.display = 'block';
+    }
+
+    // Xác nhận thanh toán - GỌI API LƯU DATABASE
+    async function confirmPayment(method) {
+        if (!pendingPaymentData) {
+            showAlertModal('Không có dữ liệu thanh toán!', 'error', 'Lỗi');
+            return;
+        }
+
+        try {
+            const response = await fetch('/Admin/VehicleEntry/ConfirmXeRa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    maThe: pendingPaymentData.maThe,
+                    bienSo: pendingPaymentData.bienSo,
+                    hinhAnh: capturedImageData,
+                    phuongThucThanhToan: method
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                closePaymentModal();
+                pendingPaymentData = null;
+                
+                const methodText = method === 'cash' ? 'tiền mặt' : 'MoMo';
+                showNotification(`Xe ra thành công! Thanh toán bằng ${methodText}`, 'success');
+                
+                resetForm();
+                refreshVehiclesList();
+                refreshStats();
+            } else {
+                showAlertModal(data.message, 'error', 'Lỗi thanh toán');
+            }
+        } catch (err) {
+            showAlertModal('Lỗi kết nối server! Vui lòng thử lại.', 'error', 'Lỗi kết nối');
+        }
+    }
+
     // Show image modal
     function showImageModal(imageSrc, title, bienSo, time) {
         const modal = document.getElementById('imageModal');
@@ -1211,21 +1867,35 @@
         attachQuickOutHandlers();
 
         // Close modal on overlay click
-        document.getElementById('imageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeImageModal();
-            }
-        });
+                document.getElementById('imageModal').addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeImageModal();
+                    }
+                });
 
-        // Update elapsed time every second
-        setInterval(updateElapsedTime, 1000);
-        updateElapsedTime();
+                // Close alert modal on overlay click
+                document.getElementById('alertModal').addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeAlertModal();
+                    }
+                });
 
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            refreshVehiclesList();
-            refreshStats();
-        }, 30000);
-    });
-</script>
-}
+                // Close payment modal on overlay click (chỉ đóng khi click vào overlay, không đóng khi click vào content)
+                document.getElementById('paymentModal').addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        // Không tự động đóng payment modal - phải chọn phương thức hoặc hủy
+                    }
+                });
+
+                // Update elapsed time every second
+                setInterval(updateElapsedTime, 1000);
+                updateElapsedTime();
+
+                // Auto-refresh every 30 seconds
+                setInterval(() => {
+                    refreshVehiclesList();
+                    refreshStats();
+                }, 30000);
+            });
+        </script>
+        }

@@ -36,7 +36,7 @@ namespace QuanLyBaiDoXe.Services
                 .ToListAsync();
         }
 
-        public async Task<LuotGui> XuLyXeVaoAsync(string maThe, string bienSoVao, string? hinhAnhVao, int? maViTri)
+        public async Task<LuotGui> XuLyXeVaoAsync(string maThe, string bienSoVao, string? hinhAnhVao, int? maKhuVuc)
         {
             // Kiểm tra thẻ có tồn tại và đang hoạt động
             var theXe = await GetTheXeByMaTheAsync(maThe);
@@ -52,13 +52,20 @@ namespace QuanLyBaiDoXe.Services
                 throw new Exception("Thẻ xe này đang có lượt gửi chưa lấy xe ra!");
             }
 
-            // Cập nhật vị trí đỗ nếu có
-            if (maViTri.HasValue)
+            // Tự động gán vị trí trống trong khu vực được chọn
+            int? maViTriDuocGan = null;
+            if (maKhuVuc.HasValue)
             {
-                var viTri = await _context.ViTriDos.FindAsync(maViTri.Value);
-                if (viTri != null)
+                // Tìm vị trí trống đầu tiên trong khu vực
+                var viTriTrong = await _context.ViTriDos
+                    .Where(v => v.MaKhuVuc == maKhuVuc.Value && v.TrangThai == 0)
+                    .OrderBy(v => v.TenViTri)
+                    .FirstOrDefaultAsync();
+
+                if (viTriTrong != null)
                 {
-                    viTri.TrangThai = 1; // Đánh dấu đã sử dụng
+                    viTriTrong.TrangThai = 1; // Đánh dấu đã sử dụng
+                    maViTriDuocGan = viTriTrong.MaViTri;
                 }
             }
 
@@ -69,7 +76,7 @@ namespace QuanLyBaiDoXe.Services
                 ThoiGianVao = DateTime.Now,
                 BienSoVao = bienSoVao,
                 HinhAnhVao = hinhAnhVao,
-                MaViTri = maViTri,
+                MaViTri = maViTriDuocGan,
                 TrangThai = 0 // Đang gửi
             };
 
@@ -153,81 +160,118 @@ namespace QuanLyBaiDoXe.Services
             return await query
                 .OrderByDescending(l => l.ThoiGianVao)
                 .Take(pageSize)
-                .ToListAsync();
-        }
-
-        public async Task<decimal> TinhTienGuiXeAsync(LuotGui luotGui)
-        {
-            if (luotGui.ThoiGianVao == null || luotGui.ThoiGianRa == null)
-            {
-                return 0;
-            }
-
-            // Kiểm tra thẻ có vé tháng còn hiệu lực không
-            var veThangHopLe = await KiemTraVeThangHopLeAsync(luotGui.MaThe!);
-            if (veThangHopLe)
-            {
-                // Khách có vé tháng hợp lệ -> Miễn phí
-                return 0;
-            }
-
-            var thoiGianGui = luotGui.ThoiGianRa.Value - luotGui.ThoiGianVao;
-            var soPhut = (int)Math.Ceiling(thoiGianGui.TotalMinutes);
-
-            // Lấy loại xe từ thẻ
-            var theXe = await GetTheXeByMaTheAsync(luotGui.MaThe!);
-            if (theXe?.MaLoaiXe == null)
-            {
-                return 0;
-            }
-
-            // Lấy cấu hình giá phù hợp (ưu tiên cấu hình có IsUuTien = true và trong khung giờ)
-            var cauHinh = await GetCauHinhGiaPhùHopAsync(theXe.MaLoaiXe.Value, luotGui.ThoiGianVao);
-
-            if (cauHinh == null || !cauHinh.ChiTietGia.Any())
-            {
-                // Giá mặc định nếu không có cấu hình: 5000đ/giờ
-                var soGio = Math.Ceiling(thoiGianGui.TotalHours);
-                return (decimal)soGio * 5000;
-            }
-
-            // Tính tiền theo cấu hình giá (theo block phút)
-            decimal tongTien = 0;
-            var chiTietGiaList = cauHinh.ChiTietGia.OrderBy(c => c.ThuTuBlock).ToList();
-            int phutDaTinh = 0;
-
-            foreach (var chiTiet in chiTietGiaList)
-            {
-                if (phutDaTinh >= soPhut) break;
-
-                var soPhutBlock = chiTiet.SoPhutCuaBlock ?? 60;
-                var soPhutApDung = Math.Min(soPhutBlock, soPhut - phutDaTinh);
-
-                if (chiTiet.IsLuyTien == true)
-                {
-                    // Tính lũy tiến theo từng block
-                    tongTien += (chiTiet.GiaTien ?? 0);
-                }
-                else
-                {
-                    // Tính theo tỷ lệ phút
-                    tongTien += (chiTiet.GiaTien ?? 0) * soPhutApDung / soPhutBlock;
+                        .ToListAsync();
                 }
 
-                phutDaTinh += soPhutApDung;
-            }
+                /// <summary>
+                /// Tính tiền gửi xe preview - dùng để hiển thị trước khi xác nhận thanh toán
+                /// </summary>
+                public async Task<decimal> TinhTienGuiXePreviewAsync(LuotGui luotGui, DateTime thoiGianRa)
+                {
+                    // Tạo một bản copy để tính toán mà không ảnh hưởng entity gốc
+                    var tempLuotGui = new LuotGui
+                    {
+                        MaThe = luotGui.MaThe,
+                        ThoiGianVao = luotGui.ThoiGianVao,
+                        ThoiGianRa = thoiGianRa,
+                        MaViTri = luotGui.MaViTri
+                    };
 
-            // Nếu còn thời gian chưa tính, dùng giá block cuối cùng
-            if (phutDaTinh < soPhut && chiTietGiaList.Any())
-            {
-                var lastBlock = chiTietGiaList.Last();
-                var soPhutCon = soPhut - phutDaTinh;
-                var soBlockCon = (int)Math.Ceiling((double)soPhutCon / (lastBlock.SoPhutCuaBlock ?? 60));
-                tongTien += soBlockCon * (lastBlock.GiaTien ?? 0);
-            }
+                    return await TinhTienGuiXeAsync(tempLuotGui);
+                }
 
-            return tongTien > 0 ? tongTien : (decimal)Math.Ceiling(thoiGianGui.TotalHours) * 5000;
-        }
+                public async Task<decimal> TinhTienGuiXeAsync(LuotGui luotGui)
+                {
+                    if (luotGui.ThoiGianRa == null)
+                    {
+                        return 0;
+                    }
+
+                    // Kiểm tra thẻ có vé tháng còn hiệu lực không
+                    var veThangHopLe = await KiemTraVeThangHopLeAsync(luotGui.MaThe!);
+                    if (veThangHopLe)
+                    {
+                        return 0;
+                    }
+
+                    var thoiGianGui = luotGui.ThoiGianRa.Value - luotGui.ThoiGianVao;
+                    var soPhut = (int)Math.Ceiling(thoiGianGui.TotalMinutes);
+                    if (soPhut <= 0) soPhut = 1;
+
+                    var theXe = await GetTheXeByMaTheAsync(luotGui.MaThe!);
+                    if (theXe?.MaLoaiXe == null)
+                    {
+                        return 0;
+                    }
+
+                    var cauHinh = await GetCauHinhGiaPhùHopAsync(theXe.MaLoaiXe.Value, luotGui.ThoiGianVao);
+
+                    if (cauHinh == null || !cauHinh.ChiTietGia.Any())
+                    {
+                        // Giá mặc định: 5000đ/giờ
+                        var soGio = (int)Math.Ceiling(thoiGianGui.TotalHours);
+                        return soGio * 5000m;
+                    }
+
+                    /*
+                     * Giải thích cách tính:
+                     * - IsLuyTien = false (0): Block cố định, ví dụ: 60 phút đầu = 5000đ (gửi 30p vẫn tính 5000đ)
+                     * - IsLuyTien = true (1): Block lũy tiến, ví dụ: mỗi 60 phút tiếp = 3000đ
+                     * 
+                     * Ví dụ xe máy gửi 150 phút:
+                     * - Block 1: 60 phút đầu = 5000đ (IsLuyTien = false) -> phutDaTinh = 60
+                     * - Block 2: Mỗi 60 phút tiếp = 3000đ (IsLuyTien = true)
+                     *   + Còn 90 phút, cần 2 block = 2 x 3000 = 6000đ
+                     * - Tổng: 5000 + 6000 = 11000đ
+                     */
+                    decimal tongTien = 0;
+                    var chiTietGiaList = cauHinh.ChiTietGia.OrderBy(c => c.ThuTuBlock).ToList();
+                    int phutDaTinh = 0;
+
+                    foreach (var chiTiet in chiTietGiaList)
+                    {
+                        if (phutDaTinh >= soPhut) break;
+
+                        var soPhutBlock = chiTiet.SoPhutCuaBlock ?? 60;
+                        var giaTienBlock = chiTiet.GiaTien ?? 0;
+
+                        if (chiTiet.IsLuyTien == true)
+                        {
+                            // Lũy tiến: Tính số block còn lại với giá cố định mỗi block
+                            var soPhutCon = soPhut - phutDaTinh;
+                            var soBlockCanTinh = (int)Math.Ceiling((double)soPhutCon / soPhutBlock);
+                            tongTien += soBlockCanTinh * giaTienBlock;
+                            phutDaTinh = soPhut; // Đã tính hết
+                        }
+                        else
+                        {
+                            // Cố định: Tính đủ giá block (không theo tỷ lệ)
+                            if (soPhut - phutDaTinh > 0)
+                            {
+                                tongTien += giaTienBlock;
+                                phutDaTinh += soPhutBlock;
+                            }
+                        }
+                    }
+
+                    // Nếu vẫn còn thời gian chưa tính, dùng block cuối
+                    if (phutDaTinh < soPhut && chiTietGiaList.Any())
+                    {
+                        var lastBlock = chiTietGiaList.Last();
+                        var soPhutCon = soPhut - phutDaTinh;
+                        var soBlockCon = (int)Math.Ceiling((double)soPhutCon / (lastBlock.SoPhutCuaBlock ?? 60));
+                        tongTien += soBlockCon * (lastBlock.GiaTien ?? 0);
+                    }
+
+                    // Đảm bảo có giá tối thiểu
+                    if (tongTien <= 0)
+                    {
+                        var soGio = (int)Math.Ceiling(thoiGianGui.TotalHours);
+                        tongTien = soGio * 5000m;
+                    }
+
+                    return Math.Round(tongTien, 0);
+                }
 
         /// <summary>
         /// Kiểm tra thẻ có vé tháng còn hiệu lực không

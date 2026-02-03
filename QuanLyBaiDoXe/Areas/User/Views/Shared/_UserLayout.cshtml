@@ -1,0 +1,560 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Bãi Đỗ Xe Thông Minh</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3748;
+        }
+
+        .user-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .user-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-brand-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .sidebar-nav-link:hover,
+        .sidebar-nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar-nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+        }
+
+        .sidebar-nav-icon {
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .user-main {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .user-header {
+            background: white;
+            padding: 16px 32px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #4a5568;
+            cursor: pointer;
+            display: none;
+        }
+
+        .header-search {
+            position: relative;
+        }
+
+        .header-search input {
+            padding: 8px 16px 8px 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 14px;
+        }
+
+        .header-search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: #4a5568;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .header-icon-btn:hover {
+            background: #f7fafc;
+        }
+
+        .header-icon-btn .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #e53e3e;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .header-user:hover {
+            background: #f7fafc;
+        }
+
+        .header-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .header-user-role {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        /* User Dropdown Menu */
+        .header-user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            min-width: 240px;
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .header-user.show .header-user-dropdown {
+            display: block;
+        }
+
+        .dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .dropdown-user-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-user-email {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .dropdown-menu-custom {
+            padding: 8px 0;
+        }
+
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: #f7fafc;
+            color: #2d3748;
+        }
+
+        .dropdown-item-custom i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 8px 0;
+        }
+
+        .dropdown-item-logout {
+            color: #e53e3e;
+        }
+
+        .dropdown-item-logout:hover {
+            background-color: #fff5f5;
+            color: #c53030;
+        }
+
+        /* Content */
+        .user-content {
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        /* Card */
+        .card-custom {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-title-custom {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+    </style>
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="user-wrapper">
+        <!-- Sidebar -->
+        <aside class="user-sidebar" id="userSidebar">
+            <div class="sidebar-brand">
+                <a href="@Url.Action("Index", "Dashboard", new { area = "User" })" class="sidebar-brand-text">
+                    <div class="sidebar-brand-icon">
+                        <i class="fas fa-parking"></i>
+                    </div>
+                    <span>Smart Parking</span>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="@Url.Action("Index", "Dashboard", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="fas fa-th-large sidebar-nav-icon"></i>
+                    <span>Tổng quan</span>
+                </a>
+                <a href="@Url.Action("Index", "Booking", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Booking" ? "active" : "")">
+                    <i class="fas fa-calendar-check sidebar-nav-icon"></i>
+                    <span>Đặt chỗ</span>
+                </a>
+                <a href="@Url.Action("Index", "ParkingMap", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ParkingMap" ? "active" : "")">
+                    <i class="fas fa-map-marked-alt sidebar-nav-icon"></i>
+                    <span>Sơ đồ bãi xe</span>
+                </a>
+                <a href="@Url.Action("Index", "MonthlyTicket", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MonthlyTicket" ? "active" : "")">
+                    <i class="fas fa-ticket-alt sidebar-nav-icon"></i>
+                    <span>Thẻ tháng</span>
+                </a>
+                <a href="@Url.Action("Index", "Incident", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Incident" ? "active" : "")">
+                    <i class="fas fa-exclamation-triangle sidebar-nav-icon"></i>
+                    <span>Báo cáo sự cố</span>
+                </a>
+                <a href="@Url.Action("Index", "Profile", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Profile" ? "active" : "")">
+                    <i class="fas fa-user-circle sidebar-nav-icon"></i>
+                    <span>Thông tin cá nhân</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="user-main">
+            <!-- Header -->
+            <header class="user-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Tìm kiếm..." />
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-icon-btn" title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    
+                    @{
+                        var fullName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Khách hàng";
+                        var username = User.Identity?.Name ?? "";
+                        var firstLetter = !string.IsNullOrEmpty(fullName) ? fullName.Substring(0, 1).ToUpper() : "K";
+                    }
+                    
+                    <div class="header-user" id="headerUserDropdown">
+                        <div class="header-user-avatar">
+                            <span>@firstLetter</span>
+                        </div>
+                        <div class="header-user-info">
+                            <div class="header-user-name">@fullName</div>
+                            <div class="header-user-role">Khách hàng</div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="font-size: 12px; color: #718096;"></i>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="header-user-dropdown">
+                            <div class="dropdown-header">
+                                <div class="dropdown-user-name">@fullName</div>
+                                <div class="dropdown-user-email">@("@" + username)</div>
+                            </div>
+                            <div class="dropdown-menu-custom">
+                                <a href="@Url.Action("Index", "Profile", new { area = "User" })" class="dropdown-item-custom">
+                                    <i class="fas fa-user"></i>
+                                    <span>Thông tin cá nhân</span>
+                                </a>
+                                <a href="@Url.Action("Index", "MonthlyTicket", new { area = "User" })" class="dropdown-item-custom">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    <span>Thẻ tháng của tôi</span>
+                                </a>
+                                <a href="@Url.Action("Index", "Booking", new { area = "User" })" class="dropdown-item-custom">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span>Đặt chỗ của tôi</span>
+                                </a>
+                                <div class="dropdown-divider-custom"></div>
+                                <a href="@Url.Action("Index", "Incident", new { area = "User" })" class="dropdown-item-custom">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>Báo cáo sự cố</span>
+                                </a>
+                                <div class="dropdown-divider-custom"></div>
+                                <form action="@Url.Action("Logout", "Account", new { area = "" })" method="post" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item-custom dropdown-item-logout">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Đăng xuất</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="user-content">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        @TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                
+                @if (TempData["LoginMessage"] != null)
+                {
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        @TempData["LoginMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle sidebar on mobile
+        $(document).ready(function() {
+            // Toggle sidebar
+            $('#sidebarToggle').on('click', function() {
+                $('#userSidebar').toggleClass('show');
+            });
+
+            // Close sidebar when clicking outside on mobile
+            $(document).on('click', function(e) {
+                if ($(window).width() <= 768) {
+                    if (!$(e.target).closest('.user-sidebar, .sidebar-toggle').length) {
+                        $('#userSidebar').removeClass('show');
+                    }
+                }
+            });
+
+            // Toggle user dropdown
+            $('#headerUserDropdown').on('click', function(e) {
+                e.stopPropagation();
+                $(this).toggleClass('show');
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#headerUserDropdown').length) {
+                    $('#headerUserDropdown').removeClass('show');
+                }
+            });
+
+            // Prevent dropdown close when clicking inside
+            $('.header-user-dropdown').on('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

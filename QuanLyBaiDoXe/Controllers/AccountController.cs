@@ -24,19 +24,19 @@ namespace QuanLyBaiDoXe.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl)
         {
-            // Nếu đã đăng nhập, redirect về Admin Dashboard hoặc Home tùy role
+            // Nếu đã đăng nhập, redirect về Dashboard tùy role
             if (User.Identity?.IsAuthenticated == true)
             {
                 var role = User.FindFirst(ClaimTypes.Role)?.Value;
                 
-                // Admin và Employee redirect về Dashboard
+                // Admin và Employee redirect về Admin Dashboard
                 if (role == "Admin" || role == "Employee")
                 {
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
                 
-                // Customer redirect về Home
-                return RedirectToAction("Index", "Home");
+                // Customer redirect về User Dashboard
+                return RedirectToAction("Index", "Dashboard", new { area = "User" });
             }
 
             ViewBag.ReturnUrl = returnUrl;
@@ -113,8 +113,8 @@ namespace QuanLyBaiDoXe.Controllers
                 return Redirect(returnUrl);
             }
 
-            // Mặc định Customer redirect về Home
-            return RedirectToAction("Index", "Home");
+            // Customer redirect về User Dashboard
+            return RedirectToAction("Index", "Dashboard", new { area = "User" });
         }
 
         #endregion
@@ -129,14 +129,14 @@ namespace QuanLyBaiDoXe.Controllers
             {
                 var role = User.FindFirst(ClaimTypes.Role)?.Value;
                 
-                // Admin và Employee redirect về Dashboard
+                // Admin và Employee redirect về Admin Dashboard
                 if (role == "Admin" || role == "Employee")
                 {
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
                 
-                // Customer redirect về Home
-                return RedirectToAction("Index", "Home");
+                // Customer redirect về User Dashboard
+                return RedirectToAction("Index", "Dashboard", new { area = "User" });
             }
 
             return View("~/Views/Account/Register.cshtml");

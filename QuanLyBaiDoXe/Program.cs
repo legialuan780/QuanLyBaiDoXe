@@ -30,6 +30,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 // Register License Plate Recognition service
 builder.Services.AddHttpClient<ILicensePlateRecognitionService, PlateRecognizerService>();
 
+// Register MoMo Payment service
+builder.Services.AddHttpClient<IMoMoService, MoMoService>();
+
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -80,8 +83,15 @@ app.MapGet("/", context =>
 
 // Route cho Area Admin
 app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+    name: "admin",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}",
+    constraints: new { area = "Admin" });
+
+// Route cho Area User (Khách hàng)
+app.MapControllerRoute(
+    name: "user",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}",
+    constraints: new { area = "User" });
 
 app.MapControllerRoute(
     name: "default",

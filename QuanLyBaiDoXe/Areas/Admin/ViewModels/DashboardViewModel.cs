@@ -7,6 +7,7 @@
         public int XeVaoHomNay { get; set; }
         public int XeRaHomNay { get; set; }
         public decimal DoanhThuHomNay { get; set; }
+        public int PendingBookings { get; set; }
 
         // So sánh với hôm qua (%)
         public decimal TyLeXeTrongBai { get; set; }

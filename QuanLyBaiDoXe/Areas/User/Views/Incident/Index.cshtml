@@ -1,0 +1,559 @@
+﻿@model List<QuanLyBaiDoXe.Models.Entities.SuCo>
+@{
+    ViewData["Title"] = "Báo cáo sự cố";
+}
+
+<style>
+    .incident-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 30px;
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 24px rgba(240, 147, 251, 0.25);
+    }
+
+    .incident-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .incident-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .incident-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .incident-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .type-emergency {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .type-lost-card {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .type-camera {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .type-barrier {
+        background: #fce7f3;
+        color: #831843;
+    }
+
+    .type-other {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .status-badge-incident {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-processing {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-resolved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .quick-report-btn {
+        padding: 16px 24px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 16px;
+    }
+
+    .quick-report-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+    }
+
+    .report-form {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .form-label-modern {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-control-modern {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 16px;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+
+    .form-control-modern:focus {
+        border-color: #f5576c;
+        box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+        outline: none;
+    }
+
+    .incident-types-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .incident-type-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .incident-type-card:hover {
+        border-color: #f5576c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
+    }
+
+    .incident-type-card.selected {
+        border-color: #f5576c;
+        background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+    }
+
+    .incident-type-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .incident-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 24px;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -32px;
+        top: 8px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #f5576c;
+    }
+
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: -26px;
+        top: 20px;
+        width: 2px;
+        height: calc(100% - 12px);
+        background: #e5e7eb;
+    }
+
+    .timeline-item:last-child::after {
+        display: none;
+    }
+
+    .empty-state-incident {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        color: #cbd5e0;
+        margin-bottom: 16px;
+    }
+</style>
+
+<div class="incident-header">
+    <h1><i class="fas fa-exclamation-triangle me-2"></i>Báo cáo sự cố</h1>
+    <p class="mb-0" style="opacity: 0.9;">Thông báo các sự cố gặp phải để chúng tôi xử lý kịp thời</p>
+</div>
+
+<!-- Quick Report Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <button class="quick-report-btn" onclick="openReportModal()">
+            <i class="fas fa-plus-circle" style="font-size: 20px;"></i>
+            Báo cáo sự cố mới
+        </button>
+    </div>
+</div>
+
+<!-- My Incidents -->
+<div class="row">
+    <div class="col-12">
+        <div class="incident-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h5 style="margin: 0; font-weight: 700; color: #2d3748;">
+                    <i class="fas fa-list-alt me-2"></i>
+                    Sự cố của tôi
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshIncidents()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Làm mới
+                </button>
+            </div>
+
+            <div id="incidentsContainer">
+                <!-- Will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 16px 16px 0 0;">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Báo cáo sự cố mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <form id="reportForm">
+                    <!-- Incident Types -->
+                    <div class="mb-4">
+                        <label class="form-label-modern">Loại sự cố <span class="text-danger">*</span></label>
+                        <div class="incident-types-grid">
+                            <div class="incident-type-card" data-type="Khẩn cấp" onclick="selectIncidentType(this)">
+                                <div class="incident-type-icon" style="color: #dc2626;">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div style="font-weight: 600; color: #374151;">Khẩn cấp</div>
+                            </div>
+                            <div class="incident-type-card" data-type="Xe mất thẻ" onclick="selectIncidentType(this)">
+                                <div class="incident-type-icon" style="color: #f59e0b;">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div style="font-weight: 600; color: #374151;">Xe mất thẻ</div>
+                            </div>
+                            <div class="incident-type-card" data-type="Lỗi camera" onclick="selectIncidentType(this)">
+                                <div class="incident-type-icon" style="color: #3b82f6;">
+                                    <i class="fas fa-video-slash"></i>
+                                </div>
+                                <div style="font-weight: 600; color: #374151;">Lỗi camera</div>
+                            </div>
+                            <div class="incident-type-card" data-type="Lỗi barrier" onclick="selectIncidentType(this)">
+                                <div class="incident-type-icon" style="color: #ec4899;">
+                                    <i class="fas fa-road-barrier"></i>
+                                </div>
+                                <div style="font-weight: 600; color: #374151;">Lỗi barrier</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="loaiSuCo" name="loaiSuCo" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label-modern">Mã thẻ xe (nếu có)</label>
+                            <input type="text" class="form-control-modern" id="maThe" placeholder="Ví dụ: THE-XM-001">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label-modern">Vị trí (nếu có)</label>
+                            <input type="number" class="form-control-modern" id="maViTri" placeholder="Ví dụ: 15">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-modern">Mô tả chi tiết <span class="text-danger">*</span></label>
+                        <textarea class="form-control-modern" id="moTaChiTiet" rows="5" 
+                                  placeholder="Vui lòng mô tả chi tiết sự cố bạn gặp phải..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="alert alert-info" style="border-radius: 12px; border-left: 4px solid #3b82f6;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong> Chúng tôi sẽ xử lý yêu cầu của bạn trong thời gian sớm nhất. 
+                        Các sự cố khẩn cấp sẽ được ưu tiên xử lý trước.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitReport()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none;">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Gửi báo cáo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let reportModal;
+        let selectedType = '';
+
+        $(document).ready(function() {
+            reportModal = new bootstrap.Modal($('#reportModal'));
+            loadMyIncidents();
+        });
+
+        function selectIncidentType(element) {
+            $('.incident-type-card').removeClass('selected');
+            $(element).addClass('selected');
+            selectedType = $(element).data('type');
+            $('#loaiSuCo').val(selectedType);
+        }
+
+        function openReportModal() {
+            $('#reportForm')[0].reset();
+            $('.incident-type-card').removeClass('selected');
+            selectedType = '';
+            reportModal.show();
+        }
+
+        function submitReport() {
+            if (!selectedType) {
+                showNotification('Vui lòng chọn loại sự cố', 'warning');
+                return;
+            }
+
+            const moTaChiTiet = $('#moTaChiTiet').val().trim();
+            if (!moTaChiTiet) {
+                showNotification('Vui lòng mô tả chi tiết sự cố', 'warning');
+                return;
+            }
+
+            const data = {
+                loaiSuCo: selectedType,
+                maThe: $('#maThe').val() || null,
+                maViTri: $('#maViTri').val() ? parseInt($('#maViTri').val()) : null,
+                moTaChiTiet: moTaChiTiet
+            };
+
+            $.ajax({
+                url: '@Url.Action("ReportIncident", "Incident", new { area = "User" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(result) {
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        reportModal.hide();
+                        loadMyIncidents();
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Có lỗi xảy ra', 'error');
+                }
+            });
+        }
+
+        function loadMyIncidents() {
+            $.ajax({
+                url: '@Url.Action("GetMyIncidents", "Incident", new { area = "User" })',
+                type: 'GET',
+                success: function(result) {
+                    if (result.success) {
+                        renderIncidents(result.data);
+                    }
+                },
+                error: function() {
+                    $('#incidentsContainer').html('<div class="alert alert-danger">Không thể tải dữ liệu</div>');
+                }
+            });
+        }
+
+        function renderIncidents(incidents) {
+            const container = $('#incidentsContainer');
+            
+            if (incidents.length === 0) {
+                container.html(`
+                    <div class="empty-state-incident">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div style="font-size: 16px; color: #718096; margin-bottom: 8px;">
+                            Chưa có sự cố nào
+                        </div>
+                        <div style="font-size: 14px; color: #a0aec0;">
+                            Bạn chưa báo cáo sự cố nào
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            let html = '<div class="incident-timeline">';
+            
+            incidents.forEach(incident => {
+                const typeClass = getTypeClass(incident.loaiSuCo);
+                const statusBadge = getStatusBadge(incident.trangThaiXuLy);
+                const time = formatDateTime(incident.thoiGianGhiNhan);
+
+                html += `
+                    <div class="timeline-item">
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <div>
+                                    <span class="incident-type-badge ${typeClass}">
+                                        <i class="fas ${getTypeIcon(incident.loaiSuCo)}"></i>
+                                        ${incident.loaiSuCo}
+                                    </span>
+                                </div>
+                                <div>
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                            
+                            <div style="color: #4a5568; margin-bottom: 12px; line-height: 1.6;">
+                                ${incident.moTaChiTiet}
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #718096;">
+                                <div>
+                                    <i class="fas fa-clock me-1"></i>
+                                    ${time}
+                                </div>
+                                <div>
+                                    <i class="fas fa-user me-1"></i>
+                                    Người xử lý: ${incident.nguoiXuLy}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.html(html);
+        }
+
+        function getTypeClass(type) {
+            const typeMap = {
+                'Khẩn cấp': 'type-emergency',
+                'Xe mất thẻ': 'type-lost-card',
+                'Lỗi camera': 'type-camera',
+                'Lỗi barrier': 'type-barrier'
+            };
+            return typeMap[type] || 'type-other';
+        }
+
+        function getTypeIcon(type) {
+            const iconMap = {
+                'Khẩn cấp': 'fa-exclamation-circle',
+                'Xe mất thẻ': 'fa-id-card',
+                'Lỗi camera': 'fa-video-slash',
+                'Lỗi barrier': 'fa-road-barrier'
+            };
+            return iconMap[type] || 'fa-exclamation-triangle';
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                0: '<span class="status-badge-incident status-pending"><i class="fas fa-clock"></i> Chờ xử lý</span>',
+                1: '<span class="status-badge-incident status-processing"><i class="fas fa-spinner"></i> Đang xử lý</span>',
+                2: '<span class="status-badge-incident status-resolved"><i class="fas fa-check-circle"></i> Đã xử lý</span>'
+            };
+            return statusMap[status] || statusMap[0];
+        }
+
+        function refreshIncidents() {
+            loadMyIncidents();
+            showNotification('Đã làm mới danh sách', 'success');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showNotification(message, type) {
+            const bgColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const notification = $(`
+                <div style="position: fixed; top: 20px; right: 20px; z-index: 99999; 
+                            background: white; padding: 16px 24px; border-radius: 12px; 
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                            display: flex; align-items: center; gap: 12px;
+                            border-left: 4px solid ${bgColor};
+                            min-width: 300px; animation: slideInRight 0.3s ease;">
+                    <i class="fas ${icon}" style="color: ${bgColor}; font-size: 20px;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #2d3748; margin-bottom: 2px;">
+                            ${type === 'success' ? 'Thành công' : 'Thông báo'}
+                        </div>
+                        <div style="font-size: 14px; color: #718096;">${message}</div>
+                    </div>
+                </div>
+            `);
+
+            $('body').append(notification);
+            setTimeout(() => notification.fadeOut(() => notification.remove()), 3000);
+        }
+    </script>
+}

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Models.EF;
 using QuanLyBaiDoXe.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -25,6 +25,7 @@ builder.Services.AddDbContext<QuanLyBaiDoXeContext>(options => options.UseSqlSer
 builder.Services.AddScoped<IVehicleEntryService, VehicleEntryService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

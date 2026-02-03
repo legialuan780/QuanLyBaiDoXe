@@ -1,4 +1,4 @@
-﻿USE master;
+USE master;
 GO
 
 -- 1. XỬ LÝ DATABASE (Xóa nếu tồn tại để làm mới hoàn toàn)
@@ -25,6 +25,17 @@ CREATE TABLE TaiKhoan (
     QuyenHan NVARCHAR(50) NOT NULL DEFAULT N'Khách hàng' CHECK (QuyenHan IN (N'Admin', N'Khách hàng', N'Nhân viên')),
     Email VARCHAR(100) UNIQUE,
     TrangThai BIT DEFAULT 1
+);
+
+CREATE TABLE PasswordResetTokens (
+    Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    MaTaiKhoan INT NOT NULL,
+    Token NVARCHAR(100) NOT NULL,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    ExpiresAt DATETIME NOT NULL,
+    IsUsed BIT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_PasswordResetTokens_TaiKhoan FOREIGN KEY (MaTaiKhoan) 
+        REFERENCES TaiKhoan(MaTaiKhoan) ON DELETE CASCADE
 );
 
 CREATE TABLE NhanVien (

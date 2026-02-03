@@ -1,19 +1,19 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace QuanLyBaiDoXe.ViewModels
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "Email ho?c T�n ??ng nh?p l� b?t bu?c")]
-        [Display(Name = "Email/T�n ??ng nh?p")]
+        [Required(ErrorMessage = "Email hoặc tên đăng nhập là bắt buộc")]
+        [Display(Name = "Email/Tên đăng nhập")]
         public string Username { get; set; } = null!;
 
-        [Required(ErrorMessage = "M?t kh?u l� b?t bu?c")]
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
         [DataType(DataType.Password)]
-        [Display(Name = "M?t kh?u")]
+        [Display(Name = "Mật khẩu")]
         public string Password { get; set; } = null!;
 
-        [Display(Name = "Ghi nh? ??ng nh?p")]
+        [Display(Name = "Ghi nhớ đăng nhập")]
         public bool RememberMe { get; set; }
 
         public string? ReturnUrl { get; set; }

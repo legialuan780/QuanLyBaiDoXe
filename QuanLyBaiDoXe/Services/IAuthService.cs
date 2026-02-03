@@ -7,7 +7,6 @@ namespace QuanLyBaiDoXe.Services
     {
         Task<(bool Success, string? ErrorMessage, TaiKhoan? Account, string? Role)> AuthenticateAsync(string username, string password);
         Task<(bool Success, string? ErrorMessage, int? CustomerId)> RegisterCustomerAsync(RegisterViewModel model);
-        Task<(bool Success, string? ErrorMessage, int? EmployeeId)> RegisterEmployeeAsync(RegisterViewModel model);
         Task<bool> ChangePasswordAsync(int accountId, string oldPassword, string newPassword);
         Task<bool> UsernameExistsAsync(string username);
         Task<bool> PhoneNumberExistsAsync(string phoneNumber);

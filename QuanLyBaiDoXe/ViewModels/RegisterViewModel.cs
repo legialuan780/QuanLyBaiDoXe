@@ -1,67 +1,47 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace QuanLyBaiDoXe.ViewModels
 {
     public class RegisterViewModel
     {
-        [Required(ErrorMessage = "Lo?i t�i kho?n l� b?t bu?c")]
-        [Display(Name = "Lo?i t�i kho?n")]
-        public string AccountType { get; set; } = "Customer"; // Customer ho?c Employee
-
-        [Required(ErrorMessage = "T�n ??ng nh?p l� b?t bu?c")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "T�n ??ng nh?p ph?i c� t? 3-50 k� t?")]
-        [Display(Name = "T�n ??ng nh?p")]
+        [Required(ErrorMessage = "Tên đăng nhập là bắt buộc")]
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "Tên đăng nhập phải có từ 3-50 ký tự")]
+        [Display(Name = "Tên đăng nhập")]
         public string Username { get; set; } = null!;
 
-        [Required(ErrorMessage = "M?t kh?u l� b?t bu?c")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "M?t kh?u ph?i c� �t nh?t 6 k� t?")]
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
         [DataType(DataType.Password)]
-        [Display(Name = "M?t kh?u")]
+        [Display(Name = "Mật khẩu")]
         public string Password { get; set; } = null!;
 
-        [Required(ErrorMessage = "X�c nh?n m?t kh?u l� b?t bu?c")]
+        [Required(ErrorMessage = "Xác nhận mật khẩu là bắt buộc")]
         [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "M?t kh?u x�c nh?n kh�ng kh?p")]
-        [Display(Name = "X�c nh?n m?t kh?u")]
+        [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp")]
+        [Display(Name = "Xác nhận mật khẩu")]
         public string ConfirmPassword { get; set; } = null!;
 
-        [Required(ErrorMessage = "H? t�n l� b?t bu?c")]
-        [StringLength(100, ErrorMessage = "H? t�n kh�ng ???c qu� 100 k� t?")]
-        [Display(Name = "H? v� t�n")]
+        [Required(ErrorMessage = "Họ tên là bắt buộc")]
+        [StringLength(100, ErrorMessage = "Họ tên không được quá 100 ký tự")]
+        [Display(Name = "Họ và tên")]
         public string FullName { get; set; } = null!;
 
-        [Required(ErrorMessage = "S? ?i?n tho?i l� b?t bu?c")]
-        [Phone(ErrorMessage = "S? ?i?n tho?i kh�ng h?p l?")]
-        [RegularExpression(@"^(0[3|5|7|8|9])+([0-9]{8})$", ErrorMessage = "S? ?i?n tho?i kh�ng h?p l?")]
-        [Display(Name = "S? ?i?n tho?i")]
+        [Required(ErrorMessage = "Số điện thoại là bắt buộc")]
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
+        [RegularExpression(@"^(0[3|5|7|8|9])+([0-9]{8})$", ErrorMessage = "Số điện thoại không hợp lệ")]
+        [Display(Name = "Số điện thoại")]
         public string PhoneNumber { get; set; } = null!;
 
-        [StringLength(20, ErrorMessage = "CCCD kh�ng ???c qu� 20 k� t?")]
+        [StringLength(20, ErrorMessage = "CCCD không được quá 20 ký tự")]
         [Display(Name = "CCCD/CMND")]
         public string? CCCD { get; set; }
 
-        [StringLength(200, ErrorMessage = "??a ch? kh�ng ???c qu� 200 k� t?")]
-        [Display(Name = "??a ch?")]
+        [StringLength(200, ErrorMessage = "Địa chỉ không được quá 200 ký tự")]
+        [Display(Name = "Địa chỉ")]
         public string? Address { get; set; }
 
-        // Ch? cho Kh�ch h�ng
-        [StringLength(20, ErrorMessage = "Bi?n s? xe kh�ng ???c qu� 20 k� t?")]
-        [Display(Name = "Bi?n s? xe (kh�ng b?t bu?c)")]
+        [StringLength(20, ErrorMessage = "Biển số xe không được quá 20 ký tự")]
+        [Display(Name = "Biển số xe (không bắt buộc)")]
         public string? LicensePlate { get; set; }
-
-        // Ch? cho Nh�n vi�n
-        [Display(Name = "Gi?i t�nh")]
-        public string? Gender { get; set; } // Nam, N?, Kh�c
-
-        [Display(Name = "Ng�y sinh")]
-        [DataType(DataType.Date)]
-        public DateOnly? DateOfBirth { get; set; }
-
-        [Display(Name = "Ch?c v?")]
-        public int? Position { get; set; } // 0 = Admin, 1 = Nh�n vi�n
-
-        [Display(Name = "Ng�y v�o l�m")]
-        [DataType(DataType.Date)]
-        public DateOnly? StartDate { get; set; }
     }
 }

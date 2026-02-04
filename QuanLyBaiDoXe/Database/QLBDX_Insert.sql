@@ -1,4 +1,4 @@
-﻿USE QuanLyBaiDoXe;
+USE QuanLyBaiDoXe;
 GO
 
 ----------------------------------------------------------
@@ -150,11 +150,45 @@ INSERT INTO KhuVuc (TenKhuVuc, MaLoaiXe) VALUES (N'Khu A', 1), (N'Khu B',2), (N'
 GO
 
 INSERT INTO ViTriDo (MaKhuVuc, TenViTri, TrangThai) VALUES
-(1, 'A01', 0), (1, 'A02', 1), (1, 'A03', 0), (1, 'A04', 2),
-(2, 'B01', 0), (2, 'B02', 3), (2, 'B03', 1), (2, 'B04', 0),
-(3, 'C01', 0), (3, 'C02', 0), (3, 'C03', 2),
-(4, 'D01', 0), (4, 'D02', 1), (4, 'D03', 0);
+(1, 'A01', 0), (1, 'A02', 0), (1, 'A03', 0), (1, 'A04', 0),
+(2, 'B01', 0), (2, 'B02', 0), (2, 'B03', 0), (2, 'B04', 0),
+(3, 'C01', 0), (3, 'C02', 0), (3, 'C03', 0),
+(4, 'D01', 0), (4, 'D02', 0), (4, 'D03', 0);
 GO
+
+----------------------------------------------------------
+-- BỔ SUNG DỮ LIỆU VỊ TRÍ ĐỖ (30 CHỖ MỖI KHU VỰC)
+----------------------------------------------------------
+
+-- 1. Dọn dẹp dữ liệu vị trí cũ (nếu muốn làm sạch để chạy lại từ đầu)
+DELETE FROM ViTriDo;
+GO
+
+-- 2. Sử dụng vòng lặp để chèn 30 vị trí cho mỗi Khu vực
+DECLARE @i INT = 1;
+DECLARE @MaxSlots INT = 30;
+
+WHILE @i <= @MaxSlots
+BEGIN
+    -- Định dạng số thứ tự thành 2 chữ số (01, 02, ..., 30)
+    DECLARE @Suffix NVARCHAR(2) = RIGHT('0' + CAST(@i AS NVARCHAR(2)), 2);
+
+    -- Chèn cho Khu A (MaKhuVuc = 1)
+    INSERT INTO ViTriDo (MaKhuVuc, TenViTri, TrangThai) VALUES (1, 'A' + @Suffix, 0);
+    
+    -- Chèn cho Khu B (MaKhuVuc = 2)
+    INSERT INTO ViTriDo (MaKhuVuc, TenViTri, TrangThai) VALUES (2, 'B' + @Suffix, 0);
+    
+    -- Chèn cho Khu C (MaKhuVuc = 3)
+    INSERT INTO ViTriDo (MaKhuVuc, TenViTri, TrangThai) VALUES (3, 'C' + @Suffix, 0);
+    
+    -- Chèn cho Khu D (MaKhuVuc = 4)
+    INSERT INTO ViTriDo (MaKhuVuc, TenViTri, TrangThai) VALUES (4, 'D' + @Suffix, 0);
+
+    SET @i = @i + 1;
+END;
+GO
+
 
 INSERT INTO DatCho (MaKhachHang, MaViTri, ThoiGianDat, ThoiGianDenDuKien, ThoiGianHetHan, TrangThaiDatCho) VALUES
 (1, 4, GETDATE(), DATEADD(MINUTE, 15, GETDATE()), DATEADD(MINUTE, 30, GETDATE()), 0),
@@ -166,12 +200,70 @@ GO
 ----------------------------------------------------------
 -- 8. THẺ XE & VÉ THÁNG
 ----------------------------------------------------------
-INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai) VALUES
-('THE-XM-001', 1, 1, 1), ('THE-XM-002', 1, 1, 1),
-('THE-OTO4-001', 2, 1, 1), ('THE-OTO7-001', 3, 1, 1),
-('THE-OTO7-002', 3, 0, 1), ('THE-TAI-001', 4, 1, 1),
-('THE-VL-001', 1, 0, 1), ('THE-VL-002', 2, 0, 1);
+----------------------------------------------------------
+-- 1. TẠO THẺ THÁNG (Tiền tố TT)
+----------------------------------------------------------
+DECLARE @i INT = 1;
+
+-- Thẻ tháng Xe máy (MaLoaiXe = 1) - 30 thẻ
+WHILE @i <= 30
+BEGIN
+    INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai)
+    VALUES ('TTXM' + RIGHT('00' + CAST(@i AS NVARCHAR(2)), 2), 1, 1, 1);
+    SET @i = @i + 1;
+END;
+
+-- Thẻ tháng Ô tô 4 chỗ (MaLoaiXe = 2) - 15 thẻ
+SET @i = 1;
+WHILE @i <= 15
+BEGIN
+    INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai)
+    VALUES ('TTOT4' + RIGHT('00' + CAST(@i AS NVARCHAR(2)), 2), 2, 1, 1);
+    SET @i = @i + 1;
+END;
+
+-- Thẻ tháng Ô tô 7 chỗ (MaLoaiXe = 3) - 15 thẻ
+SET @i = 1;
+WHILE @i <= 15
+BEGIN
+    INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai)
+    VALUES ('TTOT7' + RIGHT('00' + CAST(@i AS NVARCHAR(2)), 2), 3, 1, 1);
+    SET @i = @i + 1;
+END;
+
+----------------------------------------------------------
+-- 2. TẠO THẺ VÃNG LAI (Tiền tố VL)
+----------------------------------------------------------
+
+-- Thẻ vãng lai Xe máy (30 thẻ)
+SET @i = 1;
+WHILE @i <= 30
+BEGIN
+    INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai)
+    VALUES ('VLXM' + RIGHT('00' + CAST(@i AS NVARCHAR(2)), 2), 1, 0, 1);
+    SET @i = @i + 1;
+END;
+
+-- Thẻ vãng lai Ô tô (30 thẻ)
+SET @i = 1;
+WHILE @i <= 30
+BEGIN
+    -- Gán mặc định loại xe 2 (Ô tô 4 chỗ) cho thẻ vãng lai ô tô
+    INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai)
+    VALUES ('VLOT' + RIGHT('00' + CAST(@i AS NVARCHAR(2)), 2), 2, 0, 1);
+    SET @i = @i + 1;
+END;
 GO
+
+----------------------------------------------------------
+-- 3. KIỂM TRA DỮ LIỆU
+----------------------------------------------------------
+SELECT 
+    LEFT(MaThe, 2) AS TienTo,
+    CASE WHEN LoaiThe = 1 THEN N'Thẻ Tháng' ELSE N'Thẻ Vãng Lai' END AS LoaiThe,
+    COUNT(*) AS SoLuong
+FROM TheXe
+GROUP BY LEFT(MaThe, 2), LoaiThe;
 
 INSERT INTO TheThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai) VALUES
 (1, 'THE-XM-001', '2025-01-01', '2025-01-31', 150000, 1),

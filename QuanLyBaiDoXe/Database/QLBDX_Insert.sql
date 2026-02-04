@@ -265,19 +265,6 @@ SELECT
 FROM TheXe
 GROUP BY LEFT(MaThe, 2), LoaiThe;
 
-INSERT INTO TheThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai) VALUES
-(1, 'THE-XM-001', '2025-01-01', '2025-01-31', 150000, 1),
-(2, 'THE-XM-002', '2025-01-05', '2025-02-04', 150000, 1),
-(1, 'THE-OTO4-001', '2025-01-01', '2025-01-31', 800000, 1),
-(3, 'THE-OTO7-001', '2025-01-10', '2025-02-09', 1000000, 1),
-(2, 'THE-TAI-001', '2025-01-15', '2025-02-14', 1200000, 1);
-GO
-
-INSERT INTO LichSuGiaHanThe (MaTheThang, NgayGiaHan, ThoiHanCu, ThoiHanMoi, SoTien, MaNhanVienThucHien) VALUES
-(2, GETDATE(), '2025-01-31', '2025-02-28', 150000, 1),
-(3, GETDATE(), '2025-01-31', '2025-02-28', 800000, 2),
-(4, GETDATE(), '2025-02-09', '2025-03-10', 1000000, 1);
-GO
 
 ----------------------------------------------------------
 -- 9. LƯỢT GỬI & SỰ CỐ

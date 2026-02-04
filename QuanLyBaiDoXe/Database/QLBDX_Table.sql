@@ -201,6 +201,7 @@ CREATE TABLE TheThang (
     MaTheThang INT PRIMARY KEY IDENTITY(1,1),
     MaKhachHang INT REFERENCES KhachHang(MaKhachHang),
     MaThe VARCHAR(50) REFERENCES TheXe(MaThe),
+    BienSoXe VARCHAR(20) NULL,
     NgayBatDau DATE DEFAULT GETDATE(),
     NgayHetHan DATE,
     SoTienDong DECIMAL(18,0) CHECK (SoTienDong >= 0),
@@ -390,17 +391,6 @@ INSERT INTO TheXe (MaThe, MaLoaiXe, LoaiThe, TrangThai) VALUES
 
 
 -- 6. ĐĂNG KÝ VÉ THÁNG (Liên kết Khách - Thẻ - Hạn dùng)
--- Đăng ký cho khách hàng 'Lê Thị Khách' (@IdKhachHangA) dùng thẻ 'MONTH_OTO_01'
-INSERT INTO TheThang (MaKhachHang, MaThe, NgayBatDau, NgayHetHan, SoTienDong, TrangThai)
-VALUES (
-    @IdKhachHangA, 
-    'MONTH_OTO_01', 
-    GETDATE(), 
-    DATEADD(MONTH, 1, GETDATE()), -- Hết hạn sau 1 tháng
-    1500000,
-    1
-);
-
 
 -- Script thêm cột HinhAnhVao và HinhAnhRa vào bảng LuotGui
 -- Chạy script này trong SQL Server Management Studio hoặc Azure Data Studio

@@ -74,13 +74,6 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Redirect root URL to Login
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/Account/Login");
-    return Task.CompletedTask;
-});
-
 // Route cho Area Admin
 app.MapControllerRoute(
     name: "admin",
@@ -93,8 +86,9 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}",
     constraints: new { area = "User" });
 
+// Route mặc định - Landing page
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

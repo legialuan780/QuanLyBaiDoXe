@@ -7,13 +7,12 @@ body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:
 .login-wrapper{display:grid;grid-template-columns:1.2fr 1fr;min-height:100vh;height:100vh;border-radius:0;overflow:hidden;background:#fff;margin:0;border:none}
 
 /* Left side with background image */
-.login-left{
+.login-left {
     /* Default gradient fallback */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    
     /* Custom image - Change this to your image path */
-    background-image: url('/uploads/vehicles/hatangchuthuat.png');
-    
+/*    background-image: url('/uploads/vehicles/park.png');*/
+    background-image: url('../uploads/vehicles/park-logo.png');
     /* Responsive image settings */
     background-position: center center;
     background-size: cover;
@@ -24,7 +23,7 @@ body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:
     justify-content: center;
 }
 
-/* Overlay ?? text d? ??c h?n trên ?nh */
+/* Overlay ?? text d? ??c h?n trÃªn ?nh */
 .login-left .overlay{
     position: absolute;
     inset: 0;

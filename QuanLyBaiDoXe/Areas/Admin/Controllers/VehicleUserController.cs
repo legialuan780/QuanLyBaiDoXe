@@ -58,8 +58,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             }
 
             var taiKhoan = await _context.TaiKhoans
-                .Include(t => t.KhachHang)
-                .Include(t => t.NhanVien)
+                .Include(t => t.KhachHangs)
+                .Include(t => t.NhanViens)
                 .FirstOrDefaultAsync(t => t.MaTaiKhoan == id);
 
             if (taiKhoan == null)

@@ -11,6 +11,8 @@ public partial class TheThang
 
     public string? MaThe { get; set; }
 
+    public string? BienSoXe { get; set; }
+
     public DateOnly? NgayBatDau { get; set; }
 
     public DateOnly? NgayHetHan { get; set; }

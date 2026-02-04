@@ -195,6 +195,14 @@
                                             title="Chỉnh sửa">
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    @if (!hasAccount)
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" 
+                                                onclick="showCreateAccountModal(@customer.MaKhachHang)"
+                                                title="Cấp tài khoản">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                                    }
                                     <button class="btn btn-sm btn-outline-danger" 
                                             onclick="deleteCustomer(@customer.MaKhachHang, '@customer.HoTen')"
                                             title="Xóa">
@@ -320,14 +328,109 @@
     </div>
 </div>
 
+<!-- Create Account Modal -->
+<div class="modal fade" id="createAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cấp tài khoản cho khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createAccountForm">
+                    <input type="hidden" id="accountMaKhachHang" name="maKhachHang">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Tạo tài khoản để khách hàng có thể đăng nhập vào hệ thống
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Tên đăng nhập <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="accountTenDangNhap" 
+                               name="tenDangNhap" 
+                               required
+                               minlength="3"
+                               maxlength="50"
+                               pattern="[a-zA-Z0-9_]+"
+                               placeholder="Chỉ chữ cái, số và dấu gạch dưới">
+                        <small class="text-muted">Từ 3-50 ký tự, không có khoảng trắng</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Mật khẩu <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="accountMatKhau" 
+                                   name="matKhau" 
+                                   required
+                                   minlength="6">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    onclick="togglePasswordVisibility('accountMatKhau')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Tối thiểu 6 ký tự</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Xác nhận mật khẩu <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="accountMatKhauXacNhan" 
+                                   name="matKhauXacNhan" 
+                                   required
+                                   minlength="6">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    onclick="togglePasswordVisibility('accountMatKhauXacNhan')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email (tùy chọn)</label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="accountEmail" 
+                               name="email"
+                               placeholder="example@email.com">
+                        <small class="text-muted">Email dùng để khôi phục mật khẩu</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" onclick="saveAccount()">
+                    <i class="fas fa-user-plus"></i> Cấp tài khoản
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     let customerModal;
     let viewModal;
+    let createAccountModal;
 
     $(document).ready(function() {
         customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
         viewModal = new bootstrap.Modal(document.getElementById('viewCustomerModal'));
+        createAccountModal = new bootstrap.Modal(document.getElementById('createAccountModal'));
     });
 
     function showCreateModal() {
@@ -335,6 +438,100 @@
         document.getElementById('customerForm').reset();
         document.getElementById('maKhachHang').value = '';
         customerModal.show();
+    }
+
+    async function showCreateAccountModal(customerId) {
+        try {
+            // Load customer info first
+            const response = await fetch(`/Admin/Customer/GetCustomer?id=${customerId}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                showNotification(data.message, 'error');
+                return;
+            }
+
+            const customer = data.customer;
+            
+            // Check if customer already has an account
+            if (customer.maTaiKhoan) {
+                showNotification('Khách hàng đã có tài khoản!', 'error');
+                return;
+            }
+
+            // Reset form and set customer ID
+            document.getElementById('createAccountForm').reset();
+            document.getElementById('accountMaKhachHang').value = customerId;
+            
+            // Auto-suggest username based on phone number
+            const suggestedUsername = 'KH' + customer.soDienThoai;
+            document.getElementById('accountTenDangNhap').value = suggestedUsername;
+            
+            createAccountModal.show();
+        } catch (error) {
+            showNotification('Có lỗi xảy ra khi tải thông tin khách hàng', 'error');
+        }
+    }
+
+    function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = event.target.closest('button').querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    async function saveAccount() {
+        const form = document.getElementById('createAccountForm');
+        
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const matKhau = document.getElementById('accountMatKhau').value;
+        const matKhauXacNhan = document.getElementById('accountMatKhauXacNhan').value;
+
+        if (matKhau !== matKhauXacNhan) {
+            showNotification('Mật khẩu xác nhận không khớp!', 'error');
+            return;
+        }
+
+        const data = {
+            maKhachHang: parseInt(document.getElementById('accountMaKhachHang').value),
+            tenDangNhap: document.getElementById('accountTenDangNhap').value,
+            matKhau: matKhau,
+            email: document.getElementById('accountEmail').value || null
+        };
+
+        try {
+            const response = await fetch('/Admin/Customer/CreateAccount', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification(result.message, 'success');
+                createAccountModal.hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Có lỗi xảy ra khi cấp tài khoản', 'error');
+        }
     }
 
     async function viewCustomer(id) {

@@ -14,6 +14,10 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+    
+    
     <style>
         * {
             margin: 0;
@@ -124,6 +128,7 @@
             z-index: 100;
         }
 
+
         .header-left {
             display: flex;
             align-items: center;
@@ -139,57 +144,11 @@
             display: none;
         }
 
-        .header-search {
-            position: relative;
-        }
-
-        .header-search input {
-            padding: 8px 16px 8px 40px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            width: 300px;
-            font-size: 14px;
-        }
-
-        .header-search i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0aec0;
-        }
 
         .header-right {
             display: flex;
             align-items: center;
             gap: 16px;
-        }
-
-        .header-icon-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: transparent;
-            border: none;
-            color: #4a5568;
-            cursor: pointer;
-            position: relative;
-            transition: background 0.3s;
-        }
-
-        .header-icon-btn:hover {
-            background: #f7fafc;
-        }
-
-        .header-icon-btn .badge {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #e53e3e;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
         }
 
         .header-user {
@@ -410,22 +369,14 @@
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="header-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Tìm kiếm..." />
-                    </div>
                 </div>
                 <div class="header-right">
-                    <button class="header-icon-btn" title="Thông báo">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </button>
-                    
                     @{
                         var fullName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Khách hàng";
                         var username = User.Identity?.Name ?? "";
                         var firstLetter = !string.IsNullOrEmpty(fullName) ? fullName.Substring(0, 1).ToUpper() : "K";
                     }
+                    
                     
                     <div class="header-user" id="headerUserDropdown">
                         <div class="header-user-avatar">
@@ -512,6 +463,8 @@
     <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     
     <script>
         // Toggle sidebar on mobile

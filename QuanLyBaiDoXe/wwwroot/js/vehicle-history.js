@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vehicle History Management Module
  */
 const VehicleHistory = (function () {
@@ -342,10 +342,45 @@ const VehicleHistory = (function () {
     }
 
     /**
-     * Export to Excel (placeholder)
+     * Export to Excel
      */
     function exportExcel() {
-        showNotification('Tính năng xuất Excel đang được phát triển', 'info');
+        const params = getFilterParams();
+        const queryString = $.param(params);
+        
+        showLoading();
+        
+        // Create a temporary link to download the file
+        const url = `/Admin/VehicleHistory/ExportExcel?${queryString}`;
+        
+        // Use fetch to download file
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `LichSuGuiXe_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                hideLoading();
+                showNotification('Xuất file Excel thành công', 'success');
+            })
+            .catch(error => {
+                hideLoading();
+                showNotification('Lỗi khi xuất file Excel', 'error');
+                console.error('Export error:', error);
+            });
     }
 
     /**

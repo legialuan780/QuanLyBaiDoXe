@@ -131,12 +131,6 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
-                <a href="@Url.Action("Index", "ReservationManagement", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Quản lý đặt chỗ</span>
-                </a>
-            </li>
-            <li class="sidebar-nav-item">
                 <a href="@Url.Action("Index", "Customer", new { area = "Admin" })" class="sidebar-nav-link">
                     <i class="fas fa-users"></i>
                     <span>Khách hàng</span>
@@ -217,16 +211,16 @@
                     </a>
                     <ul class="sidebar-submenu">
                         <li class="sidebar-nav-item">
-                            <a href="@Url.Action("Daily", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo ngày</a>
+                            <a href="@Url.Action("Daily", "VehicleMoney", new { area = "Admin" })" class="sidebar-nav-link">Theo ngày</a>
                         </li>
                         <li class="sidebar-nav-item">
-                            <a href="@Url.Action("Monthly", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo tháng</a>
+                            <a href="@Url.Action("Monthly", "VehicleMoney", new { area = "Admin" })" class="sidebar-nav-link">Theo tháng</a>
                         </li>
                         <li class="sidebar-nav-item">
-                            <a href="@Url.Action("ByVehicle", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo loại xe</a>
+                            <a href="@Url.Action("ByVehicleType", "VehicleMoney", new { area = "Admin" })" class="sidebar-nav-link">Theo loại xe</a>
                         </li>
                         <li class="sidebar-nav-item">
-                            <a href="@Url.Action("ByGate", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo cổng</a>
+                            <a href="@Url.Action("ByGate", "VehicleMoney", new { area = "Admin" })" class="sidebar-nav-link">Theo cổng</a>
                         </li>
                     </ul>
                 </li>

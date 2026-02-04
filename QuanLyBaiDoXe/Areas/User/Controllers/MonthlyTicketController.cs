@@ -81,6 +81,7 @@ namespace QuanLyBaiDoXe.Areas.User.Controllers
                 {
                     MaKhachHang = customerId,
                     MaThe = request.MaThe,
+                    BienSoXe = request.BienSoXe,
                     NgayBatDau = ngayBatDau,
                     NgayHetHan = ngayHetHan,
                     SoTienDong = (card.MaLoaiXeNavigation?.GiaThang ?? 0) * request.SoThang,
@@ -170,6 +171,7 @@ namespace QuanLyBaiDoXe.Areas.User.Controllers
     {
         public string MaThe { get; set; } = null!;
         public int SoThang { get; set; }
+        public string? BienSoXe { get; set; }
     }
 
     public class RenewMonthlyTicketRequest

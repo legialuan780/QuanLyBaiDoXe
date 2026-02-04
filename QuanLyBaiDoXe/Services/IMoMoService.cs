@@ -6,13 +6,24 @@
     public interface IMoMoService
     {
         /// <summary>
-        /// Tạo link thanh toán MoMo
+        /// Tạo link thanh toán MoMo (sử dụng URL từ config)
         /// </summary>
         /// <param name="orderId">Mã đơn hàng (mã lượt gửi)</param>
         /// <param name="amount">Số tiền thanh toán</param>
         /// <param name="orderInfo">Thông tin đơn hàng</param>
         /// <returns>Link thanh toán MoMo hoặc null nếu thất bại</returns>
         Task<MoMoPaymentResponse> CreatePaymentAsync(string orderId, long amount, string orderInfo);
+
+        /// <summary>
+        /// Tạo link thanh toán MoMo với custom URLs
+        /// </summary>
+        /// <param name="orderId">Mã đơn hàng</param>
+        /// <param name="amount">Số tiền thanh toán</param>
+        /// <param name="orderInfo">Thông tin đơn hàng</param>
+        /// <param name="returnUrl">URL callback sau khi thanh toán</param>
+        /// <param name="notifyUrl">URL IPN (server-to-server)</param>
+        /// <returns>Link thanh toán MoMo</returns>
+        Task<MoMoPaymentResponse> CreatePaymentAsync(string orderId, long amount, string orderInfo, string returnUrl, string notifyUrl);
 
         /// <summary>
         /// Xác minh callback từ MoMo

@@ -62,7 +62,7 @@
 </div>
 
 <!-- Filters & Search -->
-<div class="admin-card">
+@* <div class="admin-card">
     <div class="admin-card-header">
         <h3 class="admin-card-title">Danh sách khách hàng</h3>
         <div class="d-flex gap-2">
@@ -71,7 +71,7 @@
                 Xuất Excel
             </button>
         </div>
-    </div>
+    </div> *@
     
     <div class="p-3 border-bottom">
         <form asp-action="Index" method="get" class="row g-3">
@@ -390,7 +390,7 @@
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
-                        <small class="text-muted">Tối thiểu 6 ký tự</small>
+                        <small class="text-muted">Tối thiểu 8 ký tự</small>
                     </div>
 
                     <div class="mb-3">
@@ -413,7 +413,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email (tùy chọn)</label>
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
                         <input type="email" 
                                class="form-control" 
                                id="accountEmail" 

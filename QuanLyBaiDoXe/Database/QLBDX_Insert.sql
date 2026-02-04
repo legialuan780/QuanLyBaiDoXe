@@ -1,4 +1,4 @@
-﻿USE QuanLyBaiDoXe;
+USE QuanLyBaiDoXe;
 GO
 
 ----------------------------------------------------------
@@ -146,15 +146,14 @@ GO
 ----------------------------------------------------------
 -- 7. KHU VỰC & VỊ TRÍ ĐỖ
 ----------------------------------------------------------
-INSERT INTO KhuVuc (TenKhuVuc) VALUES (N'Khu A'), (N'Khu B'), (N'Khu C'), (N'Khu D'), (N'Khu E');
+INSERT INTO KhuVuc (TenKhuVuc, MaLoaiXe) VALUES (N'Khu A', 1), (N'Khu B',2), (N'Khu C',3), (N'Khu D',4);
 GO
 
 INSERT INTO ViTriDo (MaKhuVuc, TenViTri, TrangThai) VALUES
 (1, 'A01', 0), (1, 'A02', 1), (1, 'A03', 0), (1, 'A04', 2),
 (2, 'B01', 0), (2, 'B02', 3), (2, 'B03', 1), (2, 'B04', 0),
 (3, 'C01', 0), (3, 'C02', 0), (3, 'C03', 2),
-(4, 'D01', 0), (4, 'D02', 1), (4, 'D03', 0),
-(5, 'E01', 0), (5, 'E02', 3), (5, 'E03', 0), (5, 'E04', 1);
+(4, 'D01', 0), (4, 'D02', 1), (4, 'D03', 0);
 GO
 
 INSERT INTO DatCho (MaKhachHang, MaViTri, ThoiGianDat, ThoiGianDenDuKien, ThoiGianHetHan, TrangThaiDatCho) VALUES

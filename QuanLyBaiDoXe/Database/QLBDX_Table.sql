@@ -1,4 +1,4 @@
-﻿USE master;
+USE master;
 GO
 
 -- 1. XỬ LÝ DATABASE (Xóa nếu tồn tại để làm mới hoàn toàn)
@@ -163,7 +163,8 @@ CREATE TABLE ChiTietGia (
 
 CREATE TABLE KhuVuc (
     MaKhuVuc INT PRIMARY KEY IDENTITY(1,1),
-    TenKhuVuc NVARCHAR(50)
+    TenKhuVuc NVARCHAR(50),
+    MaLoaiXe INT REFERENCES LoaiXe(MaLoaiXe)
 );
 
 CREATE TABLE ViTriDo (

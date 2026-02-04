@@ -9,5 +9,9 @@ public partial class KhuVuc
 
     public string? TenKhuVuc { get; set; }
 
+    public int? MaLoaiXe { get; set; }
+
+    public virtual LoaiXe? MaLoaiXeNavigation { get; set; }
+
     public virtual ICollection<ViTriDo> ViTriDos { get; set; } = new List<ViTriDo>();
 }

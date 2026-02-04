@@ -264,20 +264,20 @@
                     <button class="sidebar-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="header-search">
+                    @* <div class="header-search">
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Tìm kiếm..." />
-                    </div>
+                    </div> *@
                 </div>
                 <div class="header-right">
-                    <button class="header-icon-btn" title="Thông báo">
+                    @* <button class="header-icon-btn" title="T  hông báo">
                         <i class="fas fa-bell"></i>
                         <span class="badge">5</span>
                     </button>
                     <button class="header-icon-btn" title="Tin nhắn">
                         <i class="fas fa-envelope"></i>
                         <span class="badge">2</span>
-                    </button>
+                    </button> *@
                     
                     @{
                         var fullName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "User";

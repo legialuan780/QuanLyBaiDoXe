@@ -15,5 +15,7 @@ public partial class LoaiXe
 
     public virtual ICollection<CauHinhGium> CauHinhGia { get; set; } = new List<CauHinhGium>();
 
+    public virtual ICollection<KhuVuc> KhuVucs { get; set; } = new List<KhuVuc>();
+
     public virtual ICollection<TheXe> TheXes { get; set; } = new List<TheXe>();
 }

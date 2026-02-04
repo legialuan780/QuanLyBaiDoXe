@@ -384,7 +384,7 @@ const MonthlyTicket = {
 
     renew: async function () {
         const data = {
-            maVeThang: parseInt($('#renewMaVeThang').val()),
+            maTheThang: parseInt($('#renewMaVeThang').val()),
             soThang: parseInt($('#renewSoThang').val()),
             soTienDong: parseFloat($('#renewSoTien').val()) || 0
         };

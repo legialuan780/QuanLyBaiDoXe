@@ -1,4 +1,5 @@
-﻿@{
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleVisionViewModel
+@{
     ViewData["Title"] = "Giám sát bãi đỗ xe";
 }
 
@@ -46,7 +47,7 @@
             <i class="fas fa-parking"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="totalSlots">100</h3>
+            <h3 id="totalSlots">@Model.TotalSlots</h3>
             <p>Tổng chỗ đỗ</p>
         </div>
     </div>
@@ -55,12 +56,12 @@
             <i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="availableSlots">45</h3>
+            <h3 id="availableSlots">@Model.AvailableSlots</h3>
             <p>Chỗ trống</p>
         </div>
         <div class="stat-card-trend up">
             <i class="fas fa-arrow-up"></i>
-            45%
+            @Model.AvailablePercent%
         </div>
     </div>
     <div class="stat-card">
@@ -68,12 +69,12 @@
             <i class="fas fa-car"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="occupiedSlots">52</h3>
+            <h3 id="occupiedSlots">@Model.OccupiedSlots</h3>
             <p>Đang sử dụng</p>
         </div>
         <div class="stat-card-trend">
             <i class="fas fa-minus"></i>
-            52%
+            @Model.OccupiedPercent%
         </div>
     </div>
     <div class="stat-card">
@@ -81,7 +82,7 @@
             <i class="fas fa-exclamation-triangle"></i>
         </div>
         <div class="stat-card-info">
-            <h3 id="reservedSlots">3</h3>
+            <h3 id="reservedSlots">@(Model.ReservedSlots + Model.MaintenanceSlots)</h3>
             <p>Đã đặt / Bảo trì</p>
         </div>
     </div>
@@ -124,950 +125,125 @@
                 <!-- Compact View Mode -->
                 <div id="compactView" class="compact-view" style="display: none;">
                     <div class="compact-sections">
-                        <!-- Section A - Xe máy -->
-                        <div class="compact-section" id="section-a" onclick="toggleCompactSection('section-a', event)">
-                            <div class="compact-section-header">
-                                <div class="compact-section-icon motorcycle-icon">
-                                    <i class="fas fa-motorcycle"></i>
+                        @foreach (var zone in Model.Zones)
+                        {
+                            var isEmployeeZone = zone.VehicleTypeClass == "employee" || zone.MoTaLoaiXe.ToLower().Contains("nhân viên");
+                            <div class="compact-section @(isEmployeeZone ? "employee-section" : "")" id="section-@zone.ZoneCode.ToLower()" onclick="toggleCompactSection('section-@zone.ZoneCode.ToLower()', event)">
+                                <div class="compact-section-header">
+                                    <div class="compact-section-icon @(zone.VehicleTypeClass)-icon">
+                                        <i class="fas @zone.IconClass"></i>
+                                    </div>
+                                    <div class="compact-section-info">
+                                        <h4 class="compact-section-title">
+                                            @zone.TenKhuVuc - @zone.MoTaLoaiXe
+                                            @if (isEmployeeZone)
+                                            {
+                                                <span class="vip-badge">VIP</span>
+                                            }
+                                        </h4>
+                                        <div class="compact-section-stats">
+                                            <span class="stat-badge available-badge">@zone.AvailableSlots trống</span>
+                                            <span class="stat-badge occupied-badge">@zone.OccupiedSlots đỗ</span>
+                                            @if (zone.ReservedSlots > 0)
+                                            {
+                                                <span class="stat-badge reserved-badge">@zone.ReservedSlots đặt</span>
+                                            }
+                                            @if (zone.MaintenanceSlots > 0)
+                                            {
+                                                <span class="stat-badge maintenance-badge">@zone.MaintenanceSlots bảo trì</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="compact-section-summary">
+                                        <div class="summary-percentage">@zone.OccupiedPercent%</div>
+                                        <div class="summary-total">@zone.TotalSlots chỗ</div>
+                                    </div>
+                                    <button class="compact-expand-btn">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
                                 </div>
-                                <div class="compact-section-info">
-                                    <h4 class="compact-section-title">Khu A - Xe máy</h4>
-                                    <div class="compact-section-stats">
-                                        <span class="stat-badge available-badge">15 trống</span>
-                                        <span class="stat-badge occupied-badge">24 đỗ</span>
-                                        <span class="stat-badge reserved-badge">1 đặt</span>
-                                    </div>
+                                <div class="compact-progress-bar">
+                                    <div class="compact-progress-fill occupied-fill @(isEmployeeZone ? "employee-fill" : "")" style="width: @zone.OccupiedPercent%"></div>
+                                    @if (zone.ReservedSlots > 0)
+                                    {
+                                        <div class="compact-progress-fill reserved-fill" style="width: @zone.ReservedPercent%"></div>
+                                    }
+                                    @if (zone.MaintenanceSlots > 0)
+                                    {
+                                        <div class="compact-progress-fill maintenance-fill" style="width: @zone.MaintenancePercent%"></div>
+                                    }
                                 </div>
-                                <div class="compact-section-summary">
-                                    <div class="summary-percentage">60%</div>
-                                    <div class="summary-total">40 chỗ</div>
-                                </div>
-                                <button class="compact-expand-btn">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="compact-progress-bar">
-                                <div class="compact-progress-fill occupied-fill" style="width: 60%"></div>
-                                <div class="compact-progress-fill reserved-fill" style="width: 2.5%"></div>
-                            </div>
-                            
-                            <!-- Expanded Content -->
-                            <div class="compact-section-expanded" style="display: none;">
-                                <div class="expanded-grid motorcycle-grid">
-                                    <div class="parking-slot motorcycle available" data-slot="A01" onclick="viewSlotDetails('A01'); event.stopPropagation();">
-                                        <span class="slot-number">A01</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A02" onclick="viewSlotDetails('A02'); event.stopPropagation();">
-                                        <span class="slot-number">A02</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A03" onclick="viewSlotDetails('A03'); event.stopPropagation();">
-                                        <span class="slot-number">A03</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A04" onclick="viewSlotDetails('A04'); event.stopPropagation();">
-                                        <span class="slot-number">A04</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A05" onclick="viewSlotDetails('A05'); event.stopPropagation();">
-                                        <span class="slot-number">A05</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A06" onclick="viewSlotDetails('A06'); event.stopPropagation();">
-                                        <span class="slot-number">A06</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A07" onclick="viewSlotDetails('A07'); event.stopPropagation();">
-                                        <span class="slot-number">A07</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A08" onclick="viewSlotDetails('A08'); event.stopPropagation();">
-                                        <span class="slot-number">A08</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A09" onclick="viewSlotDetails('A09'); event.stopPropagation();">
-                                        <span class="slot-number">A09</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A10" onclick="viewSlotDetails('A10'); event.stopPropagation();">
-                                        <span class="slot-number">A10</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A11" onclick="viewSlotDetails('A11'); event.stopPropagation();">
-                                        <span class="slot-number">A11</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A12" onclick="viewSlotDetails('A12'); event.stopPropagation();">
-                                        <span class="slot-number">A12</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A13" onclick="viewSlotDetails('A13'); event.stopPropagation();">
-                                        <span class="slot-number">A13</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A14" onclick="viewSlotDetails('A14'); event.stopPropagation();">
-                                        <span class="slot-number">A14</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A15" onclick="viewSlotDetails('A15'); event.stopPropagation();">
-                                        <span class="slot-number">A15</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A16" onclick="viewSlotDetails('A16'); event.stopPropagation();">
-                                        <span class="slot-number">A16</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A17" onclick="viewSlotDetails('A17'); event.stopPropagation();">
-                                        <span class="slot-number">A17</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A18" onclick="viewSlotDetails('A18'); event.stopPropagation();">
-                                        <span class="slot-number">A18</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A19" onclick="viewSlotDetails('A19'); event.stopPropagation();">
-                                        <span class="slot-number">A19</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A20" onclick="viewSlotDetails('A20'); event.stopPropagation();">
-                                        <span class="slot-number">A20</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A21" onclick="viewSlotDetails('A21'); event.stopPropagation();">
-                                        <span class="slot-number">A21</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A22" onclick="viewSlotDetails('A22'); event.stopPropagation();">
-                                        <span class="slot-number">A22</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A23" onclick="viewSlotDetails('A23'); event.stopPropagation();">
-                                        <span class="slot-number">A23</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A24" onclick="viewSlotDetails('A24'); event.stopPropagation();">
-                                        <span class="slot-number">A24</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A25" onclick="viewSlotDetails('A25'); event.stopPropagation();">
-                                        <span class="slot-number">A25</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A26" onclick="viewSlotDetails('A26'); event.stopPropagation();">
-                                        <span class="slot-number">A26</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle reserved" data-slot="A27" onclick="viewSlotDetails('A27'); event.stopPropagation();">
-                                        <span class="slot-number">A27</span>
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A28" onclick="viewSlotDetails('A28'); event.stopPropagation();">
-                                        <span class="slot-number">A28</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A29" onclick="viewSlotDetails('A29'); event.stopPropagation();">
-                                        <span class="slot-number">A29</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A30" onclick="viewSlotDetails('A30'); event.stopPropagation();">
-                                        <span class="slot-number">A30</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A31" onclick="viewSlotDetails('A31'); event.stopPropagation();">
-                                        <span class="slot-number">A31</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A32" onclick="viewSlotDetails('A32'); event.stopPropagation();">
-                                        <span class="slot-number">A32</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A33" onclick="viewSlotDetails('A33'); event.stopPropagation();">
-                                        <span class="slot-number">A33</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A34" onclick="viewSlotDetails('A34'); event.stopPropagation();">
-                                        <span class="slot-number">A34</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A35" onclick="viewSlotDetails('A35'); event.stopPropagation();">
-                                        <span class="slot-number">A35</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A36" onclick="viewSlotDetails('A36'); event.stopPropagation();">
-                                        <span class="slot-number">A36</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A37" onclick="viewSlotDetails('A37'); event.stopPropagation();">
-                                        <span class="slot-number">A37</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A38" onclick="viewSlotDetails('A38'); event.stopPropagation();">
-                                        <span class="slot-number">A38</span>
-                                    </div>
-                                    <div class="parking-slot motorcycle occupied" data-slot="A39" onclick="viewSlotDetails('A39'); event.stopPropagation();">
-                                        <span class="slot-number">A39</span>
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="parking-slot motorcycle available" data-slot="A40" onclick="viewSlotDetails('A40'); event.stopPropagation();">
-                                        <span class="slot-number">A40</span>
+                                
+                                <!-- Expanded Content -->
+                                <div class="compact-section-expanded" style="display: none;">
+                                    <div class="expanded-grid @zone.GridClass">
+                                        @foreach (var slot in zone.Slots)
+                                        {
+                                            <div class="parking-slot @slot.VehicleTypeClass @slot.TrangThaiText" 
+                                                 data-slot="@slot.SlotCode" 
+                                                 data-mavitri="@slot.MaViTri"
+                                                 onclick="viewSlotDetails(@slot.MaViTri, '@slot.SlotCode'); event.stopPropagation();">
+                                                <span class="slot-number">@slot.SlotCode</span>
+                                                @if (slot.TrangThai == 1)
+                                                {
+                                                    <i class="fas @slot.IconClass"></i>
+                                                }
+                                                else if (slot.TrangThai == 2)
+                                                {
+                                                    <i class="fas fa-clock"></i>
+                                                }
+                                                else if (slot.TrangThai == 3)
+                                                {
+                                                    <i class="fas fa-tools"></i>
+                                                }
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Section B - Ô tô 4 chỗ -->
-                        <div class="compact-section" id="section-b" onclick="toggleCompactSection('section-b', event)">
-                            <div class="compact-section-header">
-                                <div class="compact-section-icon car-icon">
-                                    <i class="fas fa-car"></i>
-                                </div>
-                                <div class="compact-section-info">
-                                    <h4 class="compact-section-title">Khu B - Ô tô 4 chỗ</h4>
-                                    <div class="compact-section-stats">
-                                        <span class="stat-badge available-badge">11 trống</span>
-                                        <span class="stat-badge occupied-badge">8 đỗ</span>
-                                        <span class="stat-badge maintenance-badge">1 bảo trì</span>
-                                    </div>
-                                </div>
-                                <div class="compact-section-summary">
-                                    <div class="summary-percentage">40%</div>
-                                    <div class="summary-total">20 chỗ</div>
-                                </div>
-                                <button class="compact-expand-btn">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="compact-progress-bar">
-                                <div class="compact-progress-fill occupied-fill" style="width: 40%"></div>
-                                <div class="compact-progress-fill maintenance-fill" style="width: 5%"></div>
-                            </div>
-                            
-                            <!-- Expanded Content -->
-                            <div class="compact-section-expanded" style="display: none;">
-                                <div class="expanded-grid car-grid">
-                                    <div class="parking-slot car occupied" data-slot="B01" onclick="viewSlotDetails('B01'); event.stopPropagation();">
-                                        <span class="slot-number">B01</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B02" onclick="viewSlotDetails('B02'); event.stopPropagation();">
-                                        <span class="slot-number">B02</span>
-                                    </div>
-                                    <div class="parking-slot car reserved" data-slot="B03" onclick="viewSlotDetails('B03'); event.stopPropagation();">
-                                        <span class="slot-number">B03</span>
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B04" onclick="viewSlotDetails('B04'); event.stopPropagation();">
-                                        <span class="slot-number">B04</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B05" onclick="viewSlotDetails('B05'); event.stopPropagation();">
-                                        <span class="slot-number">B05</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B06" onclick="viewSlotDetails('B06'); event.stopPropagation();">
-                                        <span class="slot-number">B06</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car maintenance" data-slot="B07" onclick="viewSlotDetails('B07'); event.stopPropagation();">
-                                        <span class="slot-number">B07</span>
-                                        <i class="fas fa-tools"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B08" onclick="viewSlotDetails('B08'); event.stopPropagation();">
-                                        <span class="slot-number">B08</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B09" onclick="viewSlotDetails('B09'); event.stopPropagation();">
-                                        <span class="slot-number">B09</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B10" onclick="viewSlotDetails('B10'); event.stopPropagation();">
-                                        <span class="slot-number">B10</span>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B11" onclick="viewSlotDetails('B11'); event.stopPropagation();">
-                                        <span class="slot-number">B11</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B12" onclick="viewSlotDetails('B12'); event.stopPropagation();">
-                                        <span class="slot-number">B12</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B13" onclick="viewSlotDetails('B13'); event.stopPropagation();">
-                                        <span class="slot-number">B13</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B14" onclick="viewSlotDetails('B14'); event.stopPropagation();">
-                                        <span class="slot-number">B14</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B15" onclick="viewSlotDetails('B15'); event.stopPropagation();">
-                                        <span class="slot-number">B15</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B16" onclick="viewSlotDetails('B16'); event.stopPropagation();">
-                                        <span class="slot-number">B16</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B17" onclick="viewSlotDetails('B17'); event.stopPropagation();">
-                                        <span class="slot-number">B17</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B18" onclick="viewSlotDetails('B18'); event.stopPropagation();">
-                                        <span class="slot-number">B18</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="parking-slot car available" data-slot="B19" onclick="viewSlotDetails('B19'); event.stopPropagation();">
-                                        <span class="slot-number">B19</span>
-                                    </div>
-                                    <div class="parking-slot car occupied" data-slot="B20" onclick="viewSlotDetails('B20'); event.stopPropagation();">
-                                        <span class="slot-number">B20</span>
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section C - Ô tô 7 chỗ -->
-                        <div class="compact-section" id="section-c" onclick="toggleCompactSection('section-c', event)">
-                            <div class="compact-section-header">
-                                <div class="compact-section-icon suv-icon">
-                                    <i class="fas fa-shuttle-van"></i>
-                                </div>
-                                <div class="compact-section-info">
-                                    <h4 class="compact-section-title">Khu C - Ô tô 7 chỗ / SUV</h4>
-                                    <div class="compact-section-stats">
-                                        <span class="stat-badge available-badge">7 trống</span>
-                                        <span class="stat-badge occupied-badge">4 đỗ</span>
-                                        <span class="stat-badge reserved-badge">1 đặt</span>
-                                    </div>
-                                </div>
-                                <div class="compact-section-summary">
-                                    <div class="summary-percentage">33%</div>
-                                    <div class="summary-total">12 chỗ</div>
-                                </div>
-                                <button class="compact-expand-btn">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="compact-progress-bar">
-                                <div class="compact-progress-fill occupied-fill" style="width: 33%"></div>
-                                <div class="compact-progress-fill reserved-fill" style="width: 8.3%"></div>
-                            </div>
-                            
-                            <!-- Expanded Content -->
-                            <div class="compact-section-expanded" style="display: none;">
-                                <div class="expanded-grid suv-grid">
-                                    <div class="parking-slot suv occupied" data-slot="C01" onclick="viewSlotDetails('C01'); event.stopPropagation();">
-                                        <span class="slot-number">C01</span>
-                                        <i class="fas fa-shuttle-van"></i>
-                                    </div>
-                                    <div class="parking-slot suv available" data-slot="C02" onclick="viewSlotDetails('C02'); event.stopPropagation();">
-                                        <span class="slot-number">C02</span>
-                                    </div>
-                                    <div class="parking-slot suv occupied" data-slot="C03" onclick="viewSlotDetails('C03'); event.stopPropagation();">
-                                        <span class="slot-number">C03</span>
-                                        <i class="fas fa-shuttle-van"></i>
-                                    </div>
-                                    <div class="parking-slot suv available" data-slot="C04" onclick="viewSlotDetails('C04'); event.stopPropagation();">
-                                        <span class="slot-number">C04</span>
-                                    </div>
-                                    <div class="parking-slot suv reserved" data-slot="C05" onclick="viewSlotDetails('C05'); event.stopPropagation();">
-                                        <span class="slot-number">C05</span>
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div class="parking-slot suv available" data-slot="C06" onclick="viewSlotDetails('C06'); event.stopPropagation();">
-                                        <span class="slot-number">C06</span>
-                                    </div>
-                                    <div class="parking-slot suv occupied" data-slot="C07" onclick="viewSlotDetails('C07'); event.stopPropagation();">
-                                        <span class="slot-number">C07</span>
-                                        <i class="fas fa-shuttle-van"></i>
-                                    </div>
-                                    <div class="parking-slot suv available" data-slot="C08" onclick="viewSlotDetails('C08'); event.stopPropagation();">
-                                        <span class="slot-number">C08</span>
-                                    </div>
-                                    <div class="parking-slot suv occupied" data-slot="C09" onclick="viewSlotDetails('C09'); event.stopPropagation();">
-                                        <span class="slot-number">C09</span>
-                                        <i class="fas fa-shuttle-van"></i>
-                                    </div>
-                                    <div class="parking-slot suv available" data-slot="C10" onclick="viewSlotDetails('C10'); event.stopPropagation();">
-                                        <span class="slot-number">C10</span>
-                                    </div>
-                                    <div class="parking-slot suv occupied" data-slot="C11" onclick="viewSlotDetails('C11'); event.stopPropagation();">
-                                        <span class="slot-number">C11</span>
-                                        <i class="fas fa-shuttle-van"></i>
-                                    </div>
-                                    <div class="parking-slot suv available" data-slot="C12" onclick="viewSlotDetails('C12'); event.stopPropagation();">
-                                        <span class="slot-number">C12</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section D - Xe tải -->
-                        <div class="compact-section" id="section-d" onclick="toggleCompactSection('section-d', event)">
-                            <div class="compact-section-header">
-                                <div class="compact-section-icon truck-icon">
-                                    <i class="fas fa-truck"></i>
-                                </div>
-                                <div class="compact-section-info">
-                                    <h4 class="compact-section-title">Khu D - Xe tải</h4>
-                                    <div class="compact-section-stats">
-                                        <span class="stat-badge available-badge">4 trống</span>
-                                        <span class="stat-badge occupied-badge">4 đỗ</span>
-                                    </div>
-                                </div>
-                                <div class="compact-section-summary">
-                                    <div class="summary-percentage">50%</div>
-                                    <div class="summary-total">8 chỗ</div>
-                                </div>
-                                <button class="compact-expand-btn">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="compact-progress-bar">
-                                <div class="compact-progress-fill occupied-fill" style="width: 50%"></div>
-                            </div>
-                            
-                            <!-- Expanded Content -->
-                            <div class="compact-section-expanded" style="display: none;">
-                                <div class="expanded-grid truck-grid">
-                                    <div class="parking-slot truck occupied" data-slot="D01" onclick="viewSlotDetails('D01'); event.stopPropagation();">
-                                        <span class="slot-number">D01</span>
-                                        <i class="fas fa-truck"></i>
-                                    </div>
-                                    <div class="parking-slot truck available" data-slot="D02" onclick="viewSlotDetails('D02'); event.stopPropagation();">
-                                        <span class="slot-number">D02</span>
-                                    </div>
-                                    <div class="parking-slot truck occupied" data-slot="D03" onclick="viewSlotDetails('D03'); event.stopPropagation();">
-                                        <span class="slot-number">D03</span>
-                                        <i class="fas fa-truck"></i>
-                                    </div>
-                                    <div class="parking-slot truck available" data-slot="D04" onclick="viewSlotDetails('D04'); event.stopPropagation();">
-                                        <span class="slot-number">D04</span>
-                                    </div>
-                                    <div class="parking-slot truck occupied" data-slot="D05" onclick="viewSlotDetails('D05'); event.stopPropagation();">
-                                        <span class="slot-number">D05</span>
-                                        <i class="fas fa-truck"></i>
-                                    </div>
-                                    <div class="parking-slot truck available" data-slot="D06" onclick="viewSlotDetails('D06'); event.stopPropagation();">
-                                        <span class="slot-number">D06</span>
-                                    </div>
-                                    <div class="parking-slot truck available" data-slot="D07" onclick="viewSlotDetails('D07'); event.stopPropagation();">
-                                        <span class="slot-number">D07</span>
-                                    </div>
-                                    <div class="parking-slot truck occupied" data-slot="D08" onclick="viewSlotDetails('D08'); event.stopPropagation();">
-                                        <span class="slot-number">D08</span>
-                                        <i class="fas fa-truck"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section E - Nhân viên -->
-                        <div class="compact-section employee-section" id="section-e" onclick="toggleCompactSection('section-e', event)">
-                            <div class="compact-section-header">
-                                <div class="compact-section-icon employee-icon">
-                                    <i class="fas fa-user-tie"></i>
-                                </div>
-                                <div class="compact-section-info">
-                                    <h4 class="compact-section-title">
-                                        Khu E - Nhân viên
-                                        <span class="vip-badge">VIP</span>
-                                    </h4>
-                                    <div class="compact-section-stats">
-                                        <span class="stat-badge available-badge">8 trống</span>
-                                        <span class="stat-badge occupied-badge">12 đỗ</span>
-                                    </div>
-                                </div>
-                                <div class="compact-section-summary">
-                                    <div class="summary-percentage">60%</div>
-                                    <div class="summary-total">20 chỗ</div>
-                                </div>
-                                <button class="compact-expand-btn">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="compact-progress-bar">
-                                <div class="compact-progress-fill occupied-fill employee-fill" style="width: 60%"></div>
-                            </div>
-                            
-                            <!-- Expanded Content -->
-                            <div class="compact-section-expanded" style="display: none;">
-                                <div class="expanded-grid employee-grid">
-                                    <div class="parking-slot employee occupied" data-slot="E01" onclick="viewSlotDetails('E01'); event.stopPropagation();">
-                                        <span class="slot-number">E01</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E02" onclick="viewSlotDetails('E02'); event.stopPropagation();">
-                                        <span class="slot-number">E02</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E03" onclick="viewSlotDetails('E03'); event.stopPropagation();">
-                                        <span class="slot-number">E03</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E04" onclick="viewSlotDetails('E04'); event.stopPropagation();">
-                                        <span class="slot-number">E04</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E05" onclick="viewSlotDetails('E05'); event.stopPropagation();">
-                                        <span class="slot-number">E05</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E06" onclick="viewSlotDetails('E06'); event.stopPropagation();">
-                                        <span class="slot-number">E06</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E07" onclick="viewSlotDetails('E07'); event.stopPropagation();">
-                                        <span class="slot-number">E07</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E08" onclick="viewSlotDetails('E08'); event.stopPropagation();">
-                                        <span class="slot-number">E08</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E09" onclick="viewSlotDetails('E09'); event.stopPropagation();">
-                                        <span class="slot-number">E09</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E10" onclick="viewSlotDetails('E10'); event.stopPropagation();">
-                                        <span class="slot-number">E10</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E11" onclick="viewSlotDetails('E11'); event.stopPropagation();">
-                                        <span class="slot-number">E11</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E12" onclick="viewSlotDetails('E12'); event.stopPropagation();">
-                                        <span class="slot-number">E12</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E13" onclick="viewSlotDetails('E13'); event.stopPropagation();">
-                                        <span class="slot-number">E13</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E14" onclick="viewSlotDetails('E14'); event.stopPropagation();">
-                                        <span class="slot-number">E14</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E15" onclick="viewSlotDetails('E15'); event.stopPropagation();">
-                                        <span class="slot-number">E15</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E16" onclick="viewSlotDetails('E16'); event.stopPropagation();">
-                                        <span class="slot-number">E16</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E17" onclick="viewSlotDetails('E17'); event.stopPropagation();">
-                                        <span class="slot-number">E17</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E18" onclick="viewSlotDetails('E18'); event.stopPropagation();">
-                                        <span class="slot-number">E18</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                    <div class="parking-slot employee available" data-slot="E19" onclick="viewSlotDetails('E19'); event.stopPropagation();">
-                                        <span class="slot-number">E19</span>
-                                    </div>
-                                    <div class="parking-slot employee occupied" data-slot="E20" onclick="viewSlotDetails('E20'); event.stopPropagation();">
-                                        <span class="slot-number">E20</span>
-                                        <i class="fas fa-id-badge"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
 
                 <!-- Parking Map Grid (Detail View) -->
                 <div class="parking-map" id="detailView">
-                    <!-- Section A - Xe máy -->
-                    <div class="parking-section">
-                        <div class="section-header">
-                            <i class="fas fa-motorcycle"></i>
-                            Khu A - Xe máy (40 chỗ)
-                        </div>
-                        <div class="parking-grid motorcycle-grid">
-                            <!-- Row 1 -->
-                            <div class="parking-slot motorcycle available" data-slot="A01" onclick="viewSlotDetails('A01')">
-                                <span class="slot-number">A01</span>
+                    @foreach (var zone in Model.Zones)
+                    {
+                        var isEmployeeZone = zone.VehicleTypeClass == "employee" || zone.MoTaLoaiXe.ToLower().Contains("nhân viên");
+                        <div class="parking-section">
+                            <div class="section-header @(isEmployeeZone ? "employee-header" : "")">
+                                <i class="fas @zone.IconClass"></i>
+                                @zone.TenKhuVuc - @zone.MoTaLoaiXe (@zone.TotalSlots chỗ)
+                                @if (isEmployeeZone)
+                                {
+                                    <span class="employee-badge">VIP</span>
+                                }
                             </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A02" onclick="viewSlotDetails('A02')">
-                                <span class="slot-number">A02</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A03" onclick="viewSlotDetails('A03')">
-                                <span class="slot-number">A03</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A04" onclick="viewSlotDetails('A04')">
-                                <span class="slot-number">A04</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A05" onclick="viewSlotDetails('A05')">
-                                <span class="slot-number">A05</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A06" onclick="viewSlotDetails('A06')">
-                                <span class="slot-number">A06</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A07" onclick="viewSlotDetails('A07')">
-                                <span class="slot-number">A07</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A08" onclick="viewSlotDetails('A08')">
-                                <span class="slot-number">A08</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A09" onclick="viewSlotDetails('A09')">
-                                <span class="slot-number">A09</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A10" onclick="viewSlotDetails('A10')">
-                                <span class="slot-number">A10</span>
-                            </div>
-                            <!-- Row 2 -->
-                            <div class="parking-slot motorcycle available" data-slot="A11" onclick="viewSlotDetails('A11')">
-                                <span class="slot-number">A11</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A12" onclick="viewSlotDetails('A12')">
-                                <span class="slot-number">A12</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A13" onclick="viewSlotDetails('A13')">
-                                <span class="slot-number">A13</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A14" onclick="viewSlotDetails('A14')">
-                                <span class="slot-number">A14</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A15" onclick="viewSlotDetails('A15')">
-                                <span class="slot-number">A15</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A16" onclick="viewSlotDetails('A16')">
-                                <span class="slot-number">A16</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A17" onclick="viewSlotDetails('A17')">
-                                <span class="slot-number">A17</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A18" onclick="viewSlotDetails('A18')">
-                                <span class="slot-number">A18</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A19" onclick="viewSlotDetails('A19')">
-                                <span class="slot-number">A19</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A20" onclick="viewSlotDetails('A20')">
-                                <span class="slot-number">A20</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <!-- Row 3 -->
-                            <div class="parking-slot motorcycle occupied" data-slot="A21" onclick="viewSlotDetails('A21')">
-                                <span class="slot-number">A21</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A22" onclick="viewSlotDetails('A22')">
-                                <span class="slot-number">A22</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A23" onclick="viewSlotDetails('A23')">
-                                <span class="slot-number">A23</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A24" onclick="viewSlotDetails('A24')">
-                                <span class="slot-number">A24</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A25" onclick="viewSlotDetails('A25')">
-                                <span class="slot-number">A25</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A26" onclick="viewSlotDetails('A26')">
-                                <span class="slot-number">A26</span>
-                            </div>
-                            <div class="parking-slot motorcycle reserved" data-slot="A27" onclick="viewSlotDetails('A27')">
-                                <span class="slot-number">A27</span>
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A28" onclick="viewSlotDetails('A28')">
-                                <span class="slot-number">A28</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A29" onclick="viewSlotDetails('A29')">
-                                <span class="slot-number">A29</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A30" onclick="viewSlotDetails('A30')">
-                                <span class="slot-number">A30</span>
-                            </div>
-                            <!-- Row 4 -->
-                            <div class="parking-slot motorcycle available" data-slot="A31" onclick="viewSlotDetails('A31')">
-                                <span class="slot-number">A31</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A32" onclick="viewSlotDetails('A32')">
-                                <span class="slot-number">A32</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A33" onclick="viewSlotDetails('A33')">
-                                <span class="slot-number">A33</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A34" onclick="viewSlotDetails('A34')">
-                                <span class="slot-number">A34</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A35" onclick="viewSlotDetails('A35')">
-                                <span class="slot-number">A35</span>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A36" onclick="viewSlotDetails('A36')">
-                                <span class="slot-number">A36</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A37" onclick="viewSlotDetails('A37')">
-                                <span class="slot-number">A37</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A38" onclick="viewSlotDetails('A38')">
-                                <span class="slot-number">A38</span>
-                            </div>
-                            <div class="parking-slot motorcycle occupied" data-slot="A39" onclick="viewSlotDetails('A39')">
-                                <span class="slot-number">A39</span>
-                                <i class="fas fa-motorcycle"></i>
-                            </div>
-                            <div class="parking-slot motorcycle available" data-slot="A40" onclick="viewSlotDetails('A40')">
-                                <span class="slot-number">A40</span>
+                            <div class="parking-grid @zone.GridClass">
+                                @foreach (var slot in zone.Slots)
+                                {
+                                    <div class="parking-slot @slot.VehicleTypeClass @slot.TrangThaiText" 
+                                         data-slot="@slot.SlotCode" 
+                                         data-mavitri="@slot.MaViTri"
+                                         onclick="viewSlotDetails(@slot.MaViTri, '@slot.SlotCode')">
+                                        <span class="slot-number">@slot.SlotCode</span>
+                                        @if (slot.TrangThai == 1)
+                                        {
+                                            <i class="fas @slot.IconClass"></i>
+                                        }
+                                        else if (slot.TrangThai == 2)
+                                        {
+                                            <i class="fas fa-clock"></i>
+                                        }
+                                        else if (slot.TrangThai == 3)
+                                        {
+                                            <i class="fas fa-tools"></i>
+                                        }
+                                    </div>
+                                }
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Section B - Ô tô 4 chỗ -->
-                    <div class="parking-section">
-                        <div class="section-header">
-                            <i class="fas fa-car"></i>
-                            Khu B - Ô tô 4 chỗ (20 chỗ)
-                        </div>
-                        <div class="parking-grid car-grid">
-                            <!-- Row 1 -->
-                            <div class="parking-slot car occupied" data-slot="B01" onclick="viewSlotDetails('B01')">
-                                <span class="slot-number">B01</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B02" onclick="viewSlotDetails('B02')">
-                                <span class="slot-number">B02</span>
-                            </div>
-                            <div class="parking-slot car reserved" data-slot="B03" onclick="viewSlotDetails('B03')">
-                                <span class="slot-number">B03</span>
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="parking-slot car occupied" data-slot="B04" onclick="viewSlotDetails('B04')">
-                                <span class="slot-number">B04</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B05" onclick="viewSlotDetails('B05')">
-                                <span class="slot-number">B05</span>
-                            </div>
-                            <!-- Row 2 -->
-                            <div class="parking-slot car occupied" data-slot="B06" onclick="viewSlotDetails('B06')">
-                                <span class="slot-number">B06</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car maintenance" data-slot="B07" onclick="viewSlotDetails('B07')">
-                                <span class="slot-number">B07</span>
-                                <i class="fas fa-tools"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B08" onclick="viewSlotDetails('B08')">
-                                <span class="slot-number">B08</span>
-                            </div>
-                            <div class="parking-slot car occupied" data-slot="B09" onclick="viewSlotDetails('B09')">
-                                <span class="slot-number">B09</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B10" onclick="viewSlotDetails('B10')">
-                                <span class="slot-number">B10</span>
-                            </div>
-                            <!-- Row 3 -->
-                            <div class="parking-slot car available" data-slot="B11" onclick="viewSlotDetails('B11')">
-                                <span class="slot-number">B11</span>
-                            </div>
-                            <div class="parking-slot car occupied" data-slot="B12" onclick="viewSlotDetails('B12')">
-                                <span class="slot-number">B12</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B13" onclick="viewSlotDetails('B13')">
-                                <span class="slot-number">B13</span>
-                            </div>
-                            <div class="parking-slot car occupied" data-slot="B14" onclick="viewSlotDetails('B14')">
-                                <span class="slot-number">B14</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B15" onclick="viewSlotDetails('B15')">
-                                <span class="slot-number">B15</span>
-                            </div>
-                            <!-- Row 4 -->
-                            <div class="parking-slot car occupied" data-slot="B16" onclick="viewSlotDetails('B16')">
-                                <span class="slot-number">B16</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B17" onclick="viewSlotDetails('B17')">
-                                <span class="slot-number">B17</span>
-                            </div>
-                            <div class="parking-slot car occupied" data-slot="B18" onclick="viewSlotDetails('B18')">
-                                <span class="slot-number">B18</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="parking-slot car available" data-slot="B19" onclick="viewSlotDetails('B19')">
-                                <span class="slot-number">B19</span>
-                            </div>
-                            <div class="parking-slot car occupied" data-slot="B20" onclick="viewSlotDetails('B20')">
-                                <span class="slot-number">B20</span>
-                                <i class="fas fa-car"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section C - Ô tô 7 chỗ -->
-                    <div class="parking-section">
-                        <div class="section-header">
-                            <i class="fas fa-shuttle-van"></i>
-                            Khu C - Ô tô 7 chỗ / SUV (12 chỗ)
-                        </div>
-                        <div class="parking-grid suv-grid">
-                            <!-- Row 1 -->
-                            <div class="parking-slot suv occupied" data-slot="C01" onclick="viewSlotDetails('C01')">
-                                <span class="slot-number">C01</span>
-                                <i class="fas fa-shuttle-van"></i>
-                            </div>
-                            <div class="parking-slot suv available" data-slot="C02" onclick="viewSlotDetails('C02')">
-                                <span class="slot-number">C02</span>
-                            </div>
-                            <div class="parking-slot suv occupied" data-slot="C03" onclick="viewSlotDetails('C03')">
-                                <span class="slot-number">C03</span>
-                                <i class="fas fa-shuttle-van"></i>
-                            </div>
-                            <div class="parking-slot suv available" data-slot="C04" onclick="viewSlotDetails('C04')">
-                                <span class="slot-number">C04</span>
-                            </div>
-                            <!-- Row 2 -->
-                            <div class="parking-slot suv reserved" data-slot="C05" onclick="viewSlotDetails('C05')">
-                                <span class="slot-number">C05</span>
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="parking-slot suv available" data-slot="C06" onclick="viewSlotDetails('C06')">
-                                <span class="slot-number">C06</span>
-                            </div>
-                            <div class="parking-slot suv occupied" data-slot="C07" onclick="viewSlotDetails('C07')">
-                                <span class="slot-number">C07</span>
-                                <i class="fas fa-shuttle-van"></i>
-                            </div>
-                            <div class="parking-slot suv available" data-slot="C08" onclick="viewSlotDetails('C08')">
-                                <span class="slot-number">C08</span>
-                            </div>
-                            <!-- Row 3 -->
-                            <div class="parking-slot suv occupied" data-slot="C09" onclick="viewSlotDetails('C09')">
-                                <span class="slot-number">C09</span>
-                                <i class="fas fa-shuttle-van"></i>
-                            </div>
-                            <div class="parking-slot suv available" data-slot="C10" onclick="viewSlotDetails('C10')">
-                                <span class="slot-number">C10</span>
-                            </div>
-                            <div class="parking-slot suv occupied" data-slot="C11" onclick="viewSlotDetails('C11')">
-                                <span class="slot-number">C11</span>
-                                <i class="fas fa-shuttle-van"></i>
-                            </div>
-                            <div class="parking-slot suv available" data-slot="C12" onclick="viewSlotDetails('C12')">
-                                <span class="slot-number">C12</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section D - Xe tải -->
-                    <div class="parking-section">
-                        <div class="section-header">
-                            <i class="fas fa-truck"></i>
-                            Khu D - Xe tải (8 chỗ)
-                        </div>
-                        <div class="parking-grid truck-grid">
-                            <!-- Row 1 -->
-                            <div class="parking-slot truck occupied" data-slot="D01" onclick="viewSlotDetails('D01')">
-                                <span class="slot-number">D01</span>
-                                <i class="fas fa-truck"></i>
-                            </div>
-                            <div class="parking-slot truck available" data-slot="D02" onclick="viewSlotDetails('D02')">
-                                <span class="slot-number">D02</span>
-                            </div>
-                            <div class="parking-slot truck occupied" data-slot="D03" onclick="viewSlotDetails('D03')">
-                                <span class="slot-number">D03</span>
-                                <i class="fas fa-truck"></i>
-                            </div>
-                            <div class="parking-slot truck available" data-slot="D04" onclick="viewSlotDetails('D04')">
-                                <span class="slot-number">D04</span>
-                            </div>
-                            <!-- Row 2 -->
-                            <div class="parking-slot truck occupied" data-slot="D05" onclick="viewSlotDetails('D05')">
-                                <span class="slot-number">D05</span>
-                                <i class="fas fa-truck"></i>
-                            </div>
-                            <div class="parking-slot truck available" data-slot="D06" onclick="viewSlotDetails('D06')">
-                                <span class="slot-number">D06</span>
-                            </div>
-                            <div class="parking-slot truck available" data-slot="D07" onclick="viewSlotDetails('D07')">
-                                <span class="slot-number">D07</span>
-                            </div>
-                            <div class="parking-slot truck occupied" data-slot="D08" onclick="viewSlotDetails('D08')">
-                                <span class="slot-number">D08</span>
-                                <i class="fas fa-truck"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section E - Nhân viên -->
-                    <div class="parking-section">
-                        <div class="section-header employee-header">
-                            <i class="fas fa-user-tie"></i>
-                            Khu E - Nhân viên (20 chỗ)
-                            <span class="employee-badge">VIP</span>
-                        </div>
-                        <div class="parking-grid employee-grid">
-                            <!-- Row 1 -->
-                            <div class="parking-slot employee occupied" data-slot="E01" onclick="viewSlotDetails('E01')">
-                                <span class="slot-number">E01</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E02" onclick="viewSlotDetails('E02')">
-                                <span class="slot-number">E02</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee available" data-slot="E03" onclick="viewSlotDetails('E03')">
-                                <span class="slot-number">E03</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E04" onclick="viewSlotDetails('E04')">
-                                <span class="slot-number">E04</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E05" onclick="viewSlotDetails('E05')">
-                                <span class="slot-number">E05</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <!-- Row 2 -->
-                            <div class="parking-slot employee available" data-slot="E06" onclick="viewSlotDetails('E06')">
-                                <span class="slot-number">E06</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E07" onclick="viewSlotDetails('E07')">
-                                <span class="slot-number">E07</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee available" data-slot="E08" onclick="viewSlotDetails('E08')">
-                                <span class="slot-number">E08</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E09" onclick="viewSlotDetails('E09')">
-                                <span class="slot-number">E09</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E10" onclick="viewSlotDetails('E10')">
-                                <span class="slot-number">E10</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <!-- Row 3 -->
-                            <div class="parking-slot employee available" data-slot="E11" onclick="viewSlotDetails('E11')">
-                                <span class="slot-number">E11</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E12" onclick="viewSlotDetails('E12')">
-                                <span class="slot-number">E12</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee available" data-slot="E13" onclick="viewSlotDetails('E13')">
-                                <span class="slot-number">E13</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E14" onclick="viewSlotDetails('E14')">
-                                <span class="slot-number">E14</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee available" data-slot="E15" onclick="viewSlotDetails('E15')">
-                                <span class="slot-number">E15</span>
-                            </div>
-                            <!-- Row 4 -->
-                            <div class="parking-slot employee occupied" data-slot="E16" onclick="viewSlotDetails('E16')">
-                                <span class="slot-number">E16</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee available" data-slot="E17" onclick="viewSlotDetails('E17')">
-                                <span class="slot-number">E17</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E18" onclick="viewSlotDetails('E18')">
-                                <span class="slot-number">E18</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                            <div class="parking-slot employee available" data-slot="E19" onclick="viewSlotDetails('E19')">
-                                <span class="slot-number">E19</span>
-                            </div>
-                            <div class="parking-slot employee occupied" data-slot="E20" onclick="viewSlotDetails('E20')">
-                                <span class="slot-number">E20</span>
-                                <i class="fas fa-id-badge"></i>
-                            </div>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
@@ -1362,43 +538,40 @@
             <div class="admin-card-header">
                 <h3 class="admin-card-title">Hoạt động trực tiếp</h3>
             </div>
-            <div class="activity-list">
-                <div class="activity-item">
-                    <div class="activity-icon entry">
-                        <i class="fas fa-arrow-right"></i>
+            <div class="activity-list" id="activityList">
+                @if (Model.RecentActivities != null && Model.RecentActivities.Any())
+                {
+                    @foreach (var activity in Model.RecentActivities.Take(10))
+                    {
+                        <div class="activity-item">
+                            <div class="activity-icon @activity.ActivityClass">
+                                <i class="fas @activity.IconClass"></i>
+                            </div>
+                            <div class="activity-details">
+                                @if (activity.ActivityType == "entry")
+                                {
+                                    <div class="activity-title">Xe vào: <strong>@activity.BienSo</strong></div>
+                                }
+                                else if (activity.ActivityType == "exit")
+                                {
+                                    <div class="activity-title">Xe ra: <strong>@activity.BienSo</strong></div>
+                                }
+                                else if (activity.ActivityType == "payment")
+                                {
+                                    <div class="activity-title">Thanh toán: <strong>@(activity.SoTien?.ToString("N0") ?? "0") VNĐ</strong></div>
+                                }
+                                <div class="activity-time">@activity.TimeAgo</div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>Chưa có hoạt động nào</p>
                     </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Xe vào: <strong>29B1-12345</strong></div>
-                        <div class="activity-time">2 phút trước</div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon exit">
-                        <i class="fas fa-arrow-left"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Xe ra: <strong>30A-98765</strong></div>
-                        <div class="activity-time">5 phút trước</div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon payment">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Thanh toán: <strong>15,000 VNĐ</strong></div>
-                        <div class="activity-time">7 phút trước</div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon entry">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Xe vào: <strong>51G-11111</strong></div>
-                        <div class="activity-time">10 phút trước</div>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
@@ -1773,9 +946,46 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" onclick="navigateToSlot()">
+                <!-- Nút bảo trì - chỉ hiển thị cho ô trống hoặc đang bảo trì -->
+                <button type="button" class="btn btn-warning" id="btnToggleMaintenance" onclick="toggleSlotMaintenance()" style="display: none;">
+                    <i class="fas fa-tools"></i>
+                    <span id="btnMaintenanceText">Đặt bảo trì</span>
+                </button>
+                <button type="button" class="btn btn-primary" id="btnNavigate" onclick="navigateToSlot()">
                     <i class="fas fa-route"></i>
                     Dẫn đường
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Maintenance Modal -->
+<div class="modal fade" id="confirmMaintenanceModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="confirmMaintenanceHeader">
+                <h5 class="modal-title">
+                    <i class="fas fa-tools" id="confirmMaintenanceIcon"></i>
+                    <span id="confirmMaintenanceTitle">Xác nhận bảo trì</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div id="confirmMaintenanceIconLarge" class="mb-3">
+                    <i class="fas fa-tools fa-3x text-warning"></i>
+                </div>
+                <h5 id="confirmMaintenanceMessage" class="mb-2">Bạn có chắc chắn muốn đặt bảo trì cho vị trí này?</h5>
+                <p class="text-muted mb-0" id="confirmMaintenanceSlot">Vị trí: <strong></strong></p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Hủy
+                </button>
+                <button type="button" class="btn" id="btnConfirmMaintenance" onclick="executeToggleMaintenance()">
+                    <i class="fas fa-check"></i>
+                    <span id="btnConfirmMaintenanceText">Xác nhận</span>
                 </button>
             </div>
         </div>
@@ -4800,55 +4010,29 @@
 </style>
 
 <script>
-    // Sample data for parking slots
-    const parkingData = {
-        'A01': { status: 'available', vehicle: null },
-        'A02': { status: 'occupied', vehicle: { plate: '29B1-12345', type: 'Xe máy', entryTime: '2025-01-23 08:30' } },
-        'A03': { status: 'occupied', vehicle: { plate: '59A1-98765', type: 'Xe máy', entryTime: '2025-01-23 09:15' } },
-        'A04': { status: 'available', vehicle: null },
-        'A05': { status: 'occupied', vehicle: { plate: '29C1-54321', type: 'Xe máy', entryTime: '2025-01-23 10:00' } },
-        'A06': { status: 'available', vehicle: null },
-        'A07': { status: 'occupied', vehicle: { plate: '30A-11111', type: 'Xe máy', entryTime: '2025-01-23 07:45' } },
-        'A08': { status: 'available', vehicle: null },
-        'B01': { status: 'occupied', vehicle: { plate: '30A-56789', type: 'Ô tô 4 chỗ', entryTime: '2025-01-23 08:00' } },
-        'B02': { status: 'available', vehicle: null },
-        'B03': { status: 'reserved', vehicle: { plate: 'Đã đặt', type: 'Ô tô 4 chỗ', entryTime: 'Dự kiến 14:00' } },
-        'B04': { status: 'occupied', vehicle: { plate: '51G-22222', type: 'Ô tô 4 chỗ', entryTime: '2025-01-23 09:30' } },
-        'B05': { status: 'available', vehicle: null },
-        'B06': { status: 'occupied', vehicle: { plate: '30E-33333', type: 'Ô tô 4 chỗ', entryTime: '2025-01-23 10:15' } },
-        'B07': { status: 'maintenance', vehicle: null },
-        'B08': { status: 'available', vehicle: null },
-        'C01': { status: 'occupied', vehicle: { plate: '30E-77777', type: 'Ô tô 7 chỗ', entryTime: '2025-01-23 07:00' } },
-        'C02': { status: 'available', vehicle: null },
-        'C03': { status: 'occupied', vehicle: { plate: '51G-88888', type: 'SUV', entryTime: '2025-01-23 09:00' } },
-        'C04': { status: 'available', vehicle: null },
-        'C05': { status: 'reserved', vehicle: { plate: 'Đã đặt', type: 'Ô tô 7 chỗ', entryTime: 'Dự kiến 15:30' } },
-        'C06': { status: 'available', vehicle: null },
-        'D01': { status: 'occupied', vehicle: { plate: '51G-99999', type: 'Xe tải', entryTime: '2025-01-23 06:00' } },
-        'D02': { status: 'available', vehicle: null },
-        'D03': { status: 'occupied', vehicle: { plate: '30E-55555', type: 'Xe tải', entryTime: '2025-01-23 08:30' } },
-        'D04': { status: 'available', vehicle: null },
-        'E01': { status: 'occupied', vehicle: { plate: 'NV-001', type: 'Nhân viên', entryTime: '2025-01-23 07:00' } },
-        'E02': { status: 'occupied', vehicle: { plate: 'NV-002', type: 'Nhân viên', entryTime: '2025-01-23 07:15' } },
-        'E03': { status: 'available', vehicle: null },
-        'E04': { status: 'occupied', vehicle: { plate: 'NV-004', type: 'Nhân viên', entryTime: '2025-01-23 07:30' } },
-        'E05': { status: 'occupied', vehicle: { plate: 'NV-005', type: 'Nhân viên', entryTime: '2025-01-23 07:45' } },
-        'E06': { status: 'available', vehicle: null },
-        'E07': { status: 'occupied', vehicle: { plate: 'NV-007', type: 'Nhân viên', entryTime: '2025-01-23 08:00' } },
-        'E08': { status: 'available', vehicle: null },
-        'E09': { status: 'occupied', vehicle: { plate: 'NV-009', type: 'Nhân viên', entryTime: '2025-01-23 08:15' } },
-        'E10': { status: 'occupied', vehicle: { plate: 'NV-010', type: 'Nhân viên', entryTime: '2025-01-23 08:30' } },
-        'E11': { status: 'available', vehicle: null },
-        'E12': { status: 'occupied', vehicle: { plate: 'NV-012', type: 'Nhân viên', entryTime: '2025-01-23 08:45' } },
-        'E13': { status: 'available', vehicle: null },
-        'E14': { status: 'occupied', vehicle: { plate: 'NV-014', type: 'Nhân viên', entryTime: '2025-01-23 09:00' } },
-        'E15': { status: 'available', vehicle: null },
-        'E16': { status: 'occupied', vehicle: { plate: 'NV-016', type: 'Nhân viên', entryTime: '2025-01-23 09:15' } },
-        'E17': { status: 'available', vehicle: null },
-        'E18': { status: 'occupied', vehicle: { plate: 'NV-018', type: 'Nhân viên', entryTime: '2025-01-23 09:30' } },
-        'E19': { status: 'available', vehicle: null },
-        'E20': { status: 'occupied', vehicle: { plate: 'NV-020', type: 'Nhân viên', entryTime: '2025-01-23 09:45' } }
-    };
+    // Dữ liệu slots từ database (được render từ server)
+    const allSlotsData = @Html.Raw(Json.Serialize(Model.AllSlots.Select(s => new {
+        maViTri = s.MaViTri,
+        slotCode = s.SlotCode,
+        trangThai = s.TrangThai,
+        trangThaiText = s.TrangThaiText,
+        vehicleTypeClass = s.VehicleTypeClass,
+        zoneCode = s.ZoneCode,
+        vehicleInfo = s.VehicleInfo != null ? new {
+            bienSo = s.VehicleInfo.BienSo,
+            loaiXe = s.VehicleInfo.LoaiXe,
+            thoiGianVaoFormatted = s.VehicleInfo.ThoiGianVaoFormatted,
+            thoiGianDoFormatted = s.VehicleInfo.ThoiGianDoFormatted,
+            phiTamTinhFormatted = s.VehicleInfo.PhiTamTinhFormatted,
+            tenKhachHang = s.VehicleInfo.TenKhachHang
+        } : null
+    })));
+    
+    // Tạo map để tra cứu nhanh theo MaViTri
+    const slotsMap = {};
+    allSlotsData.forEach(slot => {
+        slotsMap[slot.maViTri] = slot;
+    });
 
     // Gate status tracking
     const gateStatus = {
@@ -4865,85 +4049,41 @@
         'counter-3': { isActive: false, name: 'Quầy 3' }
     };
 
-    function viewSlotDetails(slotNumber) {
-        const slot = parkingData[slotNumber];
+    function viewSlotDetails(maViTri, slotCode) {
+        const slot = slotsMap[maViTri];
         
-        if (!slot) return;
-
-        // Check if slot is available - only show notification, don't open modal
-        if (slot.status === 'available') {
-            // Determine vehicle type from slot number
-            let vehicleType = '';
-            const zone = slotNumber.charAt(0);
-            switch(zone) {
-                case 'A':
-                    vehicleType = 'Xe máy';
-                    break;
-                case 'B':
-                    vehicleType = 'Ô tô 4 chỗ';
-                    break;
-                case 'C':
-                    vehicleType = 'Ô tô 7 chỗ / SUV';
-                    break;
-                case 'D':
-                    vehicleType = 'Xe tải';
-                    break;
-            }
-            
-            showNotification('success', `Vị trí ${slotNumber} đang trống`, 
-                `Vị trí này dành cho ${vehicleType}. Bạn có thể đỗ xe tại đây!`);
-            return; // Don't open modal for available slots
+        if (!slot) {
+            console.log('Slot not found:', maViTri);
+            return;
         }
 
-        // Only show modal for occupied, reserved, or maintenance slots
-        document.getElementById('modalSlotNumber').textContent = slotNumber;
+        // Mở modal cho tất cả trạng thái (trống, đang đỗ, đã đặt, bảo trì)
+        document.getElementById('modalSlotNumber').textContent = slotCode;
 
         // Status
         let statusBadge = '';
-        switch (slot.status) {
-            case 'available':
+        switch (slot.trangThai) {
+            case 0:
                 statusBadge = '<span class="badge badge-success">Trống</span>';
                 break;
-            case 'occupied':
+            case 1:
                 statusBadge = '<span class="badge" style="background-color: #ff6b6b; color: white;">Đang đỗ</span>';
                 break;
-            case 'reserved':
+            case 2:
                 statusBadge = '<span class="badge badge-warning">Đã đặt</span>';
                 break;
-            case 'maintenance':
+            case 3:
                 statusBadge = '<span class="badge" style="background-color: #95a5a6; color: white;">Bảo trì</span>';
                 break;
         }
         document.getElementById('modalSlotStatus').innerHTML = statusBadge;
 
-        if (slot.vehicle) {
-            document.getElementById('modalVehicleType').textContent = slot.vehicle.type;
-            document.getElementById('modalLicensePlate').textContent = slot.vehicle.plate;
-            document.getElementById('modalEntryTime').textContent = slot.vehicle.entryTime;
-            
-            // Calculate duration and fee
-            if (slot.status === 'occupied' && slot.vehicle.entryTime !== 'Dự kiến 14:00' && slot.vehicle.entryTime !== 'Dự kiến 15:30') {
-                const entryTime = new Date(slot.vehicle.entryTime);
-                const now = new Date();
-                const duration = Math.floor((now - entryTime) / 1000 / 60 / 60); // hours
-                document.getElementById('modalDuration').textContent = duration + ' giờ';
-                
-                // Simple fee calculation
-                let fee = 0;
-                if (slot.vehicle.type === 'Xe máy') {
-                    fee = duration * 5000;
-                } else if (slot.vehicle.type === 'Ô tô 4 chỗ') {
-                    fee = duration * 10000;
-                } else if (slot.vehicle.type === 'Ô tô 7 chỗ' || slot.vehicle.type === 'SUV') {
-                    fee = duration * 15000;
-                } else if (slot.vehicle.type === 'Xe tải') {
-                    fee = duration * 20000;
-                }
-                document.getElementById('modalEstimatedFee').textContent = fee.toLocaleString('vi-VN') + ' VNĐ';
-            } else {
-                document.getElementById('modalDuration').textContent = '-';
-                document.getElementById('modalEstimatedFee').textContent = '-';
-            }
+        if (slot.vehicleInfo) {
+            document.getElementById('modalVehicleType').textContent = slot.vehicleInfo.loaiXe || '-';
+            document.getElementById('modalLicensePlate').textContent = slot.vehicleInfo.bienSo || '-';
+            document.getElementById('modalEntryTime').textContent = slot.vehicleInfo.thoiGianVaoFormatted || '-';
+            document.getElementById('modalDuration').textContent = slot.vehicleInfo.thoiGianDoFormatted || '-';
+            document.getElementById('modalEstimatedFee').textContent = slot.vehicleInfo.phiTamTinhFormatted || '-';
         } else {
             document.getElementById('modalVehicleType').textContent = '-';
             document.getElementById('modalLicensePlate').textContent = '-';
@@ -4952,9 +4092,213 @@
             document.getElementById('modalEstimatedFee').textContent = '-';
         }
 
+        // Store current slot for navigation and maintenance toggle
+        window.currentSlot = { maViTri: maViTri, slotCode: slotCode, zoneCode: slot.zoneCode, trangThai: slot.trangThai };
+
+        // Hiển thị/ẩn nút bảo trì và dẫn đường dựa vào trạng thái
+        const btnMaintenance = document.getElementById('btnToggleMaintenance');
+        const btnMaintenanceText = document.getElementById('btnMaintenanceText');
+        const btnNavigate = document.getElementById('btnNavigate');
+
+        if (slot.trangThai === 0) {
+            // Ô trống - hiển thị nút "Đặt bảo trì"
+            btnMaintenance.style.display = 'inline-block';
+            btnMaintenance.className = 'btn btn-warning';
+            btnMaintenanceText.textContent = 'Đặt bảo trì';
+            btnNavigate.style.display = 'none'; // Ẩn nút dẫn đường cho ô trống
+        } else if (slot.trangThai === 3) {
+            // Đang bảo trì - hiển thị nút "Kết thúc bảo trì"
+            btnMaintenance.style.display = 'inline-block';
+            btnMaintenance.className = 'btn btn-success';
+            btnMaintenanceText.textContent = 'Kết thúc bảo trì';
+            btnNavigate.style.display = 'none'; // Ẩn nút dẫn đường cho ô bảo trì
+        } else {
+            // Đang đỗ hoặc đã đặt - ẩn nút bảo trì, hiển thị nút dẫn đường
+            btnMaintenance.style.display = 'none';
+            btnNavigate.style.display = 'inline-block';
+        }
+
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('slotDetailsModal'));
         modal.show();
+    }
+
+    // Toggle trạng thái bảo trì cho ô đỗ - Mở modal xác nhận
+    function toggleSlotMaintenance() {
+        if (!window.currentSlot) return;
+
+        const slotCode = window.currentSlot.slotCode;
+        const currentStatus = window.currentSlot.trangThai;
+        const newStatus = currentStatus === 0 ? 3 : 0;
+
+        // Cấu hình modal dựa vào action
+        const header = document.getElementById('confirmMaintenanceHeader');
+        const iconLarge = document.getElementById('confirmMaintenanceIconLarge');
+        const title = document.getElementById('confirmMaintenanceTitle');
+        const message = document.getElementById('confirmMaintenanceMessage');
+        const slotInfo = document.getElementById('confirmMaintenanceSlot');
+        const btnConfirm = document.getElementById('btnConfirmMaintenance');
+        const btnText = document.getElementById('btnConfirmMaintenanceText');
+
+        if (newStatus === 3) {
+            // Đặt bảo trì
+            header.style.background = 'linear-gradient(135deg, #ff9800 0%, #e67e22 100%)';
+            header.style.color = 'white';
+            iconLarge.innerHTML = '<i class="fas fa-tools fa-3x text-warning"></i>';
+            title.textContent = 'Xác nhận đặt bảo trì';
+            message.textContent = 'Vị trí này sẽ được đặt vào trạng thái bảo trì và không thể sử dụng cho đến khi kết thúc bảo trì.';
+            btnConfirm.className = 'btn btn-warning';
+            btnText.textContent = 'Đặt bảo trì';
+        } else {
+            // Kết thúc bảo trì
+            header.style.background = 'linear-gradient(135deg, #87DF2C 0%, #21A691 100%)';
+            header.style.color = 'white';
+            iconLarge.innerHTML = '<i class="fas fa-check-circle fa-3x text-success"></i>';
+            title.textContent = 'Xác nhận kết thúc bảo trì';
+            message.textContent = 'Vị trí này sẽ được đưa về trạng thái trống và sẵn sàng phục vụ.';
+            btnConfirm.className = 'btn btn-success';
+            btnText.textContent = 'Kết thúc bảo trì';
+        }
+
+        slotInfo.innerHTML = `Vị trí: <strong>${slotCode}</strong>`;
+
+        // Đóng modal chi tiết slot trước
+        const slotModal = bootstrap.Modal.getInstance(document.getElementById('slotDetailsModal'));
+        if (slotModal) slotModal.hide();
+
+        // Mở modal xác nhận
+        setTimeout(() => {
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmMaintenanceModal'));
+            confirmModal.show();
+        }, 300);
+    }
+
+    // Thực thi toggle maintenance sau khi xác nhận
+    function executeToggleMaintenance() {
+        if (!window.currentSlot) return;
+
+        const maViTri = window.currentSlot.maViTri;
+        const slotCode = window.currentSlot.slotCode;
+        const currentStatus = window.currentSlot.trangThai;
+        const newStatus = currentStatus === 0 ? 3 : 0;
+
+        // Đóng modal xác nhận
+        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmMaintenanceModal'));
+        if (confirmModal) confirmModal.hide();
+
+        // Hiển thị loading
+        showNotification('info', 'Đang xử lý...', 'Vui lòng đợi');
+
+        // Gọi API cập nhật trạng thái
+        fetch('@Url.Action("UpdateSlotStatus", "VehicleVision", new { area = "Admin" })', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                MaViTri: maViTri,
+                TrangThai: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hiển thị thông báo
+                if (newStatus === 3) {
+                    showNotification('warning', `Vị trí ${slotCode} đang bảo trì`, 'Đã chuyển sang trạng thái bảo trì');
+                } else {
+                    showNotification('success', `Vị trí ${slotCode} đã sẵn sàng`, 'Đã kết thúc bảo trì, vị trí trống');
+                }
+
+                // Cập nhật UI trực tiếp
+                updateSlotUI(maViTri, slotCode, newStatus);
+                
+                // Cập nhật slotsMap
+                if (slotsMap[maViTri]) {
+                    slotsMap[maViTri].trangThai = newStatus;
+                    slotsMap[maViTri].trangThaiText = newStatus === 3 ? 'maintenance' : 'available';
+                }
+
+                // Cập nhật thống kê từ server
+                refreshStatisticsFromServer();
+            } else {
+                showNotification('danger', 'Lỗi', data.message || 'Không thể cập nhật trạng thái');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating slot status:', error);
+            showNotification('danger', 'Lỗi', 'Không thể kết nối đến server');
+        });
+    }
+
+    // Cập nhật UI của ô đỗ sau khi thay đổi trạng thái
+    function updateSlotUI(maViTri, slotCode, newStatus) {
+        // Tìm tất cả các element slot có data-mavitri tương ứng
+        const slotElements = document.querySelectorAll(`[data-mavitri="${maViTri}"]`);
+        
+        slotElements.forEach(element => {
+            // Xóa các class trạng thái cũ
+            element.classList.remove('available', 'occupied', 'reserved', 'maintenance');
+            
+            // Thêm class trạng thái mới
+            if (newStatus === 0) {
+                element.classList.add('available');
+            } else if (newStatus === 3) {
+                element.classList.add('maintenance');
+            }
+            
+            // Cập nhật icon bên trong
+            const icon = element.querySelector('i');
+            if (icon) {
+                if (newStatus === 3) {
+                    icon.className = 'fas fa-tools';
+                } else {
+                    icon.remove(); // Xóa icon cho ô trống
+                }
+            } else if (newStatus === 3) {
+                // Thêm icon bảo trì nếu chưa có
+                const newIcon = document.createElement('i');
+                newIcon.className = 'fas fa-tools';
+                element.appendChild(newIcon);
+            }
+        });
+    }
+
+    // Cập nhật thống kê từ server
+    function refreshStatisticsFromServer() {
+        fetch('@Url.Action("GetParkingStatistics", "VehicleVision", new { area = "Admin" })')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalSlots').textContent = data.totalSlots;
+                    document.getElementById('availableSlots').textContent = data.availableSlots;
+                    document.getElementById('occupiedSlots').textContent = data.occupiedSlots;
+                    document.getElementById('reservedSlots').textContent = data.reservedSlots + data.maintenanceSlots;
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing statistics:', error);
+            });
+    }
+
+    // Cập nhật thống kê client-side (fallback)
+    function updateStatistics() {
+        let available = 0, occupied = 0, reserved = 0, maintenance = 0;
+        
+        allSlotsData.forEach(slot => {
+            const currentSlot = slotsMap[slot.maViTri];
+            switch (currentSlot.trangThai) {
+                case 0: available++; break;
+                case 1: occupied++; break;
+                case 2: reserved++; break;
+                case 3: maintenance++; break;
+            }
+        });
+
+        // Cập nhật các số liệu trên UI
+        document.getElementById('availableSlots').textContent = available;
+        document.getElementById('occupiedSlots').textContent = occupied;
+        document.getElementById('reservedSlots').textContent = reserved + maintenance;
     }
 
     function toggleGate(gateId, gateName) {
@@ -5212,10 +4556,10 @@
     }
 
     function navigateToSlot() {
-        const slotNumber = document.getElementById('modalSlotNumber').textContent;
-        const slot = parkingData[slotNumber];
+        if (!window.currentSlot) return;
         
-        if (!slot) return;
+        const slotCode = window.currentSlot.slotCode;
+        const zoneCode = window.currentSlot.zoneCode;
         
         // Close slot details modal
         const slotModal = bootstrap.Modal.getInstance(document.getElementById('slotDetailsModal'));
@@ -5226,7 +4570,7 @@
         // Wait a bit for the first modal to close
         setTimeout(() => {
             // Open navigation modal
-            showNavigationModal(slotNumber);
+            showNavigationModal(slotCode);
         }, 300);
     }
 

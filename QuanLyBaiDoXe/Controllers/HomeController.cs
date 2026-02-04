@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaiDoXe.Models;
@@ -14,10 +14,21 @@ namespace QuanLyBaiDoXe.Controllers
             _logger = logger;
         }
 
-        [Authorize] // Y�u c?u ??ng nh?p
         public IActionResult Index()
         {
-            // N?u ch?a ??ng nh?p s? redirect v? Login
+            // Nếu user đã đăng nhập, redirect đến trang tương ứng
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                {
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+                }
+                else if (User.IsInRole("Customer"))
+                {
+                    return RedirectToAction("Index", "Dashboard", new { area = "User" });
+                }
+            }
+
             return View();
         }
 

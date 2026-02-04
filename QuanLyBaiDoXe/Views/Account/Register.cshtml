@@ -56,7 +56,7 @@
                 <p class="hint">Tạo tài khoản khách hàng mới</p>
 
                 <div class="info-box">
-                    <p>👤 Bạn đang đăng ký tài khoản <strong>KHÁCH HÀNG</strong> để sử dụng dịch vụ gửi xe</p>
+                    <p> Bạn đang đăng ký tài khoản <strong>KHÁCH HÀNG</strong> để sử dụng dịch vụ gửi xe</p>
                 </div>
 
                 <form asp-action="Register" asp-controller="Account" method="post" class="login-form" id="registerForm">
@@ -68,7 +68,7 @@
                             <label asp-for="Username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
                             <div class="input-wrapper">
                                 <div class="input d-flex align-items-center">
-                                    <span class="icon">👤</span>
+                                    @* <span class="icon">👤</span> *@
                                     <input asp-for="Username" class="form-control border-0" placeholder="Nhập tên đăng nhập" />
                                     <span class="validation-icon" id="usernameIcon"></span>
                                 </div>
@@ -81,7 +81,7 @@
                             <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
                             <div class="input-wrapper">
                                 <div class="input d-flex align-items-center">
-                                    <span class="icon">📧</span>
+                                    @* <span class="icon">📧</span> *@
                                     <input asp-for="Email" class="form-control border-0" type="email" placeholder="example@email.com" />
                                     
                                 </div>
@@ -93,7 +93,7 @@
                         <div class="col-md-6 mb-3">
                             <label asp-for="Password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
                             <div class="input d-flex align-items-center position-relative">
-                                <span class="icon">🔒</span>
+                                @* <span class="icon">🔒</span> *@
                                 <input asp-for="Password" class="form-control border-0" type="password" placeholder="********" id="passwordField" />
                                 <button type="button" class="btn btn-link btn-sm position-absolute" style="right: 5px; text-decoration: none;" onclick="togglePasswordVisibility('passwordField', 'passwordToggleIcon')">
                                     <i class="fas fa-eye" id="passwordToggleIcon"></i>
@@ -134,7 +134,7 @@
                         <div class="col-md-6 mb-3">
                             <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
                             <div class="input d-flex align-items-center position-relative">
-                                <span class="icon">🔒</span>
+                                @* <span class="icon">🔒</span> *@
                                 <input asp-for="ConfirmPassword" class="form-control border-0" type="password" placeholder="********" id="confirmPasswordField" />
                                 <button type="button" class="btn btn-link btn-sm position-absolute" style="right: 5px; text-decoration: none;" onclick="togglePasswordVisibility('confirmPasswordField', 'confirmPasswordToggleIcon')">
                                     <i class="fas fa-eye" id="confirmPasswordToggleIcon"></i>
@@ -148,7 +148,7 @@
                         <div class="col-12 mb-3">
                             <label asp-for="FullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
                             <div class="input d-flex align-items-center">
-                                <span class="icon">📝</span>
+                                @* <span class="icon">📝</span> *@
                                 <input asp-for="FullName" class="form-control border-0" placeholder="Nguyễn Văn A" />
                             </div>
                             <span asp-validation-for="FullName" class="text-danger small"></span>
@@ -159,9 +159,9 @@
                             <label asp-for="PhoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
                             <div class="input-wrapper">
                                 <div class="input d-flex align-items-center">
-                                    <span class="icon">📱</span>
+                                    @* <span class="icon">📱</span> *@
                                     <input asp-for="PhoneNumber" class="form-control border-0" placeholder="0912345678" />
-                                    <span class="validation-icon" id="phoneIcon"></span>
+                                    @* <span class="validation-icon" id="phoneIcon"></span> *@
                                 </div>
                             </div>
                             <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
@@ -172,9 +172,9 @@
                             <label asp-for="CCCD" class="form-label">CCCD/CMND</label>
                             <div class="input-wrapper">
                                 <div class="input d-flex align-items-center">
-                                    <span class="icon">🪪</span>
+                                    @* <span class="icon">🪪</span> *@
                                     <input asp-for="CCCD" class="form-control border-0" placeholder="001234567890" />
-                                    <span class="validation-icon" id="cccdIcon"></span>
+                                    @* <span class="validation-icon" id="cccdIcon"></span> *@
                                 </div>
                             </div>
                             <span asp-validation-for="CCCD" class="text-danger small"></span>
@@ -184,7 +184,7 @@
                         <div class="col-12 mb-3">
                             <label asp-for="Address" class="form-label">Địa chỉ</label>
                             <div class="input d-flex align-items-center">
-                                <span class="icon">🏠</span>
+                                @* <span class="icon">🏠</span> *@
                                 <input asp-for="Address" class="form-control border-0" placeholder="123 Đường ABC, Quận XYZ" />
                             </div>
                             <span asp-validation-for="Address" class="text-danger small"></span>
@@ -194,7 +194,7 @@
                         <div class="col-12 mb-3">
                             <label asp-for="LicensePlate" class="form-label">Biển số xe mặc định</label>
                             <div class="input d-flex align-items-center">
-                                <span class="icon">🚗</span>
+                                @* <span class="icon">🚗</span> *@
                                 <input asp-for="LicensePlate" class="form-control border-0" placeholder="29A-12345" />
                             </div>
                             <span asp-validation-for="LicensePlate" class="text-danger small"></span>

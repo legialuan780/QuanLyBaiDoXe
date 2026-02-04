@@ -34,7 +34,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaKhachHang = v.MaKhachHang,
                     TenKhachHang = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.HoTen : null,
                     SoDienThoai = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.SoDienThoai : null,
-                    BienSoXe = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.BienSoXeMacDinh : null,
+                    // Lấy biển số từ thẻ tháng (TheThang.BienSoXe), không lấy từ khách hàng
+                    BienSoXe = v.BienSoXe,
                     MaThe = v.MaThe,
                     TenLoaiXe = v.MaTheNavigation != null && v.MaTheNavigation.MaLoaiXeNavigation != null
                         ? v.MaTheNavigation.MaLoaiXeNavigation.TenLoaiXe : null,
@@ -47,6 +48,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         : 0
                 })
                 .ToListAsync();
+
 
             // Lấy danh sách khách hàng
             var customers = await _context.KhachHangs
@@ -122,7 +124,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaKhachHang = v.MaKhachHang,
                     TenKhachHang = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.HoTen : null,
                     SoDienThoai = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.SoDienThoai : null,
-                    BienSoXe = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.BienSoXeMacDinh : null,
+                    // Lấy biển số từ thẻ tháng (TheThang.BienSoXe)
+                    BienSoXe = v.BienSoXe,
                     MaThe = v.MaThe,
                     TenLoaiXe = v.MaTheNavigation != null && v.MaTheNavigation.MaLoaiXeNavigation != null
                         ? v.MaTheNavigation.MaLoaiXeNavigation.TenLoaiXe : null,
@@ -153,7 +156,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     MaKhachHang = v.MaKhachHang,
                     TenKhachHang = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.HoTen : null,
                     SoDienThoai = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.SoDienThoai : null,
-                    BienSoXe = v.MaKhachHangNavigation != null ? v.MaKhachHangNavigation.BienSoXeMacDinh : null,
+                    // Lấy biển số từ thẻ tháng (TheThang.BienSoXe)
+                    BienSoXe = v.BienSoXe,
                     MaThe = v.MaThe,
                     TenLoaiXe = v.MaTheNavigation != null && v.MaTheNavigation.MaLoaiXeNavigation != null
                         ? v.MaTheNavigation.MaLoaiXeNavigation.TenLoaiXe : null,
@@ -252,10 +256,15 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Không tìm thấy khách hàng!" });
                 }
 
-                // Cập nhật biển số xe mặc định nếu có
-                if (!string.IsNullOrEmpty(request.BienSoXe))
+                // Chuẩn hóa biển số xe
+                var bienSoXe = !string.IsNullOrEmpty(request.BienSoXe) 
+                    ? request.BienSoXe.Trim().ToUpper() 
+                    : null;
+
+                // Cập nhật biển số xe mặc định cho khách hàng nếu chưa có
+                if (!string.IsNullOrEmpty(bienSoXe) && string.IsNullOrEmpty(customer.BienSoXeMacDinh))
                 {
-                    customer.BienSoXeMacDinh = request.BienSoXe.Trim().ToUpper();
+                    customer.BienSoXeMacDinh = bienSoXe;
                 }
 
                 var today = DateOnly.FromDateTime(DateTime.Today);
@@ -263,6 +272,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 {
                     MaKhachHang = request.MaKhachHang,
                     MaThe = request.MaThe,
+                    // Lưu biển số xe vào thẻ tháng
+                    BienSoXe = bienSoXe,
                     NgayBatDau = today,
                     NgayHetHan = today.AddMonths(request.SoThang),
                     SoTienDong = request.SoTienDong,

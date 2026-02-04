@@ -73,6 +73,10 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
         public string Action { get; set; } = string.Empty; // "VAO" hoặc "RA"
         public LuotGuiDto? LuotGui { get; set; }
         public TheXeDto? TheXe { get; set; }
+        
+        // Thông tin bổ sung cho xe vào
+        public string? TenViTri { get; set; }
+        public string? TenKhuVuc { get; set; }
     }
 
     public class LuotGuiDto

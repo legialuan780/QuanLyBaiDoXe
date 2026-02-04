@@ -176,6 +176,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                         });
                     }
 
+
                     // Lưu hình ảnh nếu có
                     string? savedImagePath = null;
                     if (!string.IsNullOrEmpty(request.HinhAnh))
@@ -189,13 +190,27 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                                 savedImagePath,
                                 request.MaKhuVuc); // Truyền mã khu vực thay vì mã vị trí
 
+                            // Lấy thông tin vị trí và khu vực
+                            string? tenViTri = null;
+                            string? tenKhuVuc = null;
+                            if (luotGuiVao?.MaViTri != null)
+                            {
+                                var viTri = await _context.ViTriDos
+                                    .Include(v => v.MaKhuVucNavigation)
+                                    .FirstOrDefaultAsync(v => v.MaViTri == luotGuiVao.MaViTri);
+                                tenViTri = viTri?.TenViTri;
+                                tenKhuVuc = viTri?.MaKhuVucNavigation?.TenKhuVuc;
+                            }
+
                             return Json(new QuetTheResponse
                             {
                                 Success = true,
                                 Message = "Xe vào thành công!",
                                 Action = "VAO",
                                 LuotGui = MapToLuotGuiDto(luotGuiVao),
-                                TheXe = MapToTheXeDto(theXe, true)
+                                TheXe = MapToTheXeDto(theXe, true),
+                                TenViTri = tenViTri,
+                                TenKhuVuc = tenKhuVuc
                             });
                         }
                             }

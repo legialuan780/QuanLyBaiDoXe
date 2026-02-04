@@ -364,7 +364,8 @@ namespace QuanLyBaiDoXe.Services
                 NgayBatDau = veThang.NgayBatDau,
                 NgayHetHan = veThang.NgayHetHan,
                 TenKhachHang = veThang.MaKhachHangNavigation?.HoTen,
-                BienSoMacDinh = veThang.MaKhachHangNavigation?.BienSoXeMacDinh
+                // Lấy biển số từ thẻ tháng (TheThang.BienSoXe), không lấy từ khách hàng
+                BienSoMacDinh = veThang.BienSoXe
             };
 
             // Kiểm tra hết hạn

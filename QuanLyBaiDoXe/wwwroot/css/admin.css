@@ -502,10 +502,13 @@ html, body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none !important;
 }
 
 .btn-primary-admin:hover {
     background-color: #1a8a78;
+    color: white;
+    text-decoration: none !important;
 }
 
 .btn-secondary-admin {
@@ -521,11 +524,13 @@ html, body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none !important;
 }
 
 .btn-secondary-admin:hover {
     border-color: var(--primary-teal);
     color: var(--primary-teal);
+    text-decoration: none !important;
 }
 
 /* ===== TABLES ===== */

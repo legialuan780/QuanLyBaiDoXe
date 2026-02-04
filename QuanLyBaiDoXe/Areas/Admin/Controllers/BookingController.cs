@@ -6,7 +6,7 @@ using QuanLyBaiDoXe.Models.EF;
 namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin,Employee")]
+    [Authorize(Roles = "Admin")] // CHỈ ADMIN mới truy cập được
     public class BookingController : Controller
     {
         private readonly QuanLyBaiDoXeContext _context;

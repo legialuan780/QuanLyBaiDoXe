@@ -1,0 +1,252 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleUserViewModel
+@{
+    ViewData["Title"] = "Chi tiết người dùng";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Chi tiết người dùng</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <a href="@Url.Action("Index")">Quản lý người dùng</a>
+            <span>/</span>
+            <span>Chi tiết</span>
+        </div>
+    </div>
+    <div>
+        <a href="@Url.Action("Index")" class="btn-secondary-admin">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại
+        </a>
+    </div>
+</div>
+
+<!-- Details Card -->
+<div class="row">
+    <div class="col-lg-4">
+        <div class="admin-card text-center">
+            <div class="admin-card-body py-5">
+                <div class="mb-4">
+                    @if (Model.QuyenHan == "Admin")
+                    {
+                        <div class="avatar-circle bg-danger">
+                            <i class="fas fa-user-shield fa-4x text-white"></i>
+                        </div>
+                    }
+                    else if (Model.QuyenHan == "Nhân viên")
+                    {
+                        <div class="avatar-circle bg-primary">
+                            <i class="fas fa-user-tie fa-4x text-white"></i>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="avatar-circle bg-secondary">
+                            <i class="fas fa-user fa-4x text-white"></i>
+                        </div>
+                    }
+                </div>
+
+                <h3 class="mb-1">@Model.TenDangNhap</h3>
+                
+                @if (Model.QuyenHan == "Admin")
+                {
+                    <span class="badge bg-danger mb-3">
+                        <i class="fas fa-user-shield"></i> Administrator
+                    </span>
+                }
+                else if (Model.QuyenHan == "Nhân viên")
+                {
+                    <span class="badge bg-primary mb-3">
+                        <i class="fas fa-user-tie"></i> Nhân viên
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary mb-3">
+                        <i class="fas fa-user"></i> Khách hàng
+                    </span>
+                }
+
+                <div class="mb-3">
+                    @if (Model.TrangThai)
+                    {
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle"></i> Hoạt động
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">
+                            <i class="fas fa-lock"></i> Đã khóa
+                        </span>
+                    }
+                </div>
+
+                <hr />
+
+                <div class="text-start mt-4">
+                    <p class="mb-2">
+                        <i class="fas fa-envelope text-muted me-2"></i>
+                        <strong>Email:</strong>
+                    </p>
+                    <p class="ms-4 text-muted">@(Model.Email ?? "Chưa cập nhật")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Thông tin tài khoản</h3>
+            </div>
+            <div class="admin-card-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th style="width: 30%;">
+                                <i class="fas fa-id-badge text-muted"></i> Mã tài khoản
+                            </th>
+                            <td>@Model.MaTaiKhoan</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <i class="fas fa-user text-muted"></i> Tên đăng nhập
+                            </th>
+                            <td><strong>@Model.TenDangNhap</strong></td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <i class="fas fa-envelope text-muted"></i> Email
+                            </th>
+                            <td>@(Model.Email ?? "Chưa cập nhật")</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <i class="fas fa-user-shield text-muted"></i> Quyền hạn
+                            </th>
+                            <td>
+                                @if (Model.QuyenHan == "Admin")
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-user-shield"></i> Administrator
+                                    </span>
+                                    <p class="mb-0 mt-2 text-muted small">
+                                        Có toàn quyền quản lý hệ thống, cấu hình và phân quyền
+                                    </p>
+                                }
+                                else if (Model.QuyenHan == "Nhân viên")
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-user-tie"></i> Nhân viên
+                                    </span>
+                                    <p class="mb-0 mt-2 text-muted small">
+                                        Quản lý vận hành bãi xe, soát vé xe vào ra
+                                    </p>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-user"></i> Khách hàng
+                                    </span>
+                                    <p class="mb-0 mt-2 text-muted small">
+                                        Sử dụng dịch vụ gửi xe, đăng ký vé tháng, đặt chỗ
+                                    </p>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <i class="fas fa-toggle-on text-muted"></i> Trạng thái
+                            </th>
+                            <td>
+                                @if (Model.TrangThai)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Đang hoạt động
+                                    </span>
+                                    <p class="mb-0 mt-2 text-muted small">
+                                        Tài khoản có thể đăng nhập và sử dụng hệ thống
+                                    </p>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-lock"></i> Đã bị khóa
+                                    </span>
+                                    <p class="mb-0 mt-2 text-muted small">
+                                        Tài khoản không thể đăng nhập vào hệ thống
+                                    </p>
+                                }
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-card mt-4">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">Phân quyền chi tiết</h3>
+            </div>
+            <div class="admin-card-body">
+                @if (Model.QuyenHan == "Admin")
+                {
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-shield-alt"></i> Quyền Administrator</h5>
+                        <ul class="mb-0">
+                            <li>Toàn quyền quản lý hệ thống</li>
+                            <li>Quản lý người dùng và phân quyền</li>
+                            <li>Cấu hình bảng giá, ca làm việc</li>
+                            <li>Xem tất cả báo cáo và thống kê</li>
+                            <li>Quản lý sự cố và xử lý ngoại lệ</li>
+                        </ul>
+                    </div>
+                }
+                else if (Model.QuyenHan == "Nhân viên")
+                {
+                    <div class="alert alert-primary">
+                        <h5><i class="fas fa-user-tie"></i> Quyền Nhân viên</h5>
+                        <ul class="mb-0">
+                            <li>Giám sát cổng vào/ra</li>
+                            <li>Soát vé xe vào và xe ra</li>
+                            <li>Xác nhận thanh toán</li>
+                            <li>Xử lý một số sự cố cơ bản</li>
+                            <li>Xem lịch sử gửi xe</li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary">
+                        <h5><i class="fas fa-user"></i> Quyền Khách hàng</h5>
+                        <ul class="mb-0">
+                            <li>Gửi xe tại bãi đỗ</li>
+                            <li>Đăng ký vé tháng</li>
+                            <li>Đặt chỗ trước</li>
+                            <li>Xem lịch sử gửi xe cá nhân</li>
+                            <li>Quản lý thông tin cá nhân</li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .avatar-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+    </style>
+}

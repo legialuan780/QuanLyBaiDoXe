@@ -5,10 +5,13 @@ using QuanLyBaiDoXe.Areas.Admin.ViewModels;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Employee")] // Admin và Employee đều có thể truy cập
     public class VehicleAnomalyController : Controller
     {
         private readonly QuanLyBaiDoXeContext _context;
@@ -20,14 +23,38 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(AnomalyFilterViewModel filter)
         {
+            // Kiểm tra role
+            var isEmployee = User.IsInRole("Employee");
+            var employeeId = 0;
+            
+            if (isEmployee)
+            {
+                // Lấy EmployeeId từ Claims
+                var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
+                if (int.TryParse(employeeIdClaim, out employeeId))
+                {
+                    ViewBag.EmployeeId = employeeId;
+                }
+            }
+
+            ViewBag.IsEmployee = isEmployee;
+
             // Thống kê tổng quan
+            var statsQuery = _context.SuCos.AsQueryable();
+            
+            // Nếu là nhân viên, chỉ thống kê sự cố của mình hoặc chưa được assign
+            if (isEmployee && employeeId > 0)
+            {
+                statsQuery = statsQuery.Where(s => s.MaNhanVien == null || s.MaNhanVien == employeeId);
+            }
+            
             var stats = new AnomalyStatisticsViewModel
             {
-                TongSuCo = await _context.SuCos.CountAsync(),
-                ChuaXuLy = await _context.SuCos.CountAsync(s => s.TrangThaiXuLy == 0),
-                DangXuLy = await _context.SuCos.CountAsync(s => s.TrangThaiXuLy == 1),
-                DaXuLy = await _context.SuCos.CountAsync(s => s.TrangThaiXuLy == 2),
-                KhanCap = await _context.SuCos.CountAsync(s => s.LoaiSuCo == "Khẩn cấp" && s.TrangThaiXuLy != 2)
+                TongSuCo = await statsQuery.CountAsync(),
+                ChuaXuLy = await statsQuery.CountAsync(s => s.TrangThaiXuLy == 0),
+                DangXuLy = await statsQuery.CountAsync(s => s.TrangThaiXuLy == 1),
+                DaXuLy = await statsQuery.CountAsync(s => s.TrangThaiXuLy == 2),
+                KhanCap = await statsQuery.CountAsync(s => s.LoaiSuCo == "Khẩn cấp" && s.TrangThaiXuLy != 2)
             };
             ViewBag.Statistics = stats;
 
@@ -35,6 +62,12 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             var query = _context.SuCos
                 .Include(s => s.MaNhanVienNavigation)
                 .AsQueryable();
+
+            // Nếu là nhân viên, chỉ xem sự cố của mình hoặc chưa được assign
+            if (isEmployee && employeeId > 0)
+            {
+                query = query.Where(s => s.MaNhanVien == null || s.MaNhanVien == employeeId);
+            }
 
             // Áp dụng bộ lọc
             if (filter.TuNgay.HasValue)
@@ -114,6 +147,20 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 return Json(new { success = false, message = "Không tìm thấy sự cố" });
             }
 
+            // Nếu là Employee, kiểm tra quyền chỉnh sửa
+            if (User.IsInRole("Employee"))
+            {
+                var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
+                if (int.TryParse(employeeIdClaim, out int employeeId))
+                {
+                    // Employee chỉ được cập nhật sự cố của mình
+                    if (anomaly.MaNhanVien != employeeId)
+                    {
+                        return Json(new { success = false, message = "Bạn không có quyền cập nhật sự cố này" });
+                    }
+                }
+            }
+
             anomaly.TrangThaiXuLy = status;
             
             try
@@ -127,7 +174,86 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             }
         }
 
+        // Nhân viên nhận sự cố để xử lý
         [HttpPost]
+        [Authorize(Roles = "Employee")]
+        public async Task<IActionResult> TakeAnomaly(int id)
+        {
+            var anomaly = await _context.SuCos.FindAsync(id);
+            if (anomaly == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy sự cố" });
+            }
+
+            // Kiểm tra sự cố đã được assign chưa
+            if (anomaly.MaNhanVien != null)
+            {
+                return Json(new { success = false, message = "Sự cố đã được nhân viên khác nhận" });
+            }
+
+            var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
+            if (int.TryParse(employeeIdClaim, out int employeeId))
+            {
+                anomaly.MaNhanVien = employeeId;
+                anomaly.TrangThaiXuLy = 1; // Đang xử lý
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Nhận sự cố thành công" });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                }
+            }
+
+            return Json(new { success = false, message = "Không xác định được nhân viên" });
+        }
+
+        // Nhân viên báo hoàn thành sự cố
+        [HttpPost]
+        [Authorize(Roles = "Employee")]
+        public async Task<IActionResult> CompleteAnomaly(int id, string solutionNote)
+        {
+            var anomaly = await _context.SuCos.FindAsync(id);
+            if (anomaly == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy sự cố" });
+            }
+
+            var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
+            if (int.TryParse(employeeIdClaim, out int employeeId))
+            {
+                // Kiểm tra sự cố có phải của nhân viên này không
+                if (anomaly.MaNhanVien != employeeId)
+                {
+                    return Json(new { success = false, message = "Bạn không có quyền hoàn thành sự cố này" });
+                }
+
+                anomaly.TrangThaiXuLy = 2; // Đã xử lý
+                // Nếu có trường ghi chú giải pháp, cập nhật vào MoTaChiTiet
+                if (!string.IsNullOrEmpty(solutionNote))
+                {
+                    anomaly.MoTaChiTiet += $"\n\n--- Giải pháp ({DateTime.Now:dd/MM/yyyy HH:mm}) ---\n{solutionNote}";
+                }
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Đã hoàn thành sự cố" });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                }
+            }
+
+            return Json(new { success = false, message = "Không xác định được nhân viên" });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")] // CHỈ ADMIN mới được điều phối nhân viên
         public async Task<IActionResult> AssignStaff(int id, int staffId)
         {
             var anomaly = await _context.SuCos.FindAsync(id);

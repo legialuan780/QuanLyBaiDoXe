@@ -1,0 +1,303 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleMoneyViewModel
+@{
+    ViewData["Title"] = ViewBag.PageTitle;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/vehicle-money.css" />
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@ViewBag.PageTitle</h1>
+        <div class="breadcrumb">
+            <a href="#">Trang chủ</a>
+            <span>/</span>
+            <span>Báo cáo doanh thu</span>
+            <span>/</span>
+            <span>Theo tháng</span>
+        </div>
+    </div>
+    <div>
+        <button class="btn-secondary-admin" onclick="window.location.reload()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
+        </button>
+        <button class="btn-primary-admin" onclick="window.print()">
+            <i class="fas fa-print"></i>
+            In báo cáo
+        </button>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="admin-card mb-3">
+    <div class="admin-card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="thang" class="form-label">Tháng</label>
+                <select class="form-control" id="thang" name="thang">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        <option value="@i" selected="@(i == ViewBag.SelectedMonth)">Tháng @i</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="nam" class="form-label">Năm</label>
+                <select class="form-control" id="nam" name="nam">
+                    @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                    {
+                        <option value="@y" selected="@(y == ViewBag.SelectedYear)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn-primary-admin w-100">
+                    <i class="fas fa-search"></i>
+                    Xem báo cáo
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn-secondary-admin w-100" onclick="location.href='@Url.Action("Monthly")'">
+                    <i class="fas fa-calendar-alt"></i>
+                    Tháng này
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-cards mb-4">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.TongDoanhThu.ToString("N0") đ</h3>
+            <p>Tổng doanh thu</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuLuotGui.ToString("N0") đ</h3>
+            <p>Lượt gửi (@Model.TongLuotGui lượt)</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-id-card"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuTheThang.ToString("N0") đ</h3>
+            <p>Thẻ tháng (@Model.TongTheThang thẻ)</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@((Model.TongLuotGui + Model.TongTheThang > 0 ? Model.TongDoanhThu / (Model.TongLuotGui + Model.TongTheThang) : 0).ToString("N0")) đ</h3>
+            <p>Trung bình/giao dịch</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Biểu đồ doanh thu theo ngày -->
+    <div class="col-lg-12 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Doanh thu theo ngày - Tháng @ViewBag.SelectedMonth/@ViewBag.SelectedYear
+                </h3>
+            </div>
+            <div style="height: 400px; padding: 20px;">
+                <canvas id="dailyRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Doanh thu lượt gửi theo ngày -->
+    <div class="col-lg-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-car"></i>
+                    Chi tiết lượt gửi theo ngày
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th class="text-center">Số lượt</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DoanhThuLuotGuiTheoNgay.Any())
+                            {
+                                @foreach (var item in Model.DoanhThuLuotGuiTheoNgay)
+                                {
+                                    <tr>
+                                        <td>@item.NgayDisplay</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info">@item.SoLuong</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@item.TongTien.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        Không có dữ liệu
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doanh thu thẻ tháng theo ngày -->
+    <div class="col-lg-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-id-card"></i>
+                    Chi tiết thẻ tháng theo ngày
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th class="text-center">Số thẻ</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DoanhThuTheThangTheoNgay.Any())
+                            {
+                                @foreach (var item in Model.DoanhThuTheThangTheoNgay)
+                                {
+                                    <tr>
+                                        <td>@item.NgayDisplay</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-warning">@item.SoLuong</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@item.TongTien.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        Không có dữ liệu
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const dailyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuLuotGuiTheoNgay));
+        const monthlyTicketData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheThangTheoNgay));
+
+        // Merge data by date
+        const allDates = [...new Set([...dailyData.map(d => d.ngayDisplay), ...monthlyTicketData.map(d => d.ngayDisplay)])].sort();
+        
+        const luotGuiByDate = {};
+        const theThangByDate = {};
+        
+        dailyData.forEach(d => {
+            luotGuiByDate[d.ngayDisplay] = d.tongTien;
+        });
+        
+        monthlyTicketData.forEach(d => {
+            theThangByDate[d.ngayDisplay] = d.tongTien;
+        });
+
+        const ctx = document.getElementById('dailyRevenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: allDates,
+                datasets: [
+                    {
+                        label: 'Lượt gửi',
+                        data: allDates.map(d => luotGuiByDate[d] || 0),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Thẻ tháng',
+                        data: allDates.map(d => theThangByDate[d] || 0),
+                        backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

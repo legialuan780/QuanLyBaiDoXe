@@ -1,0 +1,548 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleMoneyViewModel
+@{
+    ViewData["Title"] = "Thống kê doanh thu";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/vehicle-money.css" />
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Thống kê doanh thu</h1>
+        <div class="breadcrumb">
+            <a href="#">Trang chủ</a>
+            <span>/</span>
+            <span>Thống kê doanh thu</span>
+        </div>
+    </div>
+    <div>
+        <button class="btn-secondary-admin" onclick="VehicleMoney.refresh()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
+        </button>
+        <button class="btn-primary-admin" onclick="VehicleMoney.exportExcel()">
+            <i class="fas fa-file-excel"></i>
+            Xuất Excel
+        </button>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="admin-card mb-3">
+    <div class="admin-card-body">
+        <form id="filterForm" method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="tuNgay" class="form-label">Từ ngày</label>
+                <input type="date" class="form-control" id="tuNgay" name="tuNgay" value="@ViewBag.TuNgay">
+            </div>
+            <div class="col-md-3">
+                <label for="denNgay" class="form-label">Đến ngày</label>
+                <input type="date" class="form-control" id="denNgay" name="denNgay" value="@ViewBag.DenNgay">
+            </div>
+            <div class="col-md-3">
+                <label for="loaiDoanhThu" class="form-label">Loại doanh thu</label>
+                <select class="form-control" id="loaiDoanhThu" name="loaiDoanhThu">
+                    <option value="all" selected="@(ViewBag.LoaiDoanhThu == "all")">Tất cả</option>
+                    <option value="luotgui" selected="@(ViewBag.LoaiDoanhThu == "luotgui")">Lượt gửi</option>
+                    <option value="thethang" selected="@(ViewBag.LoaiDoanhThu == "thethang")">Thẻ tháng</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn-primary-admin w-100">
+                    <i class="fas fa-filter"></i>
+                    Lọc dữ liệu
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stat Cards - Tổng quan -->
+<div class="stat-cards mb-4">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.TongDoanhThu.ToString("N0") đ</h3>
+            <p>Tổng doanh thu</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuLuotGui.ToString("N0") đ</h3>
+            <p>Doanh thu lượt gửi (@Model.TongLuotGui lượt)</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-id-card"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuTheThang.ToString("N0") đ</h3>
+            <p>Doanh thu thẻ tháng (@Model.TongTheThang thẻ)</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@((Model.TongDoanhThu > 0 ? (Model.DoanhThuLuotGui / Model.TongDoanhThu * 100) : 0).ToString("N1"))%</h3>
+            <p>Tỷ lệ lượt gửi / Tổng</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stat Cards - Theo thời gian -->
+<div class="stat-cards mb-4">
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuHomNay.ToString("N0") đ</h3>
+            <p>Doanh thu hôm nay</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon purple">
+            <i class="fas fa-calendar-week"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuTuanNay.ToString("N0") đ</h3>
+            <p>Doanh thu tuần này</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon pink">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuThangNay.ToString("N0") đ</h3>
+            <p>Doanh thu tháng này</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-calendar"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3>@Model.DoanhThuNamNay.ToString("N0") đ</h3>
+            <p>Doanh thu năm nay</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Biểu đồ doanh thu theo tháng -->
+    <div class="col-lg-8 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-chart-line"></i>
+                    Doanh thu 12 tháng gần nhất
+                </h3>
+            </div>
+            <div style="height: 400px; padding: 20px;">
+                <canvas id="monthlyRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ doanh thu theo loại xe -->
+    <div class="col-lg-4 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Doanh thu theo loại xe
+                </h3>
+            </div>
+            <div style="height: 400px; padding: 20px;">
+                <canvas id="vehicleTypeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Doanh thu lượt gửi theo ngày -->
+    <div class="col-lg-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-car"></i>
+                    Doanh thu lượt gửi theo ngày
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th class="text-center">Số lượt</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DoanhThuLuotGuiTheoNgay.Any())
+                            {
+                                @foreach (var item in Model.DoanhThuLuotGuiTheoNgay)
+                                {
+                                    <tr>
+                                        <td>@item.NgayDisplay</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info">@item.SoLuong</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@item.TongTien.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>Không có dữ liệu</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doanh thu thẻ tháng theo ngày -->
+    <div class="col-lg-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-id-card"></i>
+                    Doanh thu thẻ tháng theo ngày
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th class="text-center">Số thẻ</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DoanhThuTheThangTheoNgay.Any())
+                            {
+                                @foreach (var item in Model.DoanhThuTheThangTheoNgay)
+                                {
+                                    <tr>
+                                        <td>@item.NgayDisplay</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-warning">@item.SoLuong</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@item.TongTien.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>Không có dữ liệu</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Thống kê theo loại xe (bảng) -->
+    <div class="col-lg-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-motorcycle"></i>
+                    Chi tiết doanh thu theo loại xe
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Loại xe</th>
+                                <th class="text-center">Lượt gửi</th>
+                                <th class="text-center">Thẻ tháng</th>
+                                <th class="text-end">Doanh thu</th>
+                                <th class="text-center">Tỷ lệ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DoanhThuTheoLoaiXe.Any())
+                            {
+                                @foreach (var item in Model.DoanhThuTheoLoaiXe)
+                                {
+                                    <tr>
+                                        <td>@item.TenLoaiXe</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info">@item.SoLuotGui</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-warning">@item.SoTheThang</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@item.TongDoanhThu.ToString("N0") đ</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-success">@item.TyLe.ToString("N1")%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>Không có dữ liệu</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top khách hàng -->
+    <div class="col-lg-6 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-trophy"></i>
+                    Top 10 khách hàng
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tên khách hàng</th>
+                                <th>Số điện thoại</th>
+                                <th class="text-center">Số thẻ</th>
+                                <th class="text-end">Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopKhachHang.Any())
+                            {
+                                int index = 1;
+                                @foreach (var item in Model.TopKhachHang)
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (index <= 3)
+                                            {
+                                                <span class="badge badge-@(index == 1 ? "warning" : index == 2 ? "secondary" : "info")">
+                                                    @index
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span>@index</span>
+                                            }
+                                        </td>
+                                        <td>@item.TenKhachHang</td>
+                                        <td>@item.SoDienThoai</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-primary">@item.SoTheThang</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>@item.TongTienDong.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>Không có dữ liệu</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const VehicleMoney = {
+            monthlyRevenueChart: null,
+            vehicleTypeChart: null,
+
+            init() {
+                this.initMonthlyRevenueChart();
+                this.initVehicleTypeChart();
+            },
+
+            initMonthlyRevenueChart() {
+                const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+                
+                const monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoThang));
+                
+                this.monthlyRevenueChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: monthlyData.map(d => d.thangDisplay),
+                        datasets: [
+                            {
+                                label: 'Lượt gửi',
+                                data: monthlyData.map(d => d.doanhThuLuotGui),
+                                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Thẻ tháng',
+                                data: monthlyData.map(d => d.doanhThuTheThang),
+                                backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                                borderColor: 'rgba(255, 159, 64, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString('vi-VN') + ' đ';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                        return label;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            },
+
+            initVehicleTypeChart() {
+                const ctx = document.getElementById('vehicleTypeChart').getContext('2d');
+                
+                const vehicleTypeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoLoaiXe));
+                
+                const colors = [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)'
+                ];
+
+                this.vehicleTypeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: vehicleTypeData.map(d => d.tenLoaiXe),
+                        datasets: [{
+                            data: vehicleTypeData.map(d => d.tongDoanhThu),
+                            backgroundColor: colors.slice(0, vehicleTypeData.length),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.parsed.toLocaleString('vi-VN') + ' đ';
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                        label += ' (' + percentage + '%)';
+                                        return label;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            },
+
+            refresh() {
+                window.location.reload();
+            },
+
+            exportExcel() {
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = '@Url.Action("ExportExcel", "VehicleMoney")?' + params.toString();
+            }
+        };
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            VehicleMoney.init();
+        });
+    </script>
+}

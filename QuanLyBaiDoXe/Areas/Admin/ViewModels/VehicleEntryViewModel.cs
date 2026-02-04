@@ -42,6 +42,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
     {
         public int MaKhuVuc { get; set; }
         public string TenKhuVuc { get; set; } = string.Empty;
+        public int? MaLoaiXe { get; set; }
+        public string? TenLoaiXe { get; set; }
         public int SoChoTrong { get; set; }
         public int TongSoCho { get; set; }
         public List<ViTriDoDto> ViTriTrong { get; set; } = new();
@@ -96,6 +98,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
     public class TheXeDto
         {
             public string MaThe { get; set; } = string.Empty;
+            public int? MaLoaiXe { get; set; }
             public string? TenLoaiXe { get; set; }
             public int? LoaiThe { get; set; }
             public string TenLoaiThe => LoaiThe == 0 ? "Vé lượt" : "Vé tháng";

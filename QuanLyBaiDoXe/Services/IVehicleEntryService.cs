@@ -36,8 +36,17 @@ namespace QuanLyBaiDoXe.Services
         
         // Kiểm tra thẻ có vé tháng còn hiệu lực không
         Task<bool> KiemTraVeThangHopLeAsync(string maThe);
+
+        // Kiểm tra vé tháng chi tiết với biển số
+        Task<VeThangInfoResult> KiemTraVeThangChiTietAsync(string maThe, string? bienSo = null);
         
         // Lấy danh sách loại xe
         Task<List<LoaiXe>> GetLoaiXeListAsync();
+
+        // Lấy danh sách khu vực theo loại xe
+        Task<List<KhuVuc>> GetKhuVucTheoLoaiXeAsync(int? maLoaiXe);
+
+        // Kiểm tra biển số đang trong bãi
+        Task<bool> KiemTraBienSoDangTrongBaiAsync(string bienSo);
     }
 }

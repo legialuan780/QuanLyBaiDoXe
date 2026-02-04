@@ -35,12 +35,15 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 // Lấy danh sách vị trí trống
                 var viTriTrong = await _vehicleEntryService.GetAvailableViTriDoAsync();
 
-                // Nhóm theo khu vực và đếm số chỗ trống
+                // Nhóm theo khu vực và đếm số chỗ trống (bao gồm thông tin loại xe) - hiển thị TẤT CẢ khu vực
                 var khuVucList = await _context.KhuVucs
+                    .Include(kv => kv.MaLoaiXeNavigation)
                     .Select(kv => new KhuVucChoTrongDto
                     {
                         MaKhuVuc = kv.MaKhuVuc,
                         TenKhuVuc = kv.TenKhuVuc,
+                        MaLoaiXe = kv.MaLoaiXe,
+                        TenLoaiXe = kv.MaLoaiXeNavigation != null ? kv.MaLoaiXeNavigation.TenLoaiXe : null,
                         SoChoTrong = kv.ViTriDos.Count(v => v.TrangThai == 0),
                         TongSoCho = kv.ViTriDos.Count(),
                         ViTriTrong = kv.ViTriDos
@@ -52,7 +55,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                             })
                             .ToList()
                     })
-                    .Where(kv => kv.SoChoTrong > 0) // Chỉ hiện khu vực còn chỗ trống
+                    // Không lọc - hiển thị tất cả khu vực, kể cả đầy
                     .OrderBy(kv => kv.TenKhuVuc)
                     .ToListAsync();
 
@@ -227,13 +230,71 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
             var luotGuiHienTai = await _vehicleEntryService.GetLuotGuiDangGuiByMaTheAsync(maThe);
 
+            // Kiểm tra vé tháng chi tiết
+            var veThangInfo = await _vehicleEntryService.KiemTraVeThangChiTietAsync(maThe);
+
             return Json(new
             {
                 success = true,
                 theXe = MapToTheXeDto(theXe, luotGuiHienTai != null),
                 luotGui = luotGuiHienTai != null ? MapToLuotGuiDto(luotGuiHienTai) : null,
-                action = luotGuiHienTai != null ? "RA" : "VAO"
+                action = luotGuiHienTai != null ? "RA" : "VAO",
+                veThangInfo = veThangInfo.CoVeThang ? new
+                {
+                    coVeThang = veThangInfo.CoVeThang,
+                    hopLe = veThangInfo.HopLe,
+                    daHetHan = veThangInfo.DaHetHan,
+                    sapHetHan = veThangInfo.SapHetHan,
+                    soNgayConLai = veThangInfo.SoNgayConLai,
+                    khongCoKhachHang = veThangInfo.KhongCoKhachHang,
+                    bienSoMacDinh = veThangInfo.BienSoMacDinh,
+                    tenKhachHang = veThangInfo.TenKhachHang,
+                    ngayHetHan = veThangInfo.NgayHetHan?.ToString("dd/MM/yyyy"),
+                    thongBao = veThangInfo.ThongBao
+                } : null
             });
+        }
+
+        /// <summary>
+        /// Lấy danh sách khu vực theo loại xe (bao gồm cả khu vực đầy)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetKhuVucTheoLoaiXe(int? maLoaiXe)
+        {
+            var khuVucList = await _context.KhuVucs
+                .Include(kv => kv.MaLoaiXeNavigation)
+                .Include(kv => kv.ViTriDos)
+                // Không lọc theo số chỗ trống - hiển thị tất cả khu vực
+                .Where(kv => maLoaiXe == null || kv.MaLoaiXe == null || kv.MaLoaiXe == maLoaiXe)
+                .Select(kv => new
+                {
+                    maKhuVuc = kv.MaKhuVuc,
+                    tenKhuVuc = kv.TenKhuVuc,
+                    maLoaiXe = kv.MaLoaiXe,
+                    tenLoaiXe = kv.MaLoaiXeNavigation != null ? kv.MaLoaiXeNavigation.TenLoaiXe : null,
+                    soChoTrong = kv.ViTriDos.Count(v => v.TrangThai == 0),
+                    tongSoCho = kv.ViTriDos.Count()
+                })
+                .OrderBy(kv => kv.tenKhuVuc)
+                .ToListAsync();
+
+            return Json(khuVucList);
+        }
+
+        /// <summary>
+        /// Kiểm tra biển số xe đang trong bãi
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> KiemTraBienSoDangTrongBai(string bienSo)
+        {
+            if (string.IsNullOrEmpty(bienSo))
+            {
+                return Json(new { dangTrongBai = false });
+            }
+
+            var dangTrongBai = await _vehicleEntryService.KiemTraBienSoDangTrongBaiAsync(bienSo);
+            
+            return Json(new { dangTrongBai = dangTrongBai });
         }
 
         [HttpGet]
@@ -257,6 +318,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Vui lòng nhập mã thẻ!" });
                 }
 
+
                 var luotGui = await _vehicleEntryService.GetLuotGuiDangGuiByMaTheAsync(request.MaThe);
                 if (luotGui == null)
                 {
@@ -278,6 +340,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     }
                 }
 
+                // Kiểm tra vé tháng chi tiết với biển số
+                var veThangInfo = await _vehicleEntryService.KiemTraVeThangChiTietAsync(request.MaThe, request.BienSo ?? luotGui.BienSoVao);
+
                 // Tính tiền preview (không lưu)
                 var thoiGianRa = DateTime.Now;
                 var tongTien = await _vehicleEntryService.TinhTienGuiXePreviewAsync(luotGui, thoiGianRa);
@@ -286,6 +351,28 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 var thoiGianGui = thoiGianRa - luotGui.ThoiGianVao;
                 var soGio = (int)thoiGianGui.TotalHours;
                 var soPhut = thoiGianGui.Minutes;
+
+                // Thông báo thêm về vé tháng
+                string? thongBaoVeThang = null;
+                if (veThangInfo.CoVeThang)
+                {
+                    if (veThangInfo.HopLe)
+                    {
+                        thongBaoVeThang = "VÉ THÁNG HỢP LỆ - Miễn phí gửi xe";
+                    }
+                    else if (veThangInfo.DaHetHan)
+                    {
+                        thongBaoVeThang = $"Vé tháng đã hết hạn từ {veThangInfo.NgayHetHan:dd/MM/yyyy}";
+                    }
+                    else if (veThangInfo.BienSoKhongKhop)
+                    {
+                        thongBaoVeThang = $"Biển số không khớp với vé tháng ({veThangInfo.BienSoMacDinh})";
+                    }
+                    else if (veThangInfo.KhongCoKhachHang)
+                    {
+                        thongBaoVeThang = "Vé tháng chưa liên kết khách hàng";
+                    }
+                }
 
                 return Json(new
                 {
@@ -296,7 +383,9 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     thoiGianVao = luotGui.ThoiGianVao,
                     thoiGianRa = thoiGianRa,
                     thoiGianGui = $"{soGio} giờ {soPhut} phút",
-                    tongTien = tongTien
+                    tongTien = tongTien,
+                    veThangHopLe = veThangInfo.HopLe,
+                    thongBaoVeThang = thongBaoVeThang
                 });
             }
             catch (Exception ex)
@@ -479,6 +568,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     return new TheXeDto
                     {
                         MaThe = theXe.MaThe,
+                        MaLoaiXe = theXe.MaLoaiXe,
                         TenLoaiXe = theXe.MaLoaiXeNavigation?.TenLoaiXe,
                         LoaiThe = theXe.LoaiThe,
                         TrangThai = theXe.TrangThai,

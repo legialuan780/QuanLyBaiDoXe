@@ -13,15 +13,98 @@
         public string? GhiChuBanGiao { get; set; }
         public int TrangThaiCa { get; set; }
 
+        // Trạng thái hiển thị động dựa trên thời gian thực
+        public string GetDisplayStatus()
+        {
+            // Nếu đã chốt ca
+            if (TrangThaiCa == 1)
+            {
+                return "completed"; // Đã chốt
+            }
+
+            // Nếu chưa chốt ca (TrangThaiCa = 0)
+            if (!ThoiGianNhanCa.HasValue)
+            {
+                return "unknown";
+            }
+
+            var now = DateTime.Now;
+            var shiftStartTime = ThoiGianNhanCa.Value;
+            
+            // Xác định loại ca dựa trên giờ nhận ca
+            var hour = shiftStartTime.Hour;
+            DateTime shiftStartDate = shiftStartTime.Date;
+            DateTime shiftEndTime;
+            
+            if (hour >= 6 && hour < 14)
+            {
+                // Ca sáng: 6h - 14h
+                shiftEndTime = shiftStartDate.AddHours(14);
+            }
+            else if (hour >= 14 && hour < 22)
+            {
+                // Ca chiều: 14h - 22h
+                shiftEndTime = shiftStartDate.AddHours(22);
+            }
+            else
+            {
+                // Ca đêm: 22h - 6h (sang ngày hôm sau)
+                if (hour >= 22)
+                {
+                    // Bắt đầu từ 22h hôm nay, kết thúc 6h ngày mai
+                    shiftEndTime = shiftStartDate.AddDays(1).AddHours(6);
+                }
+                else
+                {
+                    // Bắt đầu từ 0h - 6h (tiếp tục ca đêm hôm trước)
+                    shiftEndTime = shiftStartDate.AddHours(6);
+                }
+            }
+
+            // Kiểm tra thời gian hiện tại có nằm trong ca không
+            if (now >= shiftStartTime && now < shiftEndTime)
+            {
+                return "active"; // Đang trực (xanh lá)
+            }
+            
+            // Nếu thời gian hiện tại đã qua thời gian kết thúc ca
+            if (now >= shiftEndTime)
+            {
+                return "finished"; // Đã xong - Chờ chốt ca (vàng cam)
+            }
+
+            // Ca chưa bắt đầu
+            return "upcoming"; // Sắp tới
+        }
+
         public string TrangThaiCaText
         {
             get
             {
-                return TrangThaiCa switch
+                var status = GetDisplayStatus();
+                return status switch
                 {
-                    0 => "Đang trực",
-                    1 => "Đã chốt",
+                    "active" => "Đang trực",
+                    "finished" => "Chờ chốt",
+                    "completed" => "Đã chốt",
+                    "upcoming" => "Sắp tới",
                     _ => "Không xác định"
+                };
+            }
+        }
+
+        public string TrangThaiCaColor
+        {
+            get
+            {
+                var status = GetDisplayStatus();
+                return status switch
+                {
+                    "active" => "success", // Xanh lá
+                    "finished" => "warning", // Vàng cam
+                    "completed" => "secondary", // Xám
+                    "upcoming" => "info", // Xanh dương
+                    _ => "info"
                 };
             }
         }
@@ -39,6 +122,29 @@
                     return (ThoiGianGiaoCa.Value - ThoiGianNhanCa.Value).TotalHours;
                 }
                 return 0;
+            }
+        }
+
+        // Tính số giờ làm real-time cho ca đang trực
+        public double SoGioLamHienTai
+        {
+            get
+            {
+                if (!ThoiGianNhanCa.HasValue)
+                    return 0;
+
+                // Nếu ca chưa bắt đầu (sắp tới), không tính giờ
+                if (ThoiGianNhanCa.Value > DateTime.Now)
+                    return 0;
+
+                // Nếu đã có thời gian giao ca (ca đã kết thúc), dùng nó
+                if (ThoiGianGiaoCa.HasValue)
+                {
+                    return (ThoiGianGiaoCa.Value - ThoiGianNhanCa.Value).TotalHours;
+                }
+
+                // Nếu chưa có thời gian giao ca (ca đang trực), tính từ lúc bắt đầu đến hiện tại
+                return (DateTime.Now - ThoiGianNhanCa.Value).TotalHours;
             }
         }
     }

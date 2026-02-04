@@ -167,6 +167,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             // Nhóm ca theo ngày
             var dailyShifts = new List<DailyShiftViewModel>();
             var currentDate = startDate;
+            var now = DateTime.Now;
 
             while (currentDate <= endDate)
             {
@@ -181,19 +182,18 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                     Shifts = dayShifts
                 };
 
-                // Xác định ca hiện tại và ca tiếp theo
-                var now = DateTime.Now;
+                // Xác định ca hiện tại và ca tiếp theo dựa trên trạng thái động
                 if (currentDate.Date == now.Date)
                 {
-                    // Ca hiện tại: ca đang trực (TrangThaiCa = 0) và chưa có ThoiGianGiaoCa
+                    // Ca hiện tại: ca có trạng thái "active" (đang trong thời gian làm việc)
                     dailyShift.CurrentShift = dayShifts
-                        .FirstOrDefault(s => s.TrangThaiCa == 0 && !s.ThoiGianGiaoCa.HasValue);
+                        .FirstOrDefault(s => s.GetDisplayStatus() == "active");
                     
-                    // Nếu không tìm thấy trong ngày này, kiểm tra ca đêm hôm trước
+                    // Nếu không có ca active, kiểm tra ca đêm hôm trước
                     if (dailyShift.CurrentShift == null)
                     {
                         dailyShift.CurrentShift = shifts
-                            .Where(s => s.TrangThaiCa == 0 && !s.ThoiGianGiaoCa.HasValue)
+                            .Where(s => s.GetDisplayStatus() == "active")
                             .OrderByDescending(s => s.ThoiGianNhanCa)
                             .FirstOrDefault();
                     }
@@ -214,10 +214,10 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
                 currentDate = currentDate.AddDays(1);
             }
 
-            // Tính thống kê tháng
+            // Tính thống kê tháng với trạng thái động
             var stats = new MonthStatsViewModel
             {
-                TotalActiveShifts = shifts.Count(s => s.TrangThaiCa == 0),
+                TotalActiveShifts = shifts.Count(s => s.GetDisplayStatus() == "active"),
                 TotalCompletedShifts = shifts.Count(s => s.TrangThaiCa == 1),
                 TotalWorkHours = shifts.Sum(s => (decimal)s.SoGioLam),
                 TotalRevenue = shifts.Sum(s => s.TongTienHeThong)

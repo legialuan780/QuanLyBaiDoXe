@@ -205,10 +205,19 @@ public partial class QuanLyBaiDoXeContext : DbContext
         {
             entity.HasKey(e => e.MaLich).HasName("PK__LichLamV__728A9AE99F35B313");
 
-            entity.ToTable("LichLamViec");
+            entity.ToTable("LichLamViec", tb =>
+            {
+                tb.HasCheckConstraint("CHK_GioLam", 
+                    "(GioKetThuc > GioBatDau) OR (GioKetThuc = '00:00:00' AND GioBatDau > '00:00:00')");
+            });
 
             entity.Property(e => e.GhiChu).HasMaxLength(255);
-            entity.Property(e => e.TrangThai).HasDefaultValue(1);
+            entity.Property(e => e.LoaiCa)
+                .HasDefaultValue(0)
+                .HasComment("0: Thường | 1: Tăng ca | 2: Đêm");
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue(1)
+                .HasComment("0: Nghỉ | 1: Làm");
 
             entity.HasOne(d => d.MaCaNavigation).WithMany(p => p.LichLamViecs)
                 .HasForeignKey(d => d.MaCa)

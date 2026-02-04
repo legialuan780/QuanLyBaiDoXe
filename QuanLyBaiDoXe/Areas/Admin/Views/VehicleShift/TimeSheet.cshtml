@@ -181,73 +181,18 @@
                         <div class="shifts-container">
                             @foreach (var shift in day.Shifts)
                             {
-                                var now = DateTime.Now;
-                                var shiftStartTime = shift.ThoiGianNhanCa ?? DateTime.MinValue;
-                                var shiftEndTime = shift.ThoiGianGiaoCa;
-                                
-                                // Xác định trạng thái ca dựa trên thời gian thực
-                                bool isCurrent = false;
-                                bool isUpcoming = false;
-                                bool isCompleted = shift.TrangThaiCa == 1; // Ca đã chốt
-                                
-                                if (!isCompleted)
-                                {
-                                    // Ca chưa chốt - kiểm tra thời gian
-                                    if (shiftStartTime > now)
-                                    {
-                                        // Ca chưa bắt đầu
-                                        isUpcoming = true;
-                                    }
-                                    else if (shiftEndTime.HasValue)
-                                    {
-                                        // Ca đã có thời gian kết thúc
-                                        if (now >= shiftStartTime && now <= shiftEndTime.Value)
-                                        {
-                                            // Thời gian hiện tại nằm trong khoảng ca làm việc
-                                            isCurrent = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // Ca đã bắt đầu nhưng chưa có thời gian kết thúc
-                                        // Kiểm tra dựa trên ca làm việc tiêu chuẩn
-                                        var hour = shiftStartTime.Hour;
-                                        DateTime estimatedEndTime;
-                                        
-                                        if (hour >= 6 && hour < 14)
-                                        {
-                                            // Ca sáng: 6:00 - 14:00
-                                            estimatedEndTime = shiftStartTime.Date.AddHours(14);
-                                        }
-                                        else if (hour >= 14 && hour < 22)
-                                        {
-                                            // Ca chiều: 14:00 - 22:00
-                                            estimatedEndTime = shiftStartTime.Date.AddHours(22);
-                                        }
-                                        else
-                                        {
-                                            // Ca đêm: 22:00 - 6:00 (ngày hôm sau)
-                                            estimatedEndTime = shiftStartTime.Date.AddDays(1).AddHours(6);
-                                        }
-                                        
-                                        if (now >= shiftStartTime && now <= estimatedEndTime)
-                                        {
-                                            isCurrent = true;
-                                        }
-                                    }
-                                }
-                                
+                                var displayStatus = shift.GetDisplayStatus();
                                 var shiftClass = "shift-item";
                                 
-                                if (isCurrent)
+                                if (displayStatus == "active")
                                 {
                                     shiftClass += " current-shift";
                                 }
-                                else if (isUpcoming)
+                                else if (displayStatus == "finished")
                                 {
-                                    shiftClass += " next-shift";
+                                    shiftClass += " finished-shift";
                                 }
-                                else if (isCompleted)
+                                else if (displayStatus == "completed")
                                 {
                                     shiftClass += " completed-shift";
                                 }
@@ -256,31 +201,31 @@
                                     <div class="shift-header">
                                         <div class="shift-id">
                                             <strong>#@shift.MaCa</strong>
-                                            @if (isCurrent)
+                                            @if (displayStatus == "active")
                                             {
                                                 <span class="badge badge-success ms-2">
                                                     <i class="fas fa-circle pulse"></i> Đang trực
                                                 </span>
                                             }
-                                            else if (isUpcoming)
+                                            else if (displayStatus == "finished")
                                             {
                                                 <span class="badge badge-warning ms-2">
-                                                    <i class="fas fa-clock"></i> Sắp tới
+                                                    <i class="fas fa-hourglass-end"></i> Chờ chốt
                                                 </span>
                                             }
-                                            else if (isCompleted)
+                                            else if (displayStatus == "completed")
                                             {
                                                 <span class="badge badge-secondary ms-2">
                                                     <i class="fas fa-check-circle"></i> Đã chốt
                                                 </span>
                                             }
-                                            else
-                                            {
-                                                <span class="badge badge-info ms-2">
-                                                    @shift.TrangThaiCaText
-                                                </span>
-                                            }
                                         </div>
+                                        @if (displayStatus == "finished")
+                                        {
+                                            <button class="btn-warning-admin btn-sm" onclick="openCloseShiftModal(@shift.MaCa, '@shift.TenNhanVien')" style="white-space: nowrap;">
+                                                <i class="fas fa-clipboard-check"></i> Chốt ca
+                                            </button>
+                                        }
                                     </div>
                                     
                                     <div class="shift-body">
@@ -322,7 +267,7 @@
                                         <div class="shift-stats">
                                             <div class="stat-item">
                                                 <i class="fas fa-clock text-primary"></i>
-                                                <span>@shift.SoGioLam.ToString("F1")h</span>
+                                                <span>@shift.SoGioLamHienTai.ToString("F1")h</span>
                                             </div>
                                             <div class="stat-item">
                                                 <i class="fas fa-money-bill-wave text-success"></i>
@@ -422,7 +367,7 @@
                         <div class="shift-header-section">
                             <h6 class="mb-3">
                                 <i class="fas fa-sun text-warning"></i>
-                                <strong>Ca Sáng (6:00 - 14:00)</strong>
+                                <strong>Ca Sáng (0:00 - 8:00)</strong>
                             </h6>
                         </div>
                         <div class="row">
@@ -450,7 +395,7 @@
                         <div class="shift-header-section">
                             <h6 class="mb-3">
                                 <i class="fas fa-cloud-sun text-primary"></i>
-                                <strong>Ca Chiều (14:00 - 22:00)</strong>
+                                <strong>Ca Chiều (8:00 - 16:00)</strong>
                             </h6>
                         </div>
                         <div class="row">
@@ -473,12 +418,12 @@
 
                     <hr>
 
-                    <!-- Ca đêm -->
+                    <!-- Ca tối -->
                     <div class="shift-section mb-4">
                         <div class="shift-header-section">
                             <h6 class="mb-3">
                                 <i class="fas fa-moon text-info"></i>
-                                <strong>Ca Đêm (22:00 - 6:00)</strong>
+                                <strong>Ca Tối (16:00 - 0:00)</strong>
                             </h6>
                         </div>
                         <div class="row">
@@ -495,7 +440,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Ghi chú</label>
-                            <textarea class="form-control" id="nightNote" rows="2" placeholder="Ghi chú cho ca đêm (tùy chọn)"></textarea>
+                            <textarea class="form-control" id="nightNote" rows="2" placeholder="Ghi chú cho ca tối (tùy chọn)"></textarea>
                         </div>
                     </div>
                 </form>
@@ -504,6 +449,56 @@
                 <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn-primary-admin" id="btnSubmitShifts" onclick="submitCreateShifts()">
                     <i class="fas fa-save"></i> Tạo ca làm việc
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Close Shift Modal -->
+<div class="modal fade" id="closeShiftModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    Chốt ca làm việc
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Ca làm việc <strong id="closeShiftId"></strong> của nhân viên <strong id="closeShiftEmployeeName"></strong> đã hết giờ làm việc và cần được chốt ca.
+                </div>
+
+                <form id="closeShiftForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-money-bill-wave text-success"></i>
+                            Tiền mặt bàn giao
+                        </label>
+                        <input type="number" class="form-control" id="closeTienMatBanGiao" 
+                               placeholder="Nhập số tiền bàn giao" min="0" step="1000" required>
+                        <small class="form-text text-muted">Số tiền mặt nhân viên bàn giao khi kết thúc ca</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-comment"></i>
+                            Ghi chú
+                        </label>
+                        <textarea class="form-control" id="closeGhiChuBanGiao" rows="3" 
+                                  placeholder="Ghi chú về tình trạng ca làm việc (tùy chọn)"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-admin" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button type="button" class="btn-warning-admin" onclick="confirmCloseShift()">
+                    <i class="fas fa-check"></i> Xác nhận chốt ca
                 </button>
             </div>
         </div>
@@ -651,6 +646,16 @@
         border-left-color: #ffc107;
     }
 
+    .shift-item.finished-shift {
+        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        border-left-color: #ff9800;
+        border-left-width: 5px;
+    }
+
+    .shift-item.finished-shift:hover {
+        box-shadow: 0 3px 12px rgba(255, 152, 0, 0.2);
+    }
+
     .shift-item.completed-shift {
         background: #e9ecef;
         border-left-color: #6c757d;
@@ -689,12 +694,24 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     .shift-id {
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .shift-id strong {
+        white-space: nowrap;
+    }
+
+    .shift-id .badge {
+        white-space: nowrap;
+        font-size: 12px;
     }
 
     .shift-body {
@@ -1684,12 +1701,12 @@
                 const hour = shiftTime.getHours();
                 let shiftType = '';
                 
-                if (hour >= 6 && hour < 14) {
+                if (hour >= 0 && hour < 8) {
                     shiftType = '<span class="badge bg-warning">Ca Sáng</span>';
-                } else if (hour >= 14 && hour < 22) {
+                } else if (hour >= 8 && hour < 16) {
                     shiftType = '<span class="badge bg-primary">Ca Chiều</span>';
                 } else {
-                    shiftType = '<span class="badge bg-info">Ca Đêm</span>';
+                    shiftType = '<span class="badge bg-info">Ca Tối</span>';
                 }
 
                 const status = shift.trangThaiCa === 0 
@@ -1768,16 +1785,16 @@
                         let shiftIcon = '';
                         let shiftColor = '';
                         
-                        if (hour >= 6 && hour < 14) {
-                            shiftName = 'Ca Sáng (6:00 - 14:00)';
+                        if (hour >= 0 && hour < 8) {
+                            shiftName = 'Ca Sáng (0:00 - 8:00)';
                             shiftIcon = 'fa-sun';
                             shiftColor = 'warning';
-                        } else if (hour >= 14 && hour < 22) {
-                            shiftName = 'Ca Chiều (14:00 - 22:00)';
+                        } else if (hour >= 8 && hour < 16) {
+                            shiftName = 'Ca Chiều (8:00 - 16:00)';
                             shiftIcon = 'fa-cloud-sun';
                             shiftColor = 'primary';
                         } else {
-                            shiftName = 'Ca Đêm (22:00 - 6:00)';
+                            shiftName = 'Ca Tối (16:00 - 0:00)';
                             shiftIcon = 'fa-moon';
                             shiftColor = 'info';
                         }
@@ -1963,33 +1980,33 @@
             // Chuẩn bị dữ liệu
             const shifts = [];
 
-            // Ca sáng (6:00 - 14:00)
+            // Ca sáng (0:00 - 8:00)
             if (morningEmp) {
                 shifts.push({
                     MaNhanVien: parseInt(morningEmp),
-                    ThoiGianNhanCa: `${date} 06:00:00`,
+                    ThoiGianNhanCa: `${date} 00:00:00`,
                     TienDauCa: parseFloat($('#morningCash').val()) || 0,
                     GhiChuBanGiao: $('#morningNote').val() || 'Ca sáng'
                 });
             }
 
-            // Ca chiều (14:00 - 22:00)
+            // Ca chiều (8:00 - 16:00)
             if (afternoonEmp) {
                 shifts.push({
                     MaNhanVien: parseInt(afternoonEmp),
-                    ThoiGianNhanCa: `${date} 14:00:00`,
+                    ThoiGianNhanCa: `${date} 08:00:00`,
                     TienDauCa: parseFloat($('#afternoonCash').val()) || 0,
                     GhiChuBanGiao: $('#afternoonNote').val() || 'Ca chiều'
                 });
             }
 
-            // Ca đêm (22:00 - 6:00 ngày hôm sau)
+            // Ca tối (16:00 - 0:00 ngày hôm sau)
             if (nightEmp) {
                 shifts.push({
                     MaNhanVien: parseInt(nightEmp),
-                    ThoiGianNhanCa: `${date} 22:00:00`,
+                    ThoiGianNhanCa: `${date} 16:00:00`,
                     TienDauCa: parseFloat($('#nightCash').val()) || 0,
-                    GhiChuBanGiao: $('#nightNote').val() || 'Ca đêm'
+                    GhiChuBanGiao: $('#nightNote').val() || 'Ca tối'
                 });
             }
 
@@ -2726,5 +2743,52 @@
                 }
             );
         });
+
+        // ========== CLOSE SHIFT FUNCTIONS ==========
+
+        let currentClosingShiftId = 0;
+
+        // Mở modal chốt ca
+        function openCloseShiftModal(shiftId, employeeName) {
+            currentClosingShiftId = shiftId;
+            $('#closeShiftEmployeeName').text(employeeName);
+            $('#closeShiftId').text('#' + shiftId);
+            $('#closeTienMatBanGiao').val('0');
+            $('#closeGhiChuBanGiao').val('');
+            $('#closeShiftModal').modal('show');
+        }
+
+        // Xác nhận chốt ca
+        function confirmCloseShift() {
+            const tienMatBanGiao = parseFloat($('#closeTienMatBanGiao').val()) || 0;
+            const ghiChuBanGiao = $('#closeGhiChuBanGiao').val();
+
+            if (tienMatBanGiao < 0) {
+                alert('Tiền bàn giao không được âm!');
+                return;
+            }
+
+            if (!confirm('Xác nhận chốt ca này?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("CloseShift", "VehicleShift", new { area = "Admin" })',
+                type: 'POST',
+                data: { shiftId: currentClosingShiftId },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message || 'Chốt ca thành công!');
+                        $('#closeShiftModal').modal('hide');
+                        location.reload(); // Reload để cập nhật giao diện
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi chốt ca');
+                }
+            });
+        }
     </script>
 }

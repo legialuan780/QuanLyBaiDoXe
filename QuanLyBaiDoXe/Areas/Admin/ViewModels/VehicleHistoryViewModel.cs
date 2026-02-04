@@ -1,4 +1,4 @@
-namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
+ï»¿namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
 {
     public class VehicleHistoryViewModel
     {
@@ -32,7 +32,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
         public string? TenLoaiXe { get; set; }
         public decimal? TongTien { get; set; }
         public int? TrangThai { get; set; }
-        public string TrangThaiText => TrangThai == 0 ? "?ang g?i" : "?ã l?y xe";
+        public string TrangThaiText => TrangThai == 0 ? "?ang g?i" : "?Ã£ l?y xe";
         public TimeSpan? ThoiGianGui
         {
             get
@@ -49,7 +49,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
                 if (ThoiGianGui == null) return "--:--";
                 var ts = ThoiGianGui.Value;
                 if (ts.TotalDays >= 1)
-                    return $"{(int)ts.TotalDays} ngày {ts.Hours:D2}:{ts.Minutes:D2}";
+                    return $"{(int)ts.TotalDays} ngÃ y {ts.Hours:D2}:{ts.Minutes:D2}";
                 return $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
             }
         }

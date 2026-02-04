@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Admin\Views\Report\" />
     <Folder Include="wwwroot\uploads\images\" />
   </ItemGroup>
 

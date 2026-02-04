@@ -267,6 +267,81 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = string.Join(", ", errors) });
+                }
+
+                // Find customer
+                var customer = await _context.KhachHangs
+                    .Include(k => k.MaTaiKhoanNavigation)
+                    .FirstOrDefaultAsync(k => k.MaKhachHang == request.MaKhachHang);
+
+                if (customer == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy khách hàng!" });
+                }
+
+                // Check if customer already has an account
+                if (customer.MaTaiKhoan != null)
+                {
+                    return Json(new { success = false, message = "Khách hàng đã có tài khoản!" });
+                }
+
+                // Check if username already exists
+                var existingUsername = await _context.TaiKhoans
+                    .AnyAsync(t => t.TenDangNhap == request.TenDangNhap.Trim());
+
+                if (existingUsername)
+                {
+                    return Json(new { success = false, message = "Tên đăng nhập đã tồn tại!" });
+                }
+
+                // Check if email already exists
+                if (!string.IsNullOrWhiteSpace(request.Email))
+                {
+                    var existingEmail = await _context.TaiKhoans
+                        .AnyAsync(t => t.Email == request.Email.Trim());
+
+                    if (existingEmail)
+                    {
+                        return Json(new { success = false, message = "Email đã được sử dụng!" });
+                    }
+                }
+
+                // Create account
+                var taiKhoan = new TaiKhoan
+                {
+                    TenDangNhap = request.TenDangNhap.Trim(),
+                    MatKhau = request.MatKhau, // Plain text as per existing system
+                    QuyenHan = "Khách hàng",
+                    Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+                    TrangThai = true
+                };
+
+                _context.TaiKhoans.Add(taiKhoan);
+                await _context.SaveChangesAsync();
+
+                // Link account to customer
+                customer.MaTaiKhoan = taiKhoan.MaTaiKhoan;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Cấp tài khoản thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi: {ex.Message}" });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetStatistics()
         {
@@ -305,5 +380,13 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
         public string? Cccd { get; set; }
         public string? DiaChi { get; set; }
         public string? BienSoXeMacDinh { get; set; }
+    }
+
+    public class CreateAccountRequest
+    {
+        public int MaKhachHang { get; set; }
+        public string TenDangNhap { get; set; } = null!;
+        public string MatKhau { get; set; } = null!;
+        public string? Email { get; set; }
     }
 }

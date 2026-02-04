@@ -1,4 +1,4 @@
-﻿USE master;
+USE master;
 GO
 
 -- 1. XỬ LÝ DATABASE (Xóa nếu tồn tại để làm mới hoàn toàn)
@@ -40,7 +40,7 @@ CREATE TABLE PasswordResetTokens (
 
 CREATE TABLE NhanVien (
     MaNhanVien INT PRIMARY KEY IDENTITY(1,1),
-    MaTaiKhoan INT UNIQUE REFERENCES TaiKhoan(MaTaiKhoan), 
+    MaTaiKhoan INT  REFERENCES TaiKhoan(MaTaiKhoan), 
     HoTen NVARCHAR(100) NOT NULL,
     GioiTinh NVARCHAR(10),
     NgaySinh DATE,
@@ -54,7 +54,7 @@ CREATE TABLE NhanVien (
 
 CREATE TABLE KhachHang (
     MaKhachHang INT PRIMARY KEY IDENTITY(1,1),
-    MaTaiKhoan INT UNIQUE REFERENCES TaiKhoan(MaTaiKhoan) NULL, 
+    MaTaiKhoan INT  REFERENCES TaiKhoan(MaTaiKhoan) NULL, 
     SoDienThoai VARCHAR(15) UNIQUE NOT NULL, 
     HoTen NVARCHAR(100) NOT NULL,
     CCCD VARCHAR(20),

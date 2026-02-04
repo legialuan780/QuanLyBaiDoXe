@@ -22,8 +22,8 @@ namespace QuanLyBaiDoXe.Services
             {
                 // Tìm tài khoản theo tên đăng nhập
                 var account = await _context.TaiKhoans
-                    .Include(t => t.NhanVien)
-                    .Include(t => t.KhachHang)
+                    .Include(t => t.NhanViens)
+                    .Include(t => t.KhachHangs)
                     .FirstOrDefaultAsync(t => t.TenDangNhap == username);
 
                 if (account == null)
@@ -47,9 +47,9 @@ namespace QuanLyBaiDoXe.Services
                 string role = account.QuyenHan; // "Admin", "Nhân viên", hoặc "Khách hàng"
 
                 // Kiểm tra trạng thái nhân viên nếu là Admin hoặc Nhân viên
-                if ((role == "Admin" || role == "Nhân viên") && account.NhanVien != null)
+                if ((role == "Admin" || role == "Nhân viên") && account.NhanViens.FirstOrDefault() != null)
                 {
-                    if (account.NhanVien.TrangThaiLamViec == false)
+                    if (account.NhanViens.FirstOrDefault().TrangThaiLamViec == false)
                     {
                         return (false, "Nhân viên đã nghỉ việc!", null, null);
                     }
@@ -214,8 +214,8 @@ namespace QuanLyBaiDoXe.Services
             try
             {
                 var account = await _context.TaiKhoans
-                    .Include(t => t.NhanVien)
-                    .Include(t => t.KhachHang)
+                    .Include(t => t.NhanViens)
+                    .Include(t => t.KhachHangs)
                     .FirstOrDefaultAsync(t => t.Email == email);
 
                 if (account == null)
@@ -280,8 +280,8 @@ namespace QuanLyBaiDoXe.Services
                 }
 
                 var resetToken = await _context.PasswordResetTokens
-                    .FirstOrDefaultAsync(t => t.MaTaiKhoan == account.MaTaiKhoan 
-                        && t.Token == otpCode 
+                    .FirstOrDefaultAsync(t => t.MaTaiKhoan == account.MaTaiKhoan
+                        && t.Token == otpCode
                         && !t.IsUsed);
 
                 if (resetToken == null)
@@ -315,8 +315,8 @@ namespace QuanLyBaiDoXe.Services
                 }
 
                 var resetToken = await _context.PasswordResetTokens
-                    .FirstOrDefaultAsync(t => t.MaTaiKhoan == account.MaTaiKhoan 
-                        && t.Token == otpCode 
+                    .FirstOrDefaultAsync(t => t.MaTaiKhoan == account.MaTaiKhoan
+                        && t.Token == otpCode
                         && !t.IsUsed);
 
                 if (resetToken == null)

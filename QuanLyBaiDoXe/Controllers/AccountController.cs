@@ -28,13 +28,13 @@ namespace QuanLyBaiDoXe.Controllers
             if (User.Identity?.IsAuthenticated == true)
             {
                 var role = User.FindFirst(ClaimTypes.Role)?.Value;
-                
+
                 // Admin và Employee redirect về Admin Dashboard
                 if (role == "Admin" || role == "Employee")
                 {
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
-                
+
                 // Customer redirect về User Dashboard
                 return RedirectToAction("Index", "Dashboard", new { area = "User" });
             }
@@ -74,16 +74,18 @@ namespace QuanLyBaiDoXe.Controllers
             };
 
             // Thêm thông tin nhân viên hoặc khách hàng
-            if (account.NhanVien != null)
+            if (account.NhanViens != null && account.NhanViens.Any())
             {
-                claims.Add(new Claim("EmployeeId", account.NhanVien.MaNhanVien.ToString()));
-                claims.Add(new Claim("FullName", account.NhanVien.HoTen));
-                claims.Add(new Claim("Position", account.NhanVien.ChucVu?.ToString() ?? "1"));
+                var nhanVien = account.NhanViens.First();
+                claims.Add(new Claim("EmployeeId", nhanVien.MaNhanVien.ToString()));
+                claims.Add(new Claim("FullName", nhanVien.HoTen));
+                claims.Add(new Claim("Position", nhanVien.ChucVu?.ToString() ?? "1"));
             }
-            else if (account.KhachHang != null)
+            else if (account.KhachHangs != null && account.KhachHangs.Any())
             {
-                claims.Add(new Claim("CustomerId", account.KhachHang.MaKhachHang.ToString()));
-                claims.Add(new Claim("FullName", account.KhachHang.HoTen));
+                var khachHang = account.KhachHangs.First();
+                claims.Add(new Claim("CustomerId", khachHang.MaKhachHang.ToString()));
+                claims.Add(new Claim("FullName", khachHang.HoTen));
             }
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -128,13 +130,13 @@ namespace QuanLyBaiDoXe.Controllers
             if (User.Identity?.IsAuthenticated == true)
             {
                 var role = User.FindFirst(ClaimTypes.Role)?.Value;
-                
+
                 // Admin và Employee redirect về Admin Dashboard
                 if (role == "Admin" || role == "Employee")
                 {
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
-                
+
                 // Customer redirect về User Dashboard
                 return RedirectToAction("Index", "Dashboard", new { area = "User" });
             }
@@ -276,7 +278,7 @@ namespace QuanLyBaiDoXe.Controllers
             var otpCode = await _authService.GenerateOtpAsync(account.MaTaiKhoan);
 
             // Get user name for email
-            var userName = account.NhanVien?.HoTen ?? account.KhachHang?.HoTen ?? account.TenDangNhap;
+            var userName = account.NhanViens?.FirstOrDefault()?.HoTen ?? account.KhachHangs?.FirstOrDefault()?.HoTen ?? account.TenDangNhap;
 
             // Send OTP email
             var emailSent = await _emailService.SendOtpEmailAsync(model.Email, otpCode, userName);
@@ -354,7 +356,7 @@ namespace QuanLyBaiDoXe.Controllers
             var otpCode = await _authService.GenerateOtpAsync(account.MaTaiKhoan);
 
             // Get user name for email
-            var userName = account.NhanVien?.HoTen ?? account.KhachHang?.HoTen ?? account.TenDangNhap;
+            var userName = account.NhanViens?.FirstOrDefault()?.HoTen ?? account.KhachHangs?.FirstOrDefault()?.HoTen ?? account.TenDangNhap;
 
             // Send OTP email
             var emailSent = await _emailService.SendOtpEmailAsync(email, otpCode, userName);

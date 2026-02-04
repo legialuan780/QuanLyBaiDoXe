@@ -1,4 +1,4 @@
-USE master;
+﻿USE master;
 GO
 
 -- 1. XỬ LÝ DATABASE (Xóa nếu tồn tại để làm mới hoàn toàn)
@@ -94,9 +94,11 @@ CREATE TABLE LichLamViec (
     GhiChu NVARCHAR(255),
 
     CONSTRAINT CHK_GioLam CHECK (
-        (LoaiCa IN (0,1) AND GioKetThuc > GioBatDau)
-        OR
-        (LoaiCa = 2 AND GioKetThuc < GioBatDau)
+        -- Trường hợp ca 1 và ca 2 (0-8h và 8-16h)
+        (GioKetThuc > GioBatDau) 
+        OR 
+        -- Trường hợp ca 3 (16-0h): GioKetThuc là 00:00:00
+        (GioKetThuc = '00:00:00' AND GioBatDau > '00:00:00')
     )
 );
 GO

@@ -1,4 +1,4 @@
-﻿/* ===== Monthly Ticket Styles ===== */
+/* ===== Monthly Ticket Styles ===== */
 
 /* Form Sections */
 .form-section {
@@ -70,10 +70,15 @@
 }
 
 /* Select2 Custom Styles */
+.select2-container {
+    width: 100% !important;
+}
+
 .select2-container--default .select2-selection--single {
     height: 42px;
     border: 1px solid #d2d6da;
     border-radius: 8px;
+    width: 100%;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -95,6 +100,7 @@
     border-radius: 8px;
     border: 1px solid #d2d6da;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 300px;
 }
 
 .select2-results__option--highlighted[aria-selected] {

@@ -243,6 +243,10 @@
         border-color: var(--primary-teal);
     }
 
+    .position-select:required:invalid {
+        border-color: #e74c3c;
+    }
+
     .position-select optgroup {
         font-weight: 600;
         color: var(--primary-teal);
@@ -254,6 +258,54 @@
         font-weight: 400;
         color: var(--dark-bg);
         padding: 8px 15px;
+    }
+
+    .position-select option:disabled {
+        color: #adb5bd;
+        background: #f8f9fa;
+        font-style: italic;
+    }
+
+    /* Monthly Ticket Info Styles */
+    .monthly-ticket-info {
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+    }
+
+    .monthly-ticket-info.valid {
+        background: rgba(39, 174, 96, 0.15);
+        color: #27ae60;
+        border: 1px solid rgba(39, 174, 96, 0.3);
+    }
+
+    .monthly-ticket-info.warning {
+        background: rgba(255, 152, 0, 0.15);
+        color: #ff9800;
+        border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+
+    .monthly-ticket-info.expired {
+        background: rgba(231, 76, 60, 0.15);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+
+    .monthly-ticket-info.info {
+        background: rgba(52, 152, 219, 0.15);
+        color: #3498db;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+
+    .monthly-ticket-info small {
+        display: block;
+        margin-top: 4px;
+        opacity: 0.9;
     }
 
     .capture-warning {
@@ -271,6 +323,7 @@
     .capture-warning.hidden {
         display: none;
     }
+
 
     .action-buttons {
         display: flex;
@@ -955,18 +1008,47 @@
 
         <input type="text" id="plateInput" class="plate-input" placeholder="Biển số xe (VD: 59A-12345)" />
 
-        <select id="positionSelect" class="position-select">
-            <option value="">-- Chọn khu vực đỗ (không bắt buộc) --</option>
+        <label style="font-size: 13px; font-weight: 500; color: var(--dark-teal); margin-bottom: 5px; display: block;">
+            Khu vực đỗ <span style="color: #e74c3c;">*</span>
+        </label>
+        <select id="positionSelect" class="position-select" required>
+            <option value="">-- Chọn khu vực đỗ (bắt buộc) --</option>
             @foreach (var khuVuc in Model.KhuVucList)
             {
-                <option value="@khuVuc.MaKhuVuc">@khuVuc.TenKhuVuc (@khuVuc.SoChoTrong/@khuVuc.TongSoCho chỗ trống)</option>
+                var loaiXeText = !string.IsNullOrEmpty(khuVuc.TenLoaiXe) ? " - " + khuVuc.TenLoaiXe : "";
+                var isDisabled = khuVuc.SoChoTrong == 0;
+                var statusText = isDisabled ? "ĐẦY" : khuVuc.SoChoTrong + "/" + khuVuc.TongSoCho + " chỗ trống";
+                if (isDisabled)
+                {
+                    <option value="@khuVuc.MaKhuVuc" 
+                            data-loaixe="@khuVuc.MaLoaiXe" 
+                            data-sochotrong="@khuVuc.SoChoTrong"
+                            disabled>
+                        @khuVuc.TenKhuVuc@loaiXeText (@statusText)
+                    </option>
+                }
+                else
+                {
+                    <option value="@khuVuc.MaKhuVuc" 
+                            data-loaixe="@khuVuc.MaLoaiXe" 
+                            data-sochotrong="@khuVuc.SoChoTrong">
+                        @khuVuc.TenKhuVuc@loaiXeText (@statusText)
+                    </option>
+                }
             }
         </select>
+
+        <!-- Thông báo vé tháng -->
+        <div class="monthly-ticket-info" id="monthlyTicketInfo" style="display: none;">
+            <i class="fas fa-id-card"></i>
+            <span id="monthlyTicketMessage"></span>
+        </div>
 
         <div class="capture-warning" id="captureWarning">
             <i class="fas fa-exclamation-triangle"></i>
             <span>Vui lòng chụp hình xe trước khi xử lý!</span>
         </div>
+
 
         <div class="action-buttons">
             <button class="btn-entry in" id="btnXeVao" disabled>
@@ -1125,6 +1207,12 @@
         </div>
         
         <div class="payment-body" id="paymentMethodsSection">
+            <!-- Thông báo vé tháng trong payment modal -->
+            <div class="monthly-ticket-info" id="payVeThangNotice" style="display: none; margin-bottom: 15px;">
+                <i class="fas fa-id-card"></i>
+                <span></span>
+            </div>
+            
             <div class="payment-info-grid">
                 <div class="payment-info-item">
                     <div class="payment-info-label">Mã thẻ</div>
@@ -1210,6 +1298,7 @@
     let currentAction = null;
     let currentCardInfo = null;
     let entryImageUrl = null;
+    let currentLoaiXe = null; // Loại xe hiện tại từ thẻ
 
     // Initialize camera
     async function initCamera() {
@@ -1386,12 +1475,19 @@
         }
     }
 
-    // Check card
+    // Check card - tự động chụp ảnh trước khi kiểm tra
     async function checkCard() {
         const maThe = document.getElementById('cardInput').value.trim();
         if (!maThe) {
             showAlertModal('Vui lòng nhập mã thẻ!', 'warning', 'Thiếu thông tin');
             return;
+        }
+
+        // Tự động chụp ảnh nếu chưa chụp và camera đang hoạt động
+        if (!capturedImageData && cameraStream) {
+            captureImage();
+            // Chờ một chút để nhận dạng biển số hoàn tất
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         try {
@@ -1400,7 +1496,18 @@
 
             if (data.success) {
                 currentCardInfo = data;
+                currentLoaiXe = data.theXe?.maLoaiXe;
                 displayCardInfo(data);
+
+                // Hiển thị thông báo vé tháng nếu có (bao gồm biển số đăng ký)
+                if (data.veThangInfo) {
+                    displayMonthlyTicketInfo(data.veThangInfo);
+                } else {
+                    hideMonthlyTicketInfo();
+                }
+
+                // Lọc khu vực theo loại xe
+                await filterKhuVucByLoaiXe(currentLoaiXe);
 
                 if (data.action === 'RA') {
                     currentAction = 'RA';
@@ -1412,13 +1519,14 @@
                 } else {
                     currentAction = 'VAO';
                     hideImagesSection();
+                    
+                    // Nếu có vé tháng và có biển số đăng ký, tự động điền biển số
+                    if (data.veThangInfo?.bienSoMacDinh && !document.getElementById('plateInput').value) {
+                        document.getElementById('plateInput').value = data.veThangInfo.bienSoMacDinh;
+                    }
                 }
 
-                // Show capture warning if not captured yet
-                if (!capturedImageData) {
-                    document.getElementById('captureWarning').classList.remove('hidden');
-                }
-
+                // Cập nhật trạng thái buttons (đã có ảnh rồi vì tự động chụp)
                 updateButtonsState();
             } else {
                 showAlertModal(data.message, 'error', 'Lỗi thẻ xe');
@@ -1426,6 +1534,87 @@
             }
         } catch (err) {
             showAlertModal('Lỗi kết nối server! Vui lòng thử lại.', 'error', 'Lỗi kết nối');
+        }
+    }
+
+
+    // Hiển thị thông tin vé tháng (bao gồm biển số đăng ký)
+    function displayMonthlyTicketInfo(veThangInfo) {
+        const container = document.getElementById('monthlyTicketInfo');
+        const message = document.getElementById('monthlyTicketMessage');
+        const bienSoDK = veThangInfo.bienSoMacDinh ? `<br><small>📋 Biển số đăng ký: <strong>${veThangInfo.bienSoMacDinh}</strong></small>` : '';
+
+        if (veThangInfo.daHetHan) {
+            container.className = 'monthly-ticket-info expired';
+            message.innerHTML = `<strong>VÉ THÁNG ĐÃ HẾT HẠN!</strong> ${veThangInfo.thongBao}${bienSoDK}`;
+        } else if (veThangInfo.khongCoKhachHang) {
+            container.className = 'monthly-ticket-info warning';
+            message.innerHTML = `<strong>VÉ THÁNG KHÔNG HỢP LỆ!</strong> ${veThangInfo.thongBao}`;
+        } else if (veThangInfo.sapHetHan) {
+            container.className = 'monthly-ticket-info warning';
+            message.innerHTML = `<strong>VÉ THÁNG SẮP HẾT HẠN!</strong> ${veThangInfo.thongBao}${bienSoDK}`;
+        } else if (veThangInfo.hopLe) {
+            container.className = 'monthly-ticket-info valid';
+            message.innerHTML = `<strong>VÉ THÁNG HỢP LỆ</strong> - KH: ${veThangInfo.tenKhachHang || 'N/A'} | HSD: ${veThangInfo.ngayHetHan || 'N/A'}${bienSoDK}`;
+        } else if (veThangInfo.coVeThang) {
+            container.className = 'monthly-ticket-info info';
+            message.innerHTML = (veThangInfo.thongBao || 'Có vé tháng') + bienSoDK;
+        }
+
+        container.style.display = 'flex';
+    }
+
+
+    // Ẩn thông tin vé tháng
+    function hideMonthlyTicketInfo() {
+        document.getElementById('monthlyTicketInfo').style.display = 'none';
+    }
+
+    // Lọc khu vực theo loại xe
+    async function filterKhuVucByLoaiXe(maLoaiXe) {
+        try {
+            const response = await fetch(`/Admin/VehicleEntry/GetKhuVucTheoLoaiXe?maLoaiXe=${maLoaiXe || ''}`);
+            const khuVucList = await response.json();
+
+            const select = document.getElementById('positionSelect');
+            const currentValue = select.value;
+            
+            // Reset options
+            select.innerHTML = '<option value="">-- Chọn khu vực đỗ (bắt buộc) --</option>';
+            
+            khuVucList.forEach(kv => {
+                const loaiXeText = kv.tenLoaiXe ? ` - ${kv.tenLoaiXe}` : '';
+                const isDisabled = kv.soChoTrong === 0;
+                const statusText = isDisabled ? 'ĐẦY' : `${kv.soChoTrong}/${kv.tongSoCho} chỗ trống`;
+                
+                const option = document.createElement('option');
+                option.value = kv.maKhuVuc;
+                option.setAttribute('data-loaixe', kv.maLoaiXe || '');
+                option.setAttribute('data-sochotrong', kv.soChoTrong);
+                option.textContent = `${kv.tenKhuVuc}${loaiXeText} (${statusText})`;
+                
+                if (isDisabled) {
+                    option.disabled = true;
+                }
+                
+                select.appendChild(option);
+            });
+
+            // Tự động chọn khu vực đầu tiên phù hợp với loại xe (chỉ chọn nếu còn chỗ)
+            if (maLoaiXe && khuVucList.length > 0) {
+                const matchedKhuVuc = khuVucList.find(kv => kv.maLoaiXe === maLoaiXe && kv.soChoTrong > 0);
+                if (matchedKhuVuc) {
+                    select.value = matchedKhuVuc.maKhuVuc;
+                } else {
+                    // Nếu không có khu vực phù hợp còn chỗ, chọn khu vực đầu tiên còn chỗ
+                    const firstAvailable = khuVucList.find(kv => kv.soChoTrong > 0);
+                    if (firstAvailable) {
+                        select.value = firstAvailable.maKhuVuc;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error filtering khu vuc:', err);
         }
     }
 
@@ -1514,6 +1703,13 @@
         if (!capturedImageData) {
             showAlertModal('Vui lòng chụp hình xe trước khi xử lý!', 'warning', 'Chưa chụp hình');
             document.getElementById('captureWarning').classList.remove('hidden');
+            return;
+        }
+
+        // Bắt buộc chọn khu vực khi xe VÀO
+        if (action === 'VAO' && !maKhuVuc) {
+            showAlertModal('Vui lòng chọn khu vực đỗ xe!', 'warning', 'Thiếu thông tin');
+            document.getElementById('positionSelect').focus();
             return;
         }
 
@@ -1648,8 +1844,10 @@
         document.getElementById('btnXeVao').disabled = true;
         document.getElementById('btnXeRa').disabled = true;
         document.getElementById('captureWarning').classList.add('hidden');
+        hideMonthlyTicketInfo();
         currentCardInfo = null;
         currentAction = null;
+        currentLoaiXe = null;
         entryImageUrl = null;
         retakePhoto();
         hideImagesSection();
@@ -1710,7 +1908,9 @@
             thoiGianVao: previewData.thoiGianVao,
             thoiGianRa: previewData.thoiGianRa,
             thoiGianGui: previewData.thoiGianGui,
-            tongTien: previewData.tongTien
+            tongTien: previewData.tongTien,
+            veThangHopLe: previewData.veThangHopLe,
+            thongBaoVeThang: previewData.thongBaoVeThang
         };
         
         // Hiển thị thông tin
@@ -1732,6 +1932,22 @@
         const formattedMoney = new Intl.NumberFormat('vi-VN').format(tongTien) + 'đ';
         document.getElementById('payTongTien').textContent = formattedMoney;
         document.getElementById('momoAmount').textContent = formattedMoney;
+
+        // Hiển thị thông báo vé tháng nếu có
+        const veThangNotice = document.getElementById('payVeThangNotice');
+        if (veThangNotice) {
+            if (previewData.veThangHopLe) {
+                veThangNotice.className = 'monthly-ticket-info valid';
+                veThangNotice.innerHTML = '<i class="fas fa-check-circle"></i> ' + (previewData.thongBaoVeThang || 'VÉ THÁNG HỢP LỆ - Miễn phí');
+                veThangNotice.style.display = 'flex';
+            } else if (previewData.thongBaoVeThang) {
+                veThangNotice.className = 'monthly-ticket-info warning';
+                veThangNotice.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + previewData.thongBaoVeThang;
+                veThangNotice.style.display = 'flex';
+            } else {
+                veThangNotice.style.display = 'none';
+            }
+        }
         
         // Nội dung chuyển khoản MoMo
         document.getElementById('momoContent').textContent = `GUIXE ${previewData.maThe}`;

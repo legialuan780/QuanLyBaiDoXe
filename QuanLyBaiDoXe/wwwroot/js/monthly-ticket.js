@@ -127,13 +127,15 @@ const MonthlyTicket = {
         $('.select2-customer').select2({
             placeholder: '-- Chọn khách hàng --',
             allowClear: true,
-            dropdownParent: $('#registerModal')
+            dropdownParent: $('#registerModal'),
+            width: '100%'
         });
 
         $('.select2-card').select2({
             placeholder: '-- Chọn thẻ --',
             allowClear: true,
-            dropdownParent: $('#registerModal')
+            dropdownParent: $('#registerModal'),
+            width: '100%'
         });
     },
 

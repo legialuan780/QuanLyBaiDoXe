@@ -52,21 +52,68 @@ namespace QuanLyBaiDoXe.Services
                 throw new Exception("Thẻ xe này đang có lượt gửi chưa lấy xe ra!");
             }
 
+            // Kiểm tra biển số xe đã trong bãi (tránh duplicate)
+            var bienSoChuanHoa = bienSoVao?.Trim().ToUpper();
+            if (!string.IsNullOrEmpty(bienSoChuanHoa))
+            {
+                var xeTrungBienSo = await _context.LuotGuis
+                    .Where(l => l.TrangThai == 0 && l.BienSoVao != null)
+                    .FirstOrDefaultAsync(l => l.BienSoVao!.Trim().ToUpper() == bienSoChuanHoa);
+                
+                if (xeTrungBienSo != null)
+                {
+                    throw new Exception($"Biển số {bienSoVao} đã có trong bãi với thẻ {xeTrungBienSo.MaThe}! Vui lòng kiểm tra lại.");
+                }
+            }
+
+            // Kiểm tra vé tháng - nếu có vé tháng thì biển số PHẢI khớp mới cho vào
+            var veThangInfo = await KiemTraVeThangChiTietAsync(maThe, bienSoVao);
+            if (veThangInfo.CoVeThang && !veThangInfo.DaHetHan && !veThangInfo.KhongCoKhachHang)
+            {
+                // Có vé tháng còn hiệu lực và có khách hàng -> kiểm tra biển số
+                if (veThangInfo.BienSoKhongKhop)
+                {
+                    throw new Exception($"Biển số {bienSoVao} không khớp với biển số đăng ký vé tháng ({veThangInfo.BienSoMacDinh})! Không thể vào bãi.");
+                }
+            }
+
+            // Kiểm tra khu vực bắt buộc
+            if (!maKhuVuc.HasValue)
+            {
+                throw new Exception("Vui lòng chọn khu vực đỗ xe!");
+            }
+
+            // Kiểm tra khu vực còn chỗ trống không
+            var khuVuc = await _context.KhuVucs
+                .Include(kv => kv.MaLoaiXeNavigation)
+                .FirstOrDefaultAsync(kv => kv.MaKhuVuc == maKhuVuc.Value);
+
+            if (khuVuc == null)
+            {
+                throw new Exception("Khu vực đỗ không tồn tại!");
+            }
+
+            var soChoTrong = await _context.ViTriDos
+                .CountAsync(v => v.MaKhuVuc == maKhuVuc.Value && v.TrangThai == 0);
+
+            if (soChoTrong == 0)
+            {
+                var tenLoaiXe = khuVuc.MaLoaiXeNavigation?.TenLoaiXe ?? "xe";
+                throw new Exception($"Khu vực {khuVuc.TenKhuVuc} đã hết chỗ cho {tenLoaiXe}! Vui lòng chọn khu vực khác.");
+            }
+
             // Tự động gán vị trí trống trong khu vực được chọn
             int? maViTriDuocGan = null;
-            if (maKhuVuc.HasValue)
-            {
-                // Tìm vị trí trống đầu tiên trong khu vực
-                var viTriTrong = await _context.ViTriDos
-                    .Where(v => v.MaKhuVuc == maKhuVuc.Value && v.TrangThai == 0)
-                    .OrderBy(v => v.TenViTri)
-                    .FirstOrDefaultAsync();
+            // Tìm vị trí trống đầu tiên trong khu vực
+            var viTriTrong = await _context.ViTriDos
+                .Where(v => v.MaKhuVuc == maKhuVuc.Value && v.TrangThai == 0)
+                .OrderBy(v => v.TenViTri)
+                .FirstOrDefaultAsync();
 
-                if (viTriTrong != null)
-                {
-                    viTriTrong.TrangThai = 1; // Đánh dấu đã sử dụng
-                    maViTriDuocGan = viTriTrong.MaViTri;
-                }
+            if (viTriTrong != null)
+            {
+                viTriTrong.TrangThai = 1; // Đánh dấu đã sử dụng
+                maViTriDuocGan = viTriTrong.MaViTri;
             }
 
             // Tạo lượt gửi mới
@@ -172,6 +219,7 @@ namespace QuanLyBaiDoXe.Services
                     var tempLuotGui = new LuotGui
                     {
                         MaThe = luotGui.MaThe,
+                        BienSoVao = luotGui.BienSoVao, // Thêm biển số để kiểm tra vé tháng
                         ThoiGianVao = luotGui.ThoiGianVao,
                         ThoiGianRa = thoiGianRa,
                         MaViTri = luotGui.MaViTri
@@ -187,12 +235,13 @@ namespace QuanLyBaiDoXe.Services
                         return 0;
                     }
 
-                    // Kiểm tra thẻ có vé tháng còn hiệu lực không
-                    var veThangHopLe = await KiemTraVeThangHopLeAsync(luotGui.MaThe!);
-                    if (veThangHopLe)
+                    // Kiểm tra thẻ có vé tháng còn hiệu lực không (bao gồm kiểm tra biển số)
+                    var veThangInfo = await KiemTraVeThangChiTietAsync(luotGui.MaThe!, luotGui.BienSoVao);
+                    if (veThangInfo.HopLe)
                     {
                         return 0;
                     }
+
 
                     var thoiGianGui = luotGui.ThoiGianRa.Value - luotGui.ThoiGianVao;
                     var soPhut = (int)Math.Ceiling(thoiGianGui.TotalMinutes);
@@ -281,12 +330,89 @@ namespace QuanLyBaiDoXe.Services
             var today = DateOnly.FromDateTime(DateTime.Today);
 
             var veThang = await _context.TheThangs
+                .Include(v => v.MaKhachHangNavigation)
                 .FirstOrDefaultAsync(v => v.MaThe == maThe 
                     && v.TrangThai == true 
                     && v.NgayBatDau <= today 
                     && v.NgayHetHan >= today);
 
-            return veThang != null;
+            // Vé tháng phải liên kết với khách hàng mới được miễn phí
+            return veThang != null && veThang.MaKhachHang != null;
+        }
+
+        /// <summary>
+        /// Kiểm tra vé tháng với biển số xe
+        /// </summary>
+        public async Task<VeThangInfoResult> KiemTraVeThangChiTietAsync(string maThe, string? bienSo = null)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            var veThang = await _context.TheThangs
+                .Include(v => v.MaKhachHangNavigation)
+                .Include(v => v.MaTheNavigation)
+                    .ThenInclude(t => t!.MaLoaiXeNavigation)
+                .FirstOrDefaultAsync(v => v.MaThe == maThe && v.TrangThai == true);
+
+            if (veThang == null)
+            {
+                return new VeThangInfoResult { CoVeThang = false };
+            }
+
+            var result = new VeThangInfoResult
+            {
+                CoVeThang = true,
+                NgayBatDau = veThang.NgayBatDau,
+                NgayHetHan = veThang.NgayHetHan,
+                TenKhachHang = veThang.MaKhachHangNavigation?.HoTen,
+                BienSoMacDinh = veThang.MaKhachHangNavigation?.BienSoXeMacDinh
+            };
+
+            // Kiểm tra hết hạn
+            if (veThang.NgayHetHan < today)
+            {
+                result.DaHetHan = true;
+                result.ThongBao = $"Vé tháng đã hết hạn từ {veThang.NgayHetHan:dd/MM/yyyy}! Vui lòng gia hạn.";
+                return result;
+            }
+
+            // Kiểm tra sắp hết hạn (còn 7 ngày)
+            var ngayConLai = veThang.NgayHetHan!.Value.DayNumber - today.DayNumber;
+            if (ngayConLai <= 7)
+            {
+                result.SapHetHan = true;
+                result.SoNgayConLai = ngayConLai;
+                result.ThongBao = $"Vé tháng sẽ hết hạn sau {ngayConLai} ngày ({veThang.NgayHetHan:dd/MM/yyyy}). Vui lòng gia hạn sớm!";
+            }
+
+            // Kiểm tra khách hàng
+            if (veThang.MaKhachHang == null)
+            {
+                result.KhongCoKhachHang = true;
+                result.ThongBao = "Vé tháng chưa liên kết khách hàng! Không được miễn phí.";
+                return result;
+            }
+
+            // Kiểm tra biển số (nếu có)
+            if (!string.IsNullOrEmpty(bienSo) && !string.IsNullOrEmpty(result.BienSoMacDinh))
+            {
+                var bienSoNhap = bienSo.Trim().ToUpper().Replace(" ", "").Replace("-", "").Replace(".", "");
+                var bienSoMD = result.BienSoMacDinh.Trim().ToUpper().Replace(" ", "").Replace("-", "").Replace(".", "");
+                
+                if (bienSoNhap != bienSoMD)
+                {
+                    result.BienSoKhongKhop = true;
+                    result.ThongBao = $"Biển số {bienSo} không khớp với biển số đăng ký vé tháng ({result.BienSoMacDinh})! Sẽ tính phí bình thường.";
+                    return result;
+                }
+            }
+
+            result.HopLe = !result.DaHetHan && !result.KhongCoKhachHang && !result.BienSoKhongKhop;
+            if (result.HopLe && string.IsNullOrEmpty(result.ThongBao))
+            {
+                result.ThongBao = "Vé tháng hợp lệ - Miễn phí gửi xe.";
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -344,5 +470,56 @@ namespace QuanLyBaiDoXe.Services
         {
             return await _context.LoaiXes.ToListAsync();
         }
+
+        /// <summary>
+        /// Lấy danh sách khu vực theo loại xe
+        /// </summary>
+        public async Task<List<KhuVuc>> GetKhuVucTheoLoaiXeAsync(int? maLoaiXe)
+        {
+            if (maLoaiXe == null)
+            {
+                return await _context.KhuVucs
+                    .Include(k => k.ViTriDos)
+                    .Where(k => k.ViTriDos.Any(v => v.TrangThai == 0))
+                    .ToListAsync();
+            }
+
+            return await _context.KhuVucs
+                .Include(k => k.ViTriDos)
+                .Where(k => k.MaLoaiXe == maLoaiXe && k.ViTriDos.Any(v => v.TrangThai == 0))
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Kiểm tra biển số đang trong bãi
+        /// </summary>
+        public async Task<bool> KiemTraBienSoDangTrongBaiAsync(string bienSo)
+        {
+            var bienSoChuanHoa = bienSo?.Trim().ToUpper();
+            if (string.IsNullOrEmpty(bienSoChuanHoa)) return false;
+
+            return await _context.LuotGuis
+                .Where(l => l.TrangThai == 0 && l.BienSoVao != null)
+                .AnyAsync(l => l.BienSoVao!.Trim().ToUpper() == bienSoChuanHoa);
+        }
+    }
+
+    /// <summary>
+    /// Kết quả kiểm tra vé tháng chi tiết
+    /// </summary>
+    public class VeThangInfoResult
+    {
+        public bool CoVeThang { get; set; }
+        public bool HopLe { get; set; }
+        public bool DaHetHan { get; set; }
+        public bool SapHetHan { get; set; }
+        public int SoNgayConLai { get; set; }
+        public bool KhongCoKhachHang { get; set; }
+        public bool BienSoKhongKhop { get; set; }
+        public DateOnly? NgayBatDau { get; set; }
+        public DateOnly? NgayHetHan { get; set; }
+        public string? TenKhachHang { get; set; }
+        public string? BienSoMacDinh { get; set; }
+        public string? ThongBao { get; set; }
     }
 }

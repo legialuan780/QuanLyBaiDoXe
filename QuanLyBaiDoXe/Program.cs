@@ -26,6 +26,7 @@ builder.Services.AddScoped<IVehicleEntryService, VehicleEntryService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
 // Register License Plate Recognition service
 builder.Services.AddHttpClient<ILicensePlateRecognitionService, PlateRecognizerService>();

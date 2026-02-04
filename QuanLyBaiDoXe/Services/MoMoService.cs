@@ -41,9 +41,17 @@ namespace QuanLyBaiDoXe.Services
             }
 
         /// <summary>
-        /// Tạo link thanh toán MoMo
+        /// Tạo link thanh toán MoMo (sử dụng URL từ config)
         /// </summary>
         public async Task<MoMoPaymentResponse> CreatePaymentAsync(string orderId, long amount, string orderInfo)
+        {
+            return await CreatePaymentAsync(orderId, amount, orderInfo, _returnUrl, _notifyUrl);
+        }
+
+        /// <summary>
+        /// Tạo link thanh toán MoMo với custom URLs
+        /// </summary>
+        public async Task<MoMoPaymentResponse> CreatePaymentAsync(string orderId, long amount, string orderInfo, string returnUrl, string notifyUrl)
         {
             try
             {
@@ -55,11 +63,11 @@ namespace QuanLyBaiDoXe.Services
                 var rawSignature = $"accessKey={_accessKey}" +
                                    $"&amount={amount}" +
                                    $"&extraData={extraData}" +
-                                   $"&ipnUrl={_notifyUrl}" +
+                                   $"&ipnUrl={notifyUrl}" +
                                    $"&orderId={orderId}" +
                                    $"&orderInfo={orderInfo}" +
                                    $"&partnerCode={_partnerCode}" +
-                                   $"&redirectUrl={_returnUrl}" +
+                                   $"&redirectUrl={returnUrl}" +
                                    $"&requestId={requestId}" +
                                    $"&requestType={requestType}";
 
@@ -76,8 +84,8 @@ namespace QuanLyBaiDoXe.Services
                     amount = amount,
                     orderId = orderId,
                     orderInfo = orderInfo,
-                    redirectUrl = _returnUrl,
-                    ipnUrl = _notifyUrl,
+                    redirectUrl = returnUrl,
+                    ipnUrl = notifyUrl,
                     lang = "vi",
                     extraData = extraData,
                     requestType = requestType,

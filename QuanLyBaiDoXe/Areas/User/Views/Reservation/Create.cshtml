@@ -1,0 +1,942 @@
+﻿@{
+    ViewData["Title"] = "Đặt chỗ đỗ xe";
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+@section Styles {
+<style>
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        color: #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+    }
+
+    .required-mark {
+        color: #e53e3e;
+    }
+
+    /* Vehicle Type Cards */
+    .vehicle-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .vehicle-type-card {
+        background: white;
+        border: 3px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .vehicle-type-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .vehicle-type-card.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    }
+
+    .vehicle-type-card.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .vehicle-type-icon {
+        font-size: 36px;
+        color: #667eea;
+        margin-bottom: 12px;
+    }
+
+    .vehicle-type-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+
+    .vehicle-type-desc {
+        font-size: 13px;
+        color: #718096;
+        margin-bottom: 12px;
+        min-height: 36px;
+    }
+
+    .form-control,
+    .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 24px;
+        color: white;
+        margin-top: 24px;
+    }
+
+    .summary-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+
+    .summary-label {
+        opacity: 0.9;
+    }
+
+    .summary-value {
+        font-weight: 600;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-top: 24px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .info-box {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .info-box-title {
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-box-content {
+        color: #78350f;
+        font-size: 14px;
+    }
+
+    .khu-vuc-filter {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .khu-vuc-btn {
+        padding: 8px 16px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .khu-vuc-btn:hover {
+        border-color: #667eea;
+    }
+
+    .khu-vuc-btn.active {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .zone-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Payment Modal - giống VehicleEntry */
+    .payment-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 100000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .payment-modal.show {
+        display: flex;
+    }
+
+    .payment-modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 500px;
+        width: 95%;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        animation: modalPop 0.3s ease;
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        text-align: center;
+    }
+
+    .payment-header h3 {
+        margin: 0 0 5px 0;
+        font-size: 22px;
+    }
+
+    .payment-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+    .payment-body {
+        padding: 25px;
+    }
+
+    .payment-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .payment-info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .payment-info-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .payment-info-label {
+        font-size: 12px;
+        color: #95a5a6;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .payment-info-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .payment-info-value.highlight {
+        color: #667eea;
+        font-size: 28px;
+    }
+
+    .payment-divider {
+        height: 1px;
+        background: #e5e9f2;
+        margin: 20px 0;
+    }
+
+    .payment-methods-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .payment-method-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border: 2px solid #e5e9f2;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        gap: 10px;
+    }
+
+    .payment-method-btn:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .payment-method-btn.momo {
+        border-color: #d82d8b;
+    }
+
+    .payment-method-btn.momo:hover {
+        background: rgba(216, 45, 139, 0.05);
+    }
+
+    .payment-method-btn i {
+        font-size: 32px;
+    }
+
+    .payment-method-btn.cash i {
+        color: #27ae60;
+    }
+
+    .payment-method-btn.momo i {
+        color: #d82d8b;
+    }
+
+    .payment-method-btn span {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .payment-footer {
+        padding: 15px 25px 25px;
+        text-align: center;
+    }
+
+    .payment-cancel-btn {
+        padding: 10px 30px;
+        border: none;
+        background: none;
+        color: #95a5a6;
+        font-size: 14px;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .payment-cancel-btn:hover {
+        color: #e74c3c;
+    }
+
+    @@keyframes modalPop {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+}
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-calendar-plus me-2"></i>
+        Đặt chỗ đỗ xe
+    </h1>
+    <p class="page-subtitle">Chọn loại đặt chỗ và điền thông tin</p>
+</div>
+
+<!-- Info box -->
+<div class="info-box">
+    <div class="info-box-title">
+        <i class="fas fa-info-circle"></i>
+        Lưu ý về đặt chỗ
+    </div>
+    <div class="info-box-content">
+        • Bạn cần đặt cọc 50% phí gửi xe 1 giờ để giữ chỗ<br>
+        • Vị trí sẽ được giữ trong 2 giờ kể từ thời gian đến dự kiến<br>
+        • Nếu không đến đúng giờ, đặt chỗ sẽ tự động hủy và không hoàn lại tiền cọc
+    </div>
+</div>
+
+<!-- Form đặt chỗ -->
+<form id="reservationForm">
+    <input type="hidden" id="reservationType" name="isDatTrongNgay" value="true">
+
+    <!-- Thông tin xe -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-car"></i>
+            Thông tin xe
+        </h3>
+
+        <div class="form-group">
+            <label class="form-label">
+                <i class="fas fa-list"></i>
+                Chọn loại xe <span class="required-mark">*</span>
+            </label>
+            <input type="hidden" id="maLoaiXe" name="maLoaiXe" required>
+            <div class="vehicle-type-grid" id="vehicleTypeGrid">
+                @if (ViewBag.LoaiXes != null)
+                {
+                    foreach (var loaiXe in (List<QuanLyBaiDoXe.Areas.User.ViewModels.LoaiXeDto>)ViewBag.LoaiXes)
+                    {
+                        var icon = loaiXe.TenLoaiXe?.Contains("Ô tô") == true ? "fa-car" :
+                                   loaiXe.TenLoaiXe?.Contains("Xe máy") == true ? "fa-motorcycle" :
+                                   "fa-truck";
+                        
+                        <div class="vehicle-type-card" data-loaixe="@loaiXe.MaLoaiXe" onclick="selectVehicleType(@loaiXe.MaLoaiXe, '@loaiXe.TenLoaiXe')">
+                            <div class="vehicle-type-icon">
+                                <i class="fas @icon"></i>
+                            </div>
+                            <div class="vehicle-type-name">@loaiXe.TenLoaiXe</div>
+                            <div class="vehicle-type-desc">@(loaiXe.MoTa ?? "Phù hợp cho nhu cầu gửi xe hàng ngày")</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">Không có loại xe nào</p>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-id-card"></i>
+                        Biển số xe <span class="required-mark">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="bienSoXe" name="bienSoXe" placeholder="VD: 29A-12345" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-clock"></i>
+                        Thời gian đến dự kiến <span class="required-mark">*</span>
+                    </label>
+                    <input type="datetime-local" class="form-control" id="thoiGianDenDuKien" name="thoiGianDenDuKien" required onchange="validateDateTime()">
+                    <small class="text-muted mt-1 d-block" id="dateTimeHint"></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chọn vị trí -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-map-marked-alt"></i>
+            Chọn vị trí đỗ xe
+        </h3>
+
+        <div class="form-group">
+            <label class="form-label">
+                <i class="fas fa-parking"></i>
+                Vị trí đỗ xe <span class="required-mark">*</span>
+            </label>
+            <select class="form-select" id="viTriSelect" name="maViTri" required onchange="selectViTriFromDropdown()">
+                <option value="">-- Chọn vị trí đỗ xe --</option>
+            </select>
+            <small class="text-muted mt-1 d-block">Vui lòng chọn loại xe trước để xem vị trí trống</small>
+        </div>
+
+        <!-- Info hiển thị khu vực được chọn -->
+        <div id="viTriInfo" class="alert alert-info" style="display: none;">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Vị trí đã chọn:</strong> <span id="viTriInfoText"></span>
+        </div>
+    </div>
+
+    <!-- Tóm tắt -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-clipboard-check"></i>
+            Xác nhận thông tin
+        </h3>
+
+        <div class="summary-card">
+            <div class="summary-title">Thông tin đặt chỗ</div>
+            <div class="summary-item">
+                <span class="summary-label">Loại xe:</span>
+                <span class="summary-value" id="summaryLoaiXe">-</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Biển số:</span>
+                <span class="summary-value" id="summaryBienSo">-</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Vị trí:</span>
+                <span class="summary-value" id="summaryViTri">-</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Thời gian đến:</span>
+                <span class="summary-value" id="summaryThoiGian">-</span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnSubmit">
+            <i class="fas fa-check-circle me-2"></i>
+            Xác nhận đặt chỗ
+        </button>
+    </div>
+</form>
+
+<!-- Payment Modal - Modal thanh toán (giống VehicleEntry) -->
+<div class="payment-modal" id="paymentModal">
+    <div class="payment-modal-content">
+        <div class="payment-header">
+            <h3><i class="fas fa-receipt"></i> Thanh toán đặt cọc</h3>
+            <p>Vui lòng chọn hình thức thanh toán</p>
+        </div>
+        
+        <div class="payment-body" id="paymentMethodsSection">
+            <div class="payment-info-grid">
+                <div class="payment-info-item full-width">
+                    <div class="payment-info-label">Số tiền cần thanh toán</div>
+                    <div class="payment-info-value highlight" id="paymentAmount">0đ</div>
+                </div>
+            </div>
+            
+            <div class="payment-divider"></div>
+            
+            <div class="payment-methods-title">Chọn hình thức thanh toán</div>
+            <div class="payment-methods">
+                <button class="payment-method-btn cash" onclick="payWithCash()">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Tiền mặt tại quầy</span>
+                </button>
+                <button class="payment-method-btn momo" onclick="payWithMoMo()">
+                    <i class="fas fa-qrcode"></i>
+                    <span>MoMo</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="payment-footer">
+            <button class="payment-cancel-btn" onclick="closePaymentModal()">
+                <i class="fas fa-times"></i> Hủy giao dịch
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentMaDatCho = 0;
+    let currentTienCoc = 0;
+    let selectedViTri = null;
+    let selectedLoaiXe = null;
+    let loaiXeList = [];
+    let viTriList = [];
+    let khuVucList = [];
+
+    // Load loại xe khi trang load
+    window.addEventListener('DOMContentLoaded', async function () {
+        setupDateTimeInput();
+        // Loại xe đã được render từ server, không cần load thêm
+    });
+
+    function selectVehicleType(maLoaiXe, tenLoaiXe) {
+        // Remove selected class from all cards
+        document.querySelectorAll('.vehicle-type-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // Add selected class to clicked card
+        const selectedCard = document.querySelector(`[data-loaixe="${maLoaiXe}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+        }
+
+        // Update hidden input
+        document.getElementById('maLoaiXe').value = maLoaiXe;
+        selectedLoaiXe = maLoaiXe;
+
+        // Update summary
+        updateSummary();
+
+        // Load parking spots
+        loadParkingSpots();
+    }
+
+    function setupDateTimeInput() {
+        const now = new Date();
+        // Đặt trong ngày: từ hiện tại
+        document.getElementById('thoiGianDenDuKien').min = formatDateTimeLocal(now);
+        document.getElementById('dateTimeHint').textContent = 'Chọn thời gian từ hiện tại';
+    }
+
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function validateDateTime() {
+        const selectedDateTime = new Date(document.getElementById('thoiGianDenDuKien').value);
+        const now = new Date();
+
+        if (selectedDateTime <= now) {
+            alert('Thời gian đến phải lớn hơn thời gian hiện tại!');
+            document.getElementById('thoiGianDenDuKien').value = '';
+            return false;
+        }
+
+        // Reload parking spots với thời gian mới
+        loadParkingSpots();
+        return true;
+    }
+
+    async function loadParkingSpots() {
+        const maLoaiXe = document.getElementById('maLoaiXe').value;
+        const thoiGianDenDuKien = document.getElementById('thoiGianDenDuKien').value;
+
+        const viTriSelect = document.getElementById('viTriSelect');
+
+        if (!maLoaiXe) {
+            viTriSelect.innerHTML = '<option value="">-- Chọn loại xe trước --</option>';
+            viTriSelect.disabled = true;
+            return;
+        }
+
+        try {
+            const url = `@Url.Action("GetViTriTrong", "Reservation", new { area = "User" })?maLoaiXe=${maLoaiXe}${thoiGianDenDuKien ? '&thoiGianDenDuKien=' + encodeURIComponent(thoiGianDenDuKien) : ''}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.success) {
+                viTriList = data.viTriTrong || [];
+                khuVucList = data.khuVucs || [];
+
+                renderViTriDropdown();
+                updateSummary();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error loading parking spots:', error);
+            alert('Lỗi khi tải danh sách vị trí: ' + error.message);
+        }
+    }
+
+    function renderViTriDropdown() {
+        const viTriSelect = document.getElementById('viTriSelect');
+        
+        if (viTriList.length === 0) {
+            viTriSelect.innerHTML = '<option value="">-- Không có vị trí trống --</option>';
+            viTriSelect.disabled = true;
+            return;
+        }
+
+        viTriSelect.disabled = false;
+        viTriSelect.innerHTML = '<option value="">-- Chọn vị trí đỗ xe --</option>';
+
+        // Group by khu vực
+        const grouped = {};
+        viTriList.forEach(viTri => {
+            const khuVuc = viTri.tenKhuVuc || 'Khác';
+            if (!grouped[khuVuc]) {
+                grouped[khuVuc] = [];
+            }
+            grouped[khuVuc].push(viTri);
+        });
+
+        // Render options grouped by khu vực
+        Object.keys(grouped).sort().forEach(khuVuc => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = khuVuc;
+            
+            grouped[khuVuc].forEach(viTri => {
+                const option = document.createElement('option');
+                option.value = viTri.maViTri;
+                option.textContent = `${viTri.tenViTri} - ${viTri.tenKhuVuc}`;
+                option.setAttribute('data-khuvuc', viTri.tenKhuVuc);
+                optgroup.appendChild(option);
+            });
+
+            viTriSelect.appendChild(optgroup);
+        });
+    }
+
+    function selectViTriFromDropdown() {
+        const viTriSelect = document.getElementById('viTriSelect');
+        const selectedValue = viTriSelect.value;
+
+        if (selectedValue) {
+            selectedViTri = parseInt(selectedValue);
+            
+            // Hiển thị thông tin vị trí đã chọn
+            const viTri = viTriList.find(v => v.maViTri === selectedViTri);
+            if (viTri) {
+                const viTriInfo = document.getElementById('viTriInfo');
+                const viTriInfoText = document.getElementById('viTriInfoText');
+                viTriInfoText.textContent = `${viTri.tenViTri} - ${viTri.tenKhuVuc}`;
+                viTriInfo.style.display = 'block';
+            }
+        } else {
+            selectedViTri = null;
+            document.getElementById('viTriInfo').style.display = 'none';
+        }
+
+        updateSummary();
+    }
+
+    function updateSummary() {
+        // Loại xe
+        const maLoaiXe = document.getElementById('maLoaiXe').value;
+        let tenLoaiXe = '-';
+        
+        if (maLoaiXe) {
+            const selectedCard = document.querySelector(`[data-loaixe="${maLoaiXe}"] .vehicle-type-name`);
+            if (selectedCard) {
+                tenLoaiXe = selectedCard.textContent;
+            }
+        }
+        document.getElementById('summaryLoaiXe').textContent = tenLoaiXe;
+
+        // Biển số
+        const bienSo = document.getElementById('bienSoXe').value || '-';
+        document.getElementById('summaryBienSo').textContent = bienSo;
+
+        // Vị trí
+        const viTri = viTriList.find(v => v.maViTri === selectedViTri);
+        document.getElementById('summaryViTri').textContent = viTri ? `${viTri.tenViTri} (${viTri.tenKhuVuc})` : '-';
+
+        // Thời gian
+        const thoiGian = document.getElementById('thoiGianDenDuKien').value;
+        if (thoiGian) {
+            const date = new Date(thoiGian);
+            document.getElementById('summaryThoiGian').textContent = date.toLocaleString('vi-VN');
+        } else {
+            document.getElementById('summaryThoiGian').textContent = '-';
+        }
+    }
+
+    // Submit form
+    document.getElementById('reservationForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (!selectedLoaiXe) {
+            alert('Vui lòng chọn loại xe!');
+            return;
+        }
+
+        if (!selectedViTri) {
+            alert('Vui lòng chọn vị trí đỗ xe!');
+            return;
+        }
+
+        const formData = {
+            maViTri: selectedViTri,
+            bienSoXe: document.getElementById('bienSoXe').value,
+            maLoaiXe: parseInt(selectedLoaiXe),
+            thoiGianDenDuKien: document.getElementById('thoiGianDenDuKien').value
+        };
+
+        try {
+            const response = await fetch('@Url.Action("TaoDatCho", "Reservation", new { area = "User" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (result.requirePayment) {
+                    // Hiển thị modal thanh toán
+                    currentMaDatCho = result.maDatCho;
+                    currentTienCoc = result.tienCoc;
+                    document.getElementById('paymentAmount').textContent = result.tienCoc.toLocaleString('vi-VN') + ' VNĐ';
+                    document.getElementById('paymentModal').classList.add('show');
+                } else {
+                    // Đặt chỗ thành công
+                    alert(result.message);
+                    window.location.href = '@Url.Action("Index", "Reservation", new { area = "User" })';
+                }
+            } else {
+                alert('Lỗi: ' + result.message);
+            }
+        } catch (error) {
+            alert('Lỗi: ' + error.message);
+        }
+    });
+
+    async function payWithCash() {
+        try {
+            const response = await fetch('@Url.Action("ThanhToanTienMat", "Reservation", new { area = "User" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    MaDatCho: currentMaDatCho,
+                    TienCoc: currentTienCoc,
+                    PhuongThucThanhToan: 'TienMat'
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                closePaymentModal();
+                alert('Đặt chỗ thành công! Vui lòng đến quầy thanh toán trước khi vào bãi.');
+                window.location.href = '@Url.Action("Index", "Reservation", new { area = "User" })';
+            } else {
+                alert('Lỗi: ' + result.message);
+            }
+        } catch (error) {
+            alert('Lỗi: ' + error.message);
+        }
+    }
+
+    async function payWithMoMo() {
+        if (!currentMaDatCho || !currentTienCoc) {
+            alert('Không có dữ liệu thanh toán!');
+            return;
+        }
+
+        // Đóng modal và hiển thị loading
+        closePaymentModal();
+        alert('Đang chuyển đến trang thanh toán MoMo...');
+
+        try {
+            const response = await fetch('@Url.Action("ThanhToanMoMo", "Reservation", new { area = "User" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    MaDatCho: currentMaDatCho,
+                    TienCoc: currentTienCoc,
+                    PhuongThucThanhToan: 'MoMo'
+                })
+            });
+
+            const result = await response.json();
+            if (result.success && result.payUrl) {
+                // Redirect đến trang thanh toán MoMo
+                window.location.href = result.payUrl;
+            } else {
+                alert('Lỗi: ' + (result.message || 'Không thể tạo thanh toán MoMo'));
+            }
+        } catch (error) {
+            console.error('MoMo Error:', error);
+            alert('Lỗi kết nối đến MoMo! Vui lòng thử lại.');
+        }
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.remove('show');
+    }
+
+    // Close modal on overlay click
+    document.getElementById('paymentModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            // Không tự động đóng - phải chọn phương thức hoặc hủy
+        }
+    });
+
+    // Update summary khi thay đổi input
+    document.getElementById('bienSoXe').addEventListener('input', updateSummary);
+    document.getElementById('thoiGianDenDuKien').addEventListener('change', updateSummary);
+</script>
+}

@@ -379,7 +379,7 @@
                     <i class="fas fa-th-large sidebar-nav-icon"></i>
                     <span>Tổng quan</span>
                 </a>
-                <a href="@Url.Action("Index", "Booking", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Booking" ? "active" : "")">
+                <a href="@Url.Action("Index", "Reservation", new { area = "User" })" class="sidebar-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reservation" ? "active" : "")">
                     <i class="fas fa-calendar-check sidebar-nav-icon"></i>
                     <span>Đặt chỗ</span>
                 </a>

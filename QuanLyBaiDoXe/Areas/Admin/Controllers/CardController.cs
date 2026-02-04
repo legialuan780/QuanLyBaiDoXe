@@ -2,10 +2,12 @@
 using QuanLyBaiDoXe.Areas.Admin.ViewModels;
 using QuanLyBaiDoXe.Models.Entities;
 using QuanLyBaiDoXe.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Employee")]
     public class CardController : Controller
     {
         private readonly ICardService _cardService;

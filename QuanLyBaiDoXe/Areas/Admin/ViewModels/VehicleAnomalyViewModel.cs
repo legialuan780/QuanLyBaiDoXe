@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 
 namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
 {
@@ -18,7 +18,7 @@ namespace QuanLyBaiDoXe.Areas.Admin.ViewModels
         public string? LinkVideo { get; set; }
         public string? LinkHinhAnh { get; set; }
         
-        // Thông tin x? lý
+        // ThÃ´ng tin x? lÃ½
         public int? NhanVienXuLyId { get; set; }
         public string? NhanVienXuLyTen { get; set; }
         public DateTime? ThoiGianXuLy { get; set; }

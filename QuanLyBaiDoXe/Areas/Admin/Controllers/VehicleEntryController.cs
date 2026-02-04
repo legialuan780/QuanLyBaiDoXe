@@ -4,10 +4,12 @@ using QuanLyBaiDoXe.Models.EF;
 using QuanLyBaiDoXe.Models.Entities;
 using QuanLyBaiDoXe.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Employee")]
     public class VehicleEntryController : Controller
     {
         private readonly IVehicleEntryService _vehicleEntryService;

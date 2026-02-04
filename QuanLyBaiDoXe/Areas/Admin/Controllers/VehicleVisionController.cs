@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyBaiDoXe.Areas.Admin.ViewModels;
 using QuanLyBaiDoXe.Models.EF;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Employee")]
     public class VehicleVisionController : Controller
     {
         private readonly QuanLyBaiDoXeContext _context;

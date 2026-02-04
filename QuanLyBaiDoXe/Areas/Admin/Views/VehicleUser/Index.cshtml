@@ -1,0 +1,402 @@
+﻿@model QuanLyBaiDoXe.Areas.Admin.ViewModels.VehicleUserListViewModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+@section Styles {
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <style>
+        .btn-primary-admin, .btn-secondary-admin {
+            text-decoration: none !important;
+        }
+        .btn-primary-admin:hover, .btn-secondary-admin:hover {
+            text-decoration: none !important;
+        }
+        
+        /* DataTables custom styling */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.375rem 0.75rem;
+            margin-left: 2px;
+            border-radius: 4px;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--primary-teal) !important;
+            color: white !important;
+            border-color: var(--primary-teal) !important;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--primary-teal) !important;
+            color: white !important;
+            border-color: var(--primary-teal) !important;
+        }
+        
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #e5e9f2;
+            border-radius: 6px;
+            padding: 0.375rem 0.75rem;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--primary-teal);
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(33, 166, 145, 0.25);
+        }
+        
+        /* Admin card actions */
+        .admin-card-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .admin-card-actions .btn-group button {
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+        
+        @@media (max-width: 768px) {
+            .admin-card-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 10px;
+            }
+            
+            .admin-card-actions {
+                width: 100%;
+            }
+            
+            .admin-card-actions .btn-group {
+                width: 100%;
+            }
+            
+            .admin-card-actions .btn-group button {
+                flex: 1;
+                font-size: 12px;
+                padding: 5px 8px;
+            }
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quản lý người dùng</h1>
+        <div class="breadcrumb">
+            <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Trang chủ</a>
+            <span>/</span>
+            <span>Quản lý người dùng</span>
+        </div>
+    </div>
+    <div>
+        <a href="@Url.Action("Create")" class="btn-primary-admin">
+            <i class="fas fa-plus"></i>
+            Thêm người dùng
+        </a>
+        <button class="btn-secondary-admin" onclick="VehicleUser.refresh()">
+            <i class="fas fa-sync-alt"></i>
+            Làm mới
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-card-icon teal">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statTotalUsers">@Model.TotalUsers</h3>
+            <p>Tổng người dùng</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon purple">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statAdminCount">@Model.AdminCount</h3>
+            <p>Admin</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon green">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statEmployeeCount">@Model.EmployeeCount</h3>
+            <p>Nhân viên</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon orange">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statCustomerCount">@Model.CustomerCount</h3>
+            <p>Khách hàng</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon blue">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-card-info">
+            <h3 id="statActiveUsers">@Model.ActiveUsers</h3>
+            <p>Đang hoạt động</p>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Main Content Card -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3 class="admin-card-title">Danh sách người dùng</h3>
+        <div class="admin-card-actions">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="VehicleUser.filterByRole('')">
+                    <i class="fas fa-users"></i> Tất cả
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="VehicleUser.filterByRole('Admin')">
+                    <i class="fas fa-user-shield"></i> Admin
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="VehicleUser.filterByRole('Nhân viên')">
+                    <i class="fas fa-user-tie"></i> Nhân viên
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="VehicleUser.filterByRole('Khách hàng')">
+                    <i class="fas fa-user"></i> Khách hàng
+                </button>
+            </div>
+            <div class="btn-group ms-2" role="group">
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="VehicleUser.filterByStatus(true)">
+                    <i class="fas fa-check-circle"></i> Hoạt động
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="VehicleUser.filterByStatus(false)">
+                    <i class="fas fa-lock"></i> Khóa
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="VehicleUser.filterByStatus('')">
+                    <i class="fas fa-list"></i> Tất cả
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="admin-card-body">
+        <!-- User Table -->
+        <div class="table-responsive">
+            <table id="usersTable" class="table table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Email</th>
+                        <th>Quyền hạn</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users.Any())
+                    {
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>@user.MaTaiKhoan</td>
+                                <td>
+                                    <strong>@user.TenDangNhap</strong>
+                                </td>
+                                <td>@(user.Email ?? "N/A")</td>
+                                <td>
+                                    @if (user.QuyenHan == "Admin")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-user-shield"></i> Admin
+                                        </span>
+                                    }
+                                    else if (user.QuyenHan == "Nhân viên")
+                                    {
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-user-tie"></i> Nhân viên
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-user"></i> Khách hàng
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.TrangThai)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-lock"></i> Khóa
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", new { id = user.MaTaiKhoan })" 
+                                           class="btn btn-sm btn-info" title="Chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", new { id = user.MaTaiKhoan })" 
+                                           class="btn btn-sm btn-warning" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-secondary" 
+                                                onclick="VehicleUser.changeStatus(@user.MaTaiKhoan)"
+                                                title="Đổi trạng thái">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-danger" 
+                                                onclick="VehicleUser.deleteUser(@user.MaTaiKhoan)"
+                                                title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center">
+                                <div class="py-4">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Không tìm thấy người dùng nào</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        let usersTable;
+        
+        $(document).ready(function() {
+            // Initialize DataTable
+            usersTable = $('#usersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
+                },
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Tất cả"]],
+                order: [[0, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: 5 } // Disable sorting for action column
+                ],
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                responsive: true
+            });
+        });
+
+        const VehicleUser = {
+            refresh: function() {
+                location.reload();
+            },
+            
+            filterByRole: function(role) {
+                if (role === '') {
+                    usersTable.column(3).search('').draw();
+                } else {
+                    usersTable.column(3).search(role).draw();
+                }
+            },
+            
+            filterByStatus: function(status) {
+                if (status === '') {
+                    usersTable.column(4).search('').draw();
+                } else {
+                    const searchTerm = status ? 'Hoạt động' : 'Khóa';
+                    usersTable.column(4).search(searchTerm).draw();
+                }
+            },
+
+            changeStatus: async function(id) {
+                if (!confirm('Bạn có chắc chắn muốn thay đổi trạng thái người dùng này?')) {
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+
+                    const response = await fetch(`@Url.Action("ChangeStatus", "VehicleUser", new { area = "Admin" })/${id}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    alert('Có lỗi xảy ra: ' + error.message);
+                }
+            },
+
+            deleteUser: async function(id) {
+                if (!confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác!')) {
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+
+                    const response = await fetch(`@Url.Action("Delete", "VehicleUser", new { area = "Admin" })/${id}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    alert('Có lỗi xảy ra: ' + error.message);
+                }
+            }
+        };
+    </script>
+}

@@ -4,10 +4,12 @@ using QuanLyBaiDoXe.Models.EF;
 using QuanLyBaiDoXe.Models.Entities;
 using QuanLyBaiDoXe.Areas.Admin.ViewModels;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Employee")]
     public class VehicleShiftController : Controller
     {
         private readonly QuanLyBaiDoXeContext _context;

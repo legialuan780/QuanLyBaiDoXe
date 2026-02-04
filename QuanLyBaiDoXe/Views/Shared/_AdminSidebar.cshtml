@@ -1,4 +1,11 @@
-﻿@* Admin Sidebar Partial View *@
+﻿@using System.Security.Claims
+@{
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+    var isAdmin = userRole == "Admin";
+    var isEmployee = userRole == "Employee";
+}
+
+@* Admin Sidebar Partial View *@
 
 <aside class="admin-sidebar">
     <!-- Brand -->
@@ -170,128 +177,146 @@
             </li>
         </ul>
 
-        <!-- Nhóm 4: Báo cáo & Thống kê -->
-        <div class="menu-category">Báo cáo</div>
+        <!-- Nhóm 4: Xử lý sự cố - CHO CẢ ADMIN VÀ EMPLOYEE -->
+        <div class="menu-category">Xử lý</div>
         <ul class="sidebar-nav">
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("Index", "Booking", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Quản lý đặt chỗ</span>
-                    <span class="badge bg-warning" id="pendingBookingBadge" style="margin-left: auto; display: none;">0</span>
-                </a>
-            </li> *@
-            <li class="sidebar-nav-item has-submenu">
-                <a href="#" class="sidebar-nav-link">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Báo cáo doanh thu</span>
-                </a>
-                <ul class="sidebar-submenu">
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Daily", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo ngày</a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Monthly", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo tháng</a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("ByVehicle", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo loại xe</a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("ByGate", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo cổng</a>
-                    </li>
-                </ul>
-            </li>
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("Traffic", "Report", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-car"></i>
-                    <span>Lưu lượng xe</span>
-                </a>
-            </li> *@
             <li class="sidebar-nav-item">
                 <a href="@Url.Action("Index", "VehicleAnomaly", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-flag"></i>
+                    <i class="fas fa-exclamation-triangle"></i>
                     <span>Sự cố</span>
+                    @if (isEmployee)
+                    {
+                        <span class="badge bg-danger" id="myAnomalyBadge" style="margin-left: auto; display: none;">0</span>
+                    }
                 </a>
             </li>
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("History", "Report", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-history"></i>
-                    <span>Lịch sử ra vào</span>
-                </a>
-            </li> *@
         </ul>
 
-        <!-- Nhóm 5: Smart Parking -->
-        <div class="menu-category">Đỗ xe thông minh</div>
-        <ul class="sidebar-nav">
-			<li class="sidebar-nav-item">
-				<a href="@Url.Action("Index", "Booking", new { area = "Admin" })" class="sidebar-nav-link">
-					<i class="fas fa-calendar-check"></i>
-					<span>Quản lý đặt chỗ</span>
-					<span class="badge bg-warning" id="pendingBookingBadge" style="margin-left: auto; display: none;">0</span>
-				</a>
-			</li>
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("SlotMonitor", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-th-large"></i>
-                    <span>Chỗ trống</span>
-                </a>
-            </li> *@
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("Guidance", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-directions"></i>
-                    <span>Dẫn hướng đỗ xe</span>
-                </a>
-            </li> *@
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("Booking", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Đặt chỗ trước</span>
-                </a>
-            </li> *@
-        </ul>
+        <!-- Nhóm 5: Báo cáo & Thống kê - CHỈ ADMIN -->
+        @if (isAdmin)
+        {
+            <div class="menu-category">Báo cáo</div>
+            <ul class="sidebar-nav">
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Index", "Booking", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Quản lý đặt chỗ</span>
+                        <span class="badge bg-warning" id="pendingBookingBadge" style="margin-left: auto; display: none;">0</span>
+                    </a>
+                </li> *@
+                <li class="sidebar-nav-item has-submenu">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Báo cáo doanh thu</span>
+                    </a>
+                    <ul class="sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("Daily", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo ngày</a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("Monthly", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo tháng</a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("ByVehicle", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo loại xe</a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("ByGate", "Report", new { area = "Admin" })" class="sidebar-nav-link">Theo cổng</a>
+                        </li>
+                    </ul>
+                </li>
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Traffic", "Report", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-car"></i>
+                        <span>Lưu lượng xe</span>
+                    </a>
+                </li> *@
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("History", "Report", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-history"></i>
+                        <span>Lịch sử ra vào</span>
+                    </a>
+                </li> *@
+            </ul>
+        }
 
-        <!-- Nhóm 6: Cài đặt -->
-        <div class="menu-category">Hệ thống</div>
-        <ul class="sidebar-nav">
-            @* <li class="sidebar-nav-item has-submenu">
-                <a href="#" class="sidebar-nav-link">
-                    <i class="fas fa-cogs"></i>
-                    <span>Cài đặt</span>
-                </a>
-                <ul class="sidebar-submenu">
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("General", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cài đặt chung</a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Gate", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình cổng</a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Camera", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình camera</a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="@Url.Action("Barrier", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình barrier</a>
-                    </li>
-                </ul>
-            </li> *@
-            <li class="sidebar-nav-item">
-                <a href="@Url.Action("Index", "User", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-user-cog"></i>
-                    <span>Quản lý người dùng</span>
-                </a>
-            </li>
-            @* <li class="sidebar-nav-item">
-                <a href="@Url.Action("Index", "Role", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Phân quyền</span>
-                </a>
-            </li>
-            <li class="sidebar-nav-item">
-                <a href="@Url.Action("Index", "Log", new { area = "Admin" })" class="sidebar-nav-link">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Nhật ký hệ thống</span>
-                </a>
-            </li> *@
-        </ul>
+        <!-- Nhóm 6: Smart Parking - CHỈ ADMIN -->
+        @if (isAdmin)
+        {
+            <div class="menu-category">Đỗ xe thông minh</div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Index", "Booking", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Quản lý đặt chỗ</span>
+                        <span class="badge bg-warning" id="pendingBookingBadge" style="margin-left: auto; display: none;">0</span>
+                    </a>
+                </li>
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("SlotMonitor", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>Chỗ trống</span>
+                    </a>
+                </li> *@
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Guidance", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-directions"></i>
+                        <span>Dẫn hướng đỗ xe</span>
+                    </a>
+                </li> *@
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Booking", "SmartParking", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Đặt chỗ trước</span>
+                    </a>
+                </li> *@
+            </ul>
+        }
+
+        <!-- Nhóm 6: Cài đặt - CHỈ ADMIN -->
+        @if (isAdmin)
+        {
+            <div class="menu-category">Hệ thống</div>
+            <ul class="sidebar-nav">
+                @* <li class="sidebar-nav-item has-submenu">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="fas fa-cogs"></i>
+                        <span>Cài đặt</span>
+                    </a>
+                    <ul class="sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("General", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cài đặt chung</a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("Gate", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình cổng</a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("Camera", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình camera</a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="@Url.Action("Barrier", "Settings", new { area = "Admin" })" class="sidebar-nav-link">Cấu hình barrier</a>
+                        </li>
+                    </ul>
+                </li> *@
+                <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Index", "VehicleUser", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Quản lý người dùng</span>
+                    </a>
+                </li>
+                @* <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Index", "Role", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Phân quyền</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="@Url.Action("Index", "Log", new { area = "Admin" })" class="sidebar-nav-link">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Nhật ký hệ thống</span>
+                    </a>
+                </li> *@
+            </ul>
+        }
     </div>
 </aside>
 

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = ViewBag.PageTitle;
     var doanhThuTheoCaVao = ViewBag.DoanhThuTheoCaVao as List<dynamic>;
     var doanhThuTheoCaRa = ViewBag.DoanhThuTheoCaRa as List<dynamic>;
@@ -15,21 +15,21 @@
     <div>
         <h1 class="page-title">@ViewBag.PageTitle</h1>
         <div class="breadcrumb">
-            <a href="#">Trang chủ</a>
+            <a href="#">Trang ch?</a>
             <span>/</span>
-            <span>Báo cáo doanh thu</span>
+            <span>B�o c�o doanh thu</span>
             <span>/</span>
-            <span>Theo cổng</span>
+            <span>Theo c?ng</span>
         </div>
     </div>
     <div>
         <button class="btn-secondary-admin" onclick="window.location.reload()">
             <i class="fas fa-sync-alt"></i>
-            Làm mới
+            L�m m?i
         </button>
         <button class="btn-primary-admin" onclick="window.print()">
             <i class="fas fa-print"></i>
-            In báo cáo
+            In b�o c�o
         </button>
     </div>
 </div>
@@ -39,17 +39,17 @@
     <div class="admin-card-body">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label for="tuNgay" class="form-label">Từ ngày</label>
+                <label for="tuNgay" class="form-label">T? ng�y</label>
                 <input type="date" class="form-control" id="tuNgay" name="tuNgay" value="@ViewBag.TuNgay">
             </div>
             <div class="col-md-4">
-                <label for="denNgay" class="form-label">Đến ngày</label>
+                <label for="denNgay" class="form-label">�?n ng�y</label>
                 <input type="date" class="form-control" id="denNgay" name="denNgay" value="@ViewBag.DenNgay">
             </div>
             <div class="col-md-4">
                 <button type="submit" class="btn-primary-admin w-100">
                     <i class="fas fa-filter"></i>
-                    Lọc dữ liệu
+                    L?c d? li?u
                 </button>
             </div>
         </form>
@@ -63,8 +63,8 @@
             <i class="fas fa-dollar-sign"></i>
         </div>
         <div class="stat-card-info">
-            <h3>@((tongDoanhThu ?? 0).ToString("N0")) đ</h3>
-            <p>Tổng doanh thu</p>
+            <h3>@((tongDoanhThu ?? 0).ToString("N0")) d</h3>
+            <p>T?ng doanh thu</p>
         </div>
     </div>
     <div class="stat-card">
@@ -73,7 +73,7 @@
         </div>
         <div class="stat-card-info">
             <h3>@(tongLuotGui ?? 0)</h3>
-            <p>Tổng lượt gửi</p>
+            <p>T?ng lu?t g?i</p>
         </div>
     </div>
     <div class="stat-card">
@@ -82,7 +82,7 @@
         </div>
         <div class="stat-card-info">
             <h3>@(doanhThuTheoCaVao?.Count ?? 0)</h3>
-            <p>Số ca vào</p>
+            <p>S? ca v�o</p>
         </div>
     </div>
     <div class="stat-card">
@@ -91,19 +91,19 @@
         </div>
         <div class="stat-card-info">
             <h3>@(doanhThuTheoCaRa?.Count ?? 0)</h3>
-            <p>Số ca ra</p>
+            <p>S? ca ra</p>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Doanh thu theo ca vào -->
+    <!-- Doanh thu theo ca v�o -->
     <div class="col-lg-6 mb-4">
         <div class="admin-card">
             <div class="admin-card-header">
                 <h3 class="admin-card-title">
                     <i class="fas fa-sign-in-alt text-success"></i>
-                    Doanh thu theo ca vào (Cổng vào)
+                    Doanh thu theo ca v�o (C?ng v�o)
                 </h3>
             </div>
             <div class="admin-card-body">
@@ -111,10 +111,10 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Ca làm việc</th>
-                                <th class="text-center">Số lượt</th>
+                                <th>Ca l�m vi?c</th>
+                                <th class="text-center">S? lu?t</th>
                                 <th class="text-end">Doanh thu</th>
-                                <th class="text-center">Tỷ lệ</th>
+                                <th class="text-center">T? l?</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,7 +129,7 @@
                                             <span class="badge badge-info">@item.SoLuong</span>
                                         </td>
                                         <td class="text-end">
-                                            <strong class="text-success">@item.TongTien.ToString("N0") đ</strong>
+                                            <strong class="text-success">@item.TongTien.ToString("N0") d</strong>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge badge-primary">@tyLe.ToString("N1")%</span>
@@ -142,7 +142,7 @@
                                 <tr>
                                     <td colspan="4" class="text-center text-muted py-4">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
-                                        <p>Không có dữ liệu</p>
+                                        <p>Kh�ng c� d? li?u</p>
                                     </td>
                                 </tr>
                             }
@@ -166,7 +166,7 @@
             <div class="admin-card-header">
                 <h3 class="admin-card-title">
                     <i class="fas fa-sign-out-alt text-danger"></i>
-                    Doanh thu theo ca ra (Cổng ra)
+                    Doanh thu theo ca ra (C?ng ra)
                 </h3>
             </div>
             <div class="admin-card-body">
@@ -174,10 +174,10 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Ca làm việc</th>
-                                <th class="text-center">Số lượt</th>
+                                <th>Ca l�m vi?c</th>
+                                <th class="text-center">S? lu?t</th>
                                 <th class="text-end">Doanh thu</th>
-                                <th class="text-center">Tỷ lệ</th>
+                                <th class="text-center">T? l?</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,7 +192,7 @@
                                             <span class="badge badge-warning">@item.SoLuong</span>
                                         </td>
                                         <td class="text-end">
-                                            <strong class="text-success">@item.TongTien.ToString("N0") đ</strong>
+                                            <strong class="text-success">@item.TongTien.ToString("N0") d</strong>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge badge-primary">@tyLe.ToString("N1")%</span>
@@ -205,7 +205,7 @@
                                 <tr>
                                     <td colspan="4" class="text-center text-muted py-4">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
-                                        <p>Không có dữ liệu</p>
+                                        <p>Kh�ng c� d? li?u</p>
                                     </td>
                                 </tr>
                             }
@@ -252,7 +252,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return value.toLocaleString('vi-VN') + ' đ';
+                                    return value.toLocaleString('vi-VN') + ' d';
                                 }
                             }
                         }
@@ -261,7 +261,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' d';
                                 }
                             }
                         },
@@ -299,7 +299,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return value.toLocaleString('vi-VN') + ' đ';
+                                    return value.toLocaleString('vi-VN') + ' d';
                                 }
                             }
                         }
@@ -308,7 +308,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' d';
                                 }
                             }
                         },

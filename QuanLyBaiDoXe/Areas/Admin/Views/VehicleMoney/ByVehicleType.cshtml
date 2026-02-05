@@ -231,9 +231,9 @@
         new Chart(ctxPie, {
             type: 'doughnut',
             data: {
-                labels: vehicleTypeData.map(d => d.tenLoaiXe),
+                labels: vehicleTypeData.map(d => d.TenLoaiXe),
                 datasets: [{
-                    data: vehicleTypeData.map(d => d.tongDoanhThu),
+                    data: vehicleTypeData.map(d => d.TongDoanhThu),
                     backgroundColor: colors.slice(0, vehicleTypeData.length),
                     borderWidth: 2,
                     borderColor: '#fff'
@@ -270,10 +270,10 @@
         new Chart(ctxBar, {
             type: 'bar',
             data: {
-                labels: vehicleTypeData.map(d => d.tenLoaiXe),
+                labels: vehicleTypeData.map(d => d.TenLoaiXe),
                 datasets: [{
                     label: 'Doanh thu',
-                    data: vehicleTypeData.map(d => d.tongDoanhThu),
+                    data: vehicleTypeData.map(d => d.TongDoanhThu),
                     backgroundColor: colors.slice(0, vehicleTypeData.length),
                     borderColor: colors.slice(0, vehicleTypeData.length).map(c => c.replace('0.7', '1')),
                     borderWidth: 1

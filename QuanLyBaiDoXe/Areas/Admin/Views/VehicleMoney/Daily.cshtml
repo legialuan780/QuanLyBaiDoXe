@@ -96,6 +96,19 @@
 </div>
 
 <div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Doanh thu theo loại xe - Ngày @DateTime.Parse(ViewBag.SelectedDate).ToString("dd/MM/yyyy")
+                </h3>
+            </div>
+            <div style="height: 400px; padding: 20px;">
+                <canvas id="dailyVehicleTypeChart"></canvas>
+            </div>
+        </div>
+    </div>
     <div class="col-12">
         <div class="admin-card">
             <div class="admin-card-header">
@@ -148,16 +161,117 @@
     </div>
 </div>
 
+<!-- Bảng chi tiết theo loại xe -->
+<div class="row">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">
+                    <i class="fas fa-table"></i>
+                    Thống kê theo loại xe
+                </h3>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Loại xe</th>
+                                <th class="text-center">Lượt gửi</th>
+                                <th class="text-center">Thẻ tháng</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DoanhThuTheoLoaiXe.Any())
+                            {
+                                @foreach (var item in Model.DoanhThuTheoLoaiXe)
+                                {
+                                    <tr>
+                                        <td><strong>@item.TenLoaiXe</strong></td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info">@item.SoLuotGui</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-warning">@item.SoTheThang</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success">@item.TongDoanhThu.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>Không có dữ liệu</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Quick date selection
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('ngay');
-            
-            // Format date to yyyy-MM-dd
-            const formatDate = (date) => {
-                return date.toISOString().split('T')[0];
-            };
+        const vehicleTypeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoLoaiXe));
+        
+        const colors = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)'
+        ];
+
+        // Bar chart
+        const ctx = document.getElementById('dailyVehicleTypeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: vehicleTypeData.map(d => d.TenLoaiXe),
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: vehicleTypeData.map(d => d.TongDoanhThu),
+                    backgroundColor: colors.slice(0, vehicleTypeData.length),
+                    borderColor: colors.slice(0, vehicleTypeData.length).map(c => c.replace('0.7', '1')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
         });
     </script>
 }

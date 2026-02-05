@@ -419,23 +419,23 @@
             initMonthlyRevenueChart() {
                 const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
                 
-                const monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoThang));
+              const monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoThang));
                 
                 this.monthlyRevenueChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: monthlyData.map(d => d.thangDisplay),
+                        labels: monthlyData.map(d => d.ThangDisplay),
                         datasets: [
                             {
                                 label: 'Lượt gửi',
-                                data: monthlyData.map(d => d.doanhThuLuotGui),
+                                data: monthlyData.map(d => d.DoanhThuLuotGui),
                                 backgroundColor: 'rgba(54, 162, 235, 0.7)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1
                             },
                             {
                                 label: 'Thẻ tháng',
-                                data: monthlyData.map(d => d.doanhThuTheThang),
+                                data: monthlyData.map(d => d.DoanhThuTheThang),
                                 backgroundColor: 'rgba(255, 159, 64, 0.7)',
                                 borderColor: 'rgba(255, 159, 64, 1)',
                                 borderWidth: 1
@@ -494,9 +494,9 @@
                 this.vehicleTypeChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: vehicleTypeData.map(d => d.tenLoaiXe),
+                        labels: vehicleTypeData.map(d => d.TenLoaiXe),
                         datasets: [{
-                            data: vehicleTypeData.map(d => d.tongDoanhThu),
+                            data: vehicleTypeData.map(d => d.TongDoanhThu),
                             backgroundColor: colors.slice(0, vehicleTypeData.length),
                             borderWidth: 2,
                             borderColor: '#fff'

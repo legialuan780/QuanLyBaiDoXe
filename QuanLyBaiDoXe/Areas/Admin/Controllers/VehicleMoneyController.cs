@@ -229,6 +229,8 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
 
             // Lấy dữ liệu lượt gửi trong ngày
             var luotGuiQuery = await _context.LuotGuis
+                .Include(lg => lg.MaTheNavigation)
+                    .ThenInclude(t => t!.MaLoaiXeNavigation)
                 .Where(lg => lg.ThoiGianRa != null &&
                            lg.ThoiGianRa.Value.Date == selectedDate &&
                            lg.TongTien != null)
@@ -249,6 +251,42 @@ namespace QuanLyBaiDoXe.Areas.Admin.Controllers
             viewModel.TongDoanhThu = viewModel.DoanhThuLuotGui + viewModel.DoanhThuTheThang;
             viewModel.TongLuotGui = luotGuiQuery.Count;
             viewModel.TongTheThang = theThangQuery.Count;
+
+            // Thống kê theo loại xe trong ngày
+            var doanhThuTheoLoaiXe = luotGuiQuery
+                .GroupBy(lg => lg.MaTheNavigation?.MaLoaiXeNavigation?.TenLoaiXe ?? "Chưa xác định")
+                .Select(g => new VehicleMoneyByTypeDto
+                {
+                    TenLoaiXe = g.Key,
+                    TongDoanhThu = g.Sum(lg => lg.TongTien ?? 0),
+                    SoLuotGui = g.Count(),
+                    SoTheThang = 0
+                })
+                .ToList();
+
+            var doanhThuTheThangTheoLoaiXe = theThangQuery
+                .GroupBy(tt => tt.MaTheNavigation?.MaLoaiXeNavigation?.TenLoaiXe ?? "Chưa xác định")
+                .Select(g => new VehicleMoneyByTypeDto
+                {
+                    TenLoaiXe = g.Key,
+                    TongDoanhThu = g.Sum(tt => tt.SoTienDong ?? 0),
+                    SoLuotGui = 0,
+                    SoTheThang = g.Count()
+                })
+                .ToList();
+
+            viewModel.DoanhThuTheoLoaiXe = doanhThuTheoLoaiXe
+                .Concat(doanhThuTheThangTheoLoaiXe)
+                .GroupBy(d => d.TenLoaiXe)
+                .Select(g => new VehicleMoneyByTypeDto
+                {
+                    TenLoaiXe = g.Key,
+                    TongDoanhThu = g.Sum(d => d.TongDoanhThu),
+                    SoLuotGui = g.Sum(d => d.SoLuotGui),
+                    SoTheThang = g.Sum(d => d.SoTheThang)
+                })
+                .OrderByDescending(d => d.TongDoanhThu)
+                .ToList();
 
             ViewBag.SelectedDate = selectedDate.ToString("yyyy-MM-dd");
             ViewBag.PageTitle = "Báo cáo doanh thu theo ngày";

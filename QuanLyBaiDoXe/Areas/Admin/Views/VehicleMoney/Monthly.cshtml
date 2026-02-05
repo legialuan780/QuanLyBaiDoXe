@@ -235,18 +235,80 @@
         const monthlyTicketData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheThangTheoNgay));
 
         // Merge data by date
-        const allDates = [...new Set([...dailyData.map(d => d.ngayDisplay), ...monthlyTicketData.map(d => d.ngayDisplay)])].sort();
+        const allDates = [...new Set([...dailyData.map(d => d.NgayDisplay), ...monthlyTicketData.map(d => d.NgayDisplay)])].sort();
         
         const luotGuiByDate = {};
         const theThangByDate = {};
         
         dailyData.forEach(d => {
-            luotGuiByDate[d.ngayDisplay] = d.tongTien;
+            luotGuiByDate[d.NgayDisplay] = d.TongTien;
         });
         
         monthlyTicketData.forEach(d => {
-            theThangByDate[d.ngayDisplay] = d.tongTien;
+            theThangByDate[d.NgayDisplay] = d.TongTien;
         });
+
+        const luotGuiValues = allDates.map(date => luotGuiByDate[date] || 0);
+        const theThangValues = allDates.map(date => theThangByDate[date] || 0);
+
+        // Create chart
+        const ctx = document.getElementById('dailyRevenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: allDates,
+                datasets: [
+                    {
+                        label: 'Lượt gửi',
+                        data: luotGuiValues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Thẻ tháng',
+                        data: theThangValues,
+                        backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    </script>
+}
 
         const ctx = document.getElementById('dailyRevenueChart').getContext('2d');
         new Chart(ctx, {

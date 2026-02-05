@@ -45,6 +45,12 @@ namespace QuanLyBaiDoXe.Services
                 throw new Exception("Thẻ xe không hợp lệ hoặc đã bị khóa!");
             }
 
+            // Kiểm tra biển số không được để trống
+            if (string.IsNullOrWhiteSpace(bienSoVao))
+            {
+                throw new Exception("Vui lòng nhập biển số xe!");
+            }
+
             // Kiểm tra thẻ đã có lượt gửi chưa ra
             var luotGuiCu = await GetLuotGuiDangGuiByMaTheAsync(maThe);
             if (luotGuiCu != null)
@@ -68,12 +74,19 @@ namespace QuanLyBaiDoXe.Services
 
             // Kiểm tra vé tháng - nếu có vé tháng thì biển số PHẢI khớp mới cho vào
             var veThangInfo = await KiemTraVeThangChiTietAsync(maThe, bienSoVao);
-            if (veThangInfo.CoVeThang && !veThangInfo.DaHetHan && !veThangInfo.KhongCoKhachHang)
+            if (veThangInfo.CoVeThang)
             {
-                // Có vé tháng còn hiệu lực và có khách hàng -> kiểm tra biển số
-                if (veThangInfo.BienSoKhongKhop)
+                // Có thẻ tháng (dù hết hạn hay không) -> biển số PHẢI khớp
+                if (!string.IsNullOrEmpty(veThangInfo.BienSoMacDinh))
                 {
-                    throw new Exception($"Biển số {bienSoVao} không khớp với biển số đăng ký vé tháng ({veThangInfo.BienSoMacDinh})! Không thể vào bãi.");
+                    if (veThangInfo.BienSoKhongKhop)
+                    {
+                        throw new Exception($"Biển số {bienSoVao} không khớp với biển số đăng ký trong thẻ tháng ({veThangInfo.BienSoMacDinh})! Không thể vào bãi.");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Thẻ tháng chưa khai báo biển số xe! Vui lòng cập nhật biển số xe trong thẻ tháng trước khi vào bãi.");
                 }
             }
 
